@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trading Post Interface</title>
+    <title>Mabi Commerce - Central Node</title>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
-    <!-- Firebase Compat SDKs -->
+    <!-- Firebase Compat SDKs (Stable & Global) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
     <style>
         :root {
             --bg: #050505;
             --sidebar-bg: #0a0a0a;
             --card-bg: #111;
-            --accent: #ffd700; /* Neon Yellow */
+            --accent: #ffd700; /* Cyber Neon Yellow */
             --border: rgba(255,255,255,0.05);
             --text-main: #d0d0d0;
             --text-dim: #444;
@@ -523,6 +525,7 @@
         <div class="header-bar">
             <div class="decorative-border"></div>
             <div class="title-section">
+                <!-- Added HUB Button -->
                 <a href="index.html" class="hub-btn">← HUB</a>
                 <div style="text-align:center;">
                     <span class="main-title">Trading Post</span>
@@ -660,17 +663,45 @@
     </div>
 
     <script>
-        // --- FIREBASE CONFIG ---
+        // --- FIREBASE CONFIG (RESTORED TO YOUR ACTUAL CONFIG) ---
         const firebaseConfig = {
             apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
             databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
 
-        /**
-         * Image Path Helper
-         */
+        let userId = null;
+        let userRef = null;
+
+        // AUTH HANDLER
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                userId = user.uid;
+                userRef = db.ref(`users/${userId}`);
+                console.log("Logged in:", userId);
+                await migrateLocalToFirebase();
+                startSync();
+            } else {
+                console.log("Signing in anonymously...");
+                await auth.signInAnonymously();
+            }
+        });
+
+        // --- MIGRATION LOGIC ---
+        async function migrateLocalToFirebase() {
+            if (!userId) return;
+            const updates = {};
+            const localStock = localStorage.getItem('mabi_stock');
+            if (localStock) updates['stock'] = JSON.parse(localStock);
+
+            if (Object.keys(updates).length > 0) {
+                console.log("Migrating stock to Firebase...");
+                await userRef.update(updates);
+            }
+        }
+
         function getImagePath(path) {
             if (!path) return "";
             if (path.startsWith('images/') || path.startsWith('http')) return path;
@@ -714,7 +745,7 @@
             "Group": ["Qilla", "Filia", "Cor", "Vales"]
         };
 
-        // FULL MARKET DATA
+        // --- FULL MARKET DATA (RESTORED) ---
         const marketData = {
             "Normal": {
                 "Tir Chonaill": [
@@ -733,9 +764,9 @@
                 ],
                 "Bangor": [
                     { name: "Bangor Coal", buy: 49, weight: 8, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Bangor_Coal_Icon.png" },
-                    { name: "Marble", buy: 309, weight: 20, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Marble_Icon.png" },
-                    { name: "Topaz", buy: 387, weight: 18, max: 12, limit: Infinity, img: "tradeposts/normal/bangor/Topaz_Icon.png" },
-                    { name: "Highlander Ore", buy: 814, weight: 25, max: 8, limit: Infinity, img: "tradeposts/normal/bangor/Highlander_Ore_Icon.png" },
+                    { name: "Marble", buy: 309, weight: 20, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Marble_icon.png" },
+                    { name: "Topaz", buy: 387, weight: 18, max: 12, limit: Infinity, img: "tradeposts/normal/bangor/Topaz_icon.png" },
+                    { name: "Highlander Ore", buy: 814, weight: 25, max: 8, limit: Infinity, img: "tradeposts/normal/bangor/Highlander_Ore_icon.png" },
                     { name: "Lead", buy: 802, weight: 18, max: 16, limit: Infinity, img: "tradeposts/normal/bangor/Lead_Icon.png" }
                 ],
                 "Emain Macha": [
@@ -746,60 +777,60 @@
                     { name: "Whole BBQ", buy: 630, weight: 14, max: 12, limit: Infinity, img: "tradeposts/normal/emain/Whole_BBQ_Bear_Icon.png" }
                 ],
                 "Taillteann": [
-                    { name: "Heat Crystal", buy: 11, weight: 2, max: 33, limit: Infinity, img: "tradeposts/normal/taillteann/Heat_Crystal_Icon.png" },
+                    { name: "Heat Crystal", buy: 11, weight: 2, max: 33, limit: Infinity, img: "tradeposts/normal/taillteann/Heat_Crystal_icon.png" },
                     { name: "Music Box Stone", buy: 38, weight: 3, max: 24, limit: Infinity, img: "tradeposts/normal/taillteann/Music_Box_Preservation_Stone_Icon.png" },
-                    { name: "Palala Crystal", buy: 131, weight: 6, max: 38, limit: Infinity, img: "tradeposts/normal/taillteann/Palala_Crystal_Icon.png" },
+                    { name: "Palala Crystal", buy: 131, weight: 6, max: 38, limit: Infinity, img: "tradeposts/normal/taillteann/Palala_Crystal_icon.png" },
                     { name: "Circle Barrier Spikes", buy: 127, weight: 3, max: 30, limit: Infinity, img: "tradeposts/normal/taillteann/Circle_Barrier_Spike_Crystal_Icon.png" },
-                    { name: "Alchemy Crystal", buy: 693, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/taillteann/Alchemy_Crystal_Icon.png" }
+                    { name: "Alchemy Crystal", buy: 693, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/taillteann/Alchemy_Crystal_icon.png" }
                 ],
                 "Tara": [
-                    { name: "Mini Dressing Table", buy: 203, weight: 15, max: 10, limit: Infinity, img: "tradeposts/normal/tara/Mini_Dressing_Table_Icon.png" },
-                    { name: "Tea Table", buy: 910, weight: 38, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Tea_Table_Icon.png" },
-                    { name: "Rocking Chair", buy: 900, weight: 25, max: 5, limit: Infinity, img: "tradeposts/normal/tara/Rocking_Chair_Icon.png" },
-                    { name: "Bunk Bed", buy: 3768, weight: 60, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Bunk_Bed_Icon.png" },
-                    { name: "Giant Wine Rack", buy: 8429, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/tara/Giant_Wine_Rack_Icon.png" }
+                    { name: "Mini Dressing Table", buy: 203, weight: 15, max: 10, limit: Infinity, img: "tradeposts/normal/tara/Mini_Dressing_Table_icon.png" },
+                    { name: "Tea Table", buy: 910, weight: 38, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Tea_Table_icon.png" },
+                    { name: "Rocking Chair", buy: 900, weight: 25, max: 5, limit: Infinity, img: "tradeposts/normal/tara/Rocking_Chair_icon.png" },
+                    { name: "Bunk Bed", buy: 3768, weight: 60, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Bunk_Bed_icon.png" },
+                    { name: "Giant Wine Rack", buy: 8429, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/tara/Giant_Wine_Rack_icon.png" }
                 ],
                 "Cobh": [
-                    { name: "Cobh Seaweed", buy: 12, weight: 2, max: 32, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Seaweed_Icon.png" },
-                    { name: "Cobh Oyster", buy: 47, weight: 3, max: 26, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Oyster_Icon.png" },
-                    { name: "Shark Fin", buy: 266, weight: 10, max: 25, limit: Infinity, img: "tradeposts/normal/cobh/Shark_Fin_Icon.png" },
+                    { name: "Cobh Seaweed", buy: 12, weight: 2, max: 32, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Seaweed_icon.png" },
+                    { name: "Cobh Oyster", buy: 47, weight: 3, max: 26, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Oyster_icon.png" },
+                    { name: "Shark Fin", buy: 266, weight: 10, max: 25, limit: Infinity, img: "tradeposts/normal/cobh/Shark_Fin_icon.png" },
                     { name: "Jellyfish", buy: 200, weight: 6, max: 30, limit: Infinity, img: "tradeposts/normal/cobh/Jelly_Fish_Icon.png" },
                     { name: "Neid Scale", buy: 187, weight: 2, max: 28, limit: Infinity, img: "tradeposts/normal/cobh/Neid_Scales_Icon.png" }
                 ],
                 "Belvast": [
-                    { name: "Iron Whip", buy: 117, weight: 8, max: 15, limit: Infinity, img: "tradeposts/normal/belvast/Iron_Whip_Icon.png" },
-                    { name: "Dark Sword", buy: 494, weight: 12, max: 10, limit: Infinity, img: "tradeposts/normal/belvast/Dark_Sword_Icon.png" },
-                    { name: "Safe", buy: 10051, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/belvast/Safe_Icon.png" },
+                    { name: "Iron Whip", buy: 117, weight: 8, max: 15, limit: Infinity, img: "tradeposts/normal/belvast/Iron_Whip_icon.png" },
+                    { name: "Dark Sword", buy: 494, weight: 12, max: 10, limit: Infinity, img: "tradeposts/normal/belvast/Dark_Sword_icon.png" },
+                    { name: "Safe", buy: 10051, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/belvast/Safe_icon.png" },
                     { name: "Skeleton Armour", buy: 16193, weight: 115, max: 1, limit: Infinity, img: "tradeposts/normal/belvast/Skeleton_Ogre_Armor_Icon.png" },
                     { name: "Fake Helmet", buy: 4736, weight: 30, max: 6, limit: Infinity, img: "tradeposts/normal/belvast/Fake_Morgant_Helmet_Icon.png" }
                 ],
                 "Qilla": [
-                    { name: "Mint Chocolate Powder", buy: 35, weight: 1, max: 60, limit: Infinity, img: "tradeposts/normal/qilla/Mint_Chocolate_Powder_Icon.png" },
+                    { name: "Mint Chocolate Powder", buy: 35, weight: 1, max: 60, limit: Infinity, img: "tradeposts/normal/qilla/Mint_Chocolate_Powder_icon.png" },
                     { name: "Pomegranate", buy: 58, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/qilla/Fresh_Pomegranate_Icon.png" },
-                    { name: "Mana Tunnel Figure", buy: 102, weight: 2, max: 65, limit: Infinity, img: "tradeposts/normal/qilla/Mana_Tunnel_Figure_Icon.png" },
-                    { name: "Exploration Rescue Kit", buy: 247, weight: 3, max: 38, limit: Infinity, img: "tradeposts/normal/qilla/Exploration_Rescue_Kit_Icon.png" },
-                    { name: "Kaypi Cactus Essence", buy: 566, weight: 2, max: 26, limit: Infinity, img: "tradeposts/normal/qilla/Kaypi_Cactus_Essence_Icon.png" }
+                    { name: "Mana Tunnel Figure", buy: 102, weight: 2, max: 65, limit: Infinity, img: "tradeposts/normal/qilla/Mana_Tunnel_Figure_icon.png" },
+                    { name: "Exploration Rescue Kit", buy: 247, weight: 3, max: 38, limit: Infinity, img: "tradeposts/normal/qilla/Exploration_Rescue_Kit_icon.png" },
+                    { name: "Kaypi Cactus Essence", buy: 566, weight: 2, max: 26, limit: Infinity, img: "tradeposts/normal/qilla/Kaypi_Cactus_Essence_icon.png" }
                 ],
                 "Filia": [
-                    { name: "Small Glass Chunk", buy: 72, weight: 10, max: 60, limit: Infinity, img: "tradeposts/normal/filia/Small_Glass_Chunk_Icon.png" },
-                    { name: "Cinnamon Perfume", buy: 564, weight: 22, max: 15, limit: Infinity, img: "tradeposts/normal/filia/Cinnamon_Perfume_Icon.png" },
-                    { name: "Dried Saffron", buy: 906, weight: 25, max: 10, limit: Infinity, img: "tradeposts/normal/filia/Dried_Saffron_Icon.png" },
+                    { name: "Small Glass Chunk", buy: 72, weight: 10, max: 60, limit: Infinity, img: "tradeposts/normal/filia/Small_Glass_Chunk_icon.png" },
+                    { name: "Cinnamon Perfume", buy: 564, weight: 22, max: 15, limit: Infinity, img: "tradeposts/normal/filia/Cinnamon_Perfume_icon.png" },
+                    { name: "Dried Saffron", buy: 906, weight: 25, max: 10, limit: Infinity, img: "tradeposts/normal/filia/Dried_Saffron_icon.png" },
                     { name: "Longa Rock Salt", buy: 2342, weight: 40, max: 5, limit: Infinity, img: "tradeposts/normal/filia/Longa_Natural_Rock_Salt_Icon.png" },
-                    { name: "Filia Jerky", buy: 1567, weight: 20, max: 12, limit: Infinity, img: "tradeposts/normal/filia/Filia_Jerky_Icon.png" }
+                    { name: "Filia Jerky", buy: 1567, weight: 20, max: 12, limit: Infinity, img: "tradeposts/normal/filia/Filia_Jerky_icon.png" }
                 ],
                 "Cor": [
-                    { name: "Courcle Ruins Souvenir", buy: 8, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Ruins_Souvenir_Icon.png" },
-                    { name: "Large Ritual Mask", buy: 61, weight: 3, max: 40, limit: Infinity, img: "tradeposts/normal/cor/Large_Ritual_Mask_Icon.png" },
-                    { name: "La Terra Raspberry", buy: 56, weight: 2, max: 60, limit: Infinity, img: "tradeposts/normal/cor/La_Terra_Raspberry_Icon.png" },
+                    { name: "Courcle Ruins Souvenir", buy: 8, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Ruins_Souvenir_icon.png" },
+                    { name: "Large Ritual Mask", buy: 61, weight: 3, max: 40, limit: Infinity, img: "tradeposts/normal/cor/Large_Ritual_Mask_icon.png" },
+                    { name: "La Terra Raspberry", buy: 56, weight: 2, max: 60, limit: Infinity, img: "tradeposts/normal/cor/La_Terra_Raspberry_icon.png" },
                     { name: "Artifact Rest. Tool", buy: 81, weight: 2, max: 70, limit: Infinity, img: "tradeposts/normal/cor/Artifact_Restoration_Tool_Set_Icon.png" },
-                    { name: "Courcle Natural Rubber", buy: 935, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Natural_Rubber_Icon.png" }
+                    { name: "Courcle Natural Rubber", buy: 935, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Natural_Rubber_icon.png" }
                 ],
                 "Vales": [
                     { name: "Vales Coat", buy: 30, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Vales_Padded_Coat_Icon.png" },
                     { name: "Glacial Water", buy: 118, weight: 2, max: 35, limit: Infinity, img: "tradeposts/normal/vales/Natural_Glacial_Water_Icon.png" },
-                    { name: "Ice Skates", buy: 216, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Ice_Skates_Icon.png" },
-                    { name: "Snowboard", buy: 1079, weight: 3, max: 20, limit: Infinity, img: "tradeposts/normal/vales/Snowboard_Icon.png" },
-                    { name: "Vales Vodka", buy: 1204, weight: 2, max: 16, limit: Infinity, img: "tradeposts/normal/vales/Vales_Vodka_Icon.png" }
+                    { name: "Ice Skates", buy: 216, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Ice_Skates_icon.png" },
+                    { name: "Snowboard", buy: 1079, weight: 3, max: 20, limit: Infinity, img: "tradeposts/normal/vales/Snowboard_icon.png" },
+                    { name: "Vales Vodka", buy: 1204, weight: 2, max: 16, limit: Infinity, img: "tradeposts/normal/vales/Vales_Vodka_icon.png" }
                 ]
             },
             "Barter": {
@@ -875,44 +906,79 @@
         };
 
         let currentItem = null;
+        let userData = { prefs: {}, stock: {}, ratings: {} };
+        let publicPrices = {};
 
-        // --- FIREBASE SYNC LOGIC ---
-        function startGlobalSync() {
-            console.log("Initializing Global Firebase Sync...");
+        // --- DATA SYNC & INIT ---
+        async function startSync() {
+            // Public Prices (Read Only unless updated)
             db.ref('public_commerce/prices').on('value', (snapshot) => {
-                const remotePrices = snapshot.val() || {};
-                const localPrices = JSON.parse(localStorage.getItem('mabi_p')) || {};
-
-                // Merge remote prices into local storage
-                const merged = { ...localPrices, ...remotePrices };
-                localStorage.setItem('mabi_p', JSON.stringify(merged));
-
-                // Refresh UI
-                showPrices();
-                runManifest();
-                runManifestAllOrigins();
-            }, (error) => {
-                console.error("Firebase Sync Error:", error);
+                publicPrices = snapshot.val() || {};
+                console.log("Prices synced");
+                refreshUI();
             });
+
+            // User Data (Private)
+            if (userId) {
+                userRef.on('value', (snapshot) => {
+                    const data = snapshot.val() || {};
+                    userData.prefs = data.prefs || {};
+                    userData.stock = data.stock || {};
+                    userData.ratings = data.ratings || {};
+                    refreshUI();
+                });
+            }
         }
+
+        // --- FIREBASE WRITES ---
 
         function updatePrice(city, val) {
             if (!currentItem) return;
             const sellVal = parseInt(val, 10) || 0;
             const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
 
-            // 1. Save to Firebase (Remote)
+            // Optimistic update
+            publicPrices[priceKey] = sellVal;
+            refreshUI();
+
             db.ref(`public_commerce/prices/${priceKey}`).set(sellVal);
+        }
 
-            // 2. Save to Local Memory immediately (Instant UI update)
-            const localPrices = JSON.parse(localStorage.getItem('mabi_p')) || {};
-            localPrices[priceKey] = sellVal;
-            localStorage.setItem('mabi_p', JSON.stringify(localPrices));
+        function updateStock(itemName, quantity) {
+            if (!userId) return;
+            const qty = parseInt(quantity) || 0;
 
-            // Immediate redraw
-            showPrices();
-            runManifest();
-            runManifestAllOrigins();
+            // Optimistic update
+            userData.stock[itemName] = qty;
+
+            // Save to private user path
+            userRef.child('stock').child(itemName).set(qty);
+            refreshUI();
+        }
+
+        function savePrefs() {
+            if (!userId) return;
+            const p = {
+                type: document.getElementById('commerce-type-select').value,
+                city: document.getElementById('city-select').value,
+                mount: document.getElementById('transport-dropdown').value,
+                gm: document.getElementById('gm-check').checked,
+                william: document.getElementById('william-check').checked,
+                alpaca: document.getElementById('alpaca-check').checked,
+                trader: document.getElementById('trader-qty').value,
+                trust: document.getElementById('trustworthy-qty').value
+            };
+            userRef.child('prefs').set(p);
+        }
+
+        // --- GETTERS ---
+        function getStock(itemName) {
+            return userData.stock[itemName] || 0;
+        }
+
+        function getPrice(itemName, city) {
+            const key = `${itemName}_${city}`.replace(/[.#$[\]]/g, "_");
+            return publicPrices[key] || 0;
         }
 
         // --- IMPORT LOGIC ---
@@ -920,7 +986,6 @@
             const raw = document.getElementById('import-area').value;
             const status = document.getElementById('import-status');
 
-            // Define the town order exactly as they appear in your Google Sheet columns (left to right)
             const townOrder = [
                 "Tir Chonaill", "Dunbarton", "Bangor", "Emain Macha", "Taillteann",
                 "Tara", "Cobh", "Belvast", "Qilla", "Filia", "Cor", "Vales"
@@ -932,47 +997,49 @@
             status.textContent = `Processing ${rows.length} rows...`;
 
             let count = 0;
-            for (let i = 0; i < rows.length; i++) {
-                const cols = rows[i].split('\t'); // Sheets uses Tabs
+            const updates = {};
 
-                // Col 0 is Item Name
+            for (let i = 0; i < rows.length; i++) {
+                const cols = rows[i].split('\t');
                 const item = cols[0].trim();
                 if (!item) continue;
 
-                // Loop through price columns (Col 1 to End)
                 for (let j = 1; j < cols.length; j++) {
-                    const townIndex = j - 1; // Town index maps to townOrder
+                    const townIndex = j - 1;
                     if (townIndex >= townOrder.length) break;
 
                     const town = townOrder[townIndex];
                     const priceRaw = cols[j];
 
-                    // Skip empty cells or invalid prices
                     if (!priceRaw || priceRaw.trim() === "") continue;
 
                     const price = parseInt(priceRaw.replace(/,/g, '').trim(), 10);
                     if (isNaN(price)) continue;
 
                     const key = `${item}_${town}`.replace(/[.#$[\]]/g, "_");
-
-                    // Fire and forget (don't await to speed up)
-                    db.ref('public_commerce/prices/' + key).set(price);
+                    updates[key] = price;
                     count++;
                 }
             }
-            status.textContent = `Done! Imported ${count} prices. Refreshing...`;
 
-            // Delay refresh slightly to allow Firebase to catch up
-            setTimeout(() => {
-                const localPrices = JSON.parse(localStorage.getItem('mabi_p')) || {};
-                localStorage.setItem('mabi_p', JSON.stringify(localPrices));
-                showPrices();
-                runManifest();
-                runManifestAllOrigins();
-            }, 1000);
+            if (count > 0) {
+                await db.ref('public_commerce/prices').update(updates);
+                status.textContent = `Done! Imported ${count} prices.`;
+            } else {
+                status.textContent = "No valid data found.";
+            }
         }
 
-        // --- UI REFRESH & IMAGE LOGIC ---
+        // --- UI LOGIC ---
+        function refreshUI() {
+            updateMarketItems();
+            showPrices();
+            updateRecommendationAndStats();
+            updateTownIcon();
+            runManifest();
+            runManifestAllOrigins();
+        }
+
         function updatePreview() {
             if (!currentItem) return;
             const iconDiv = document.getElementById('center-item-icon');
@@ -995,10 +1062,7 @@
             const found = items.find(i => i.name === itemName);
             if (found) {
                 currentItem = found;
-                updateMarketItems();
-                showPrices();
-                updatePreview();
-                updateRecommendationAndStats();
+                refreshUI();
             }
         }
 
@@ -1023,7 +1087,6 @@
 
         function updateMarketItems() {
             const container = document.getElementById('market-items-container');
-            if (!container) return;
             container.innerHTML = '';
             const type = document.getElementById('commerce-type-select').value;
             const city = document.getElementById('city-select').value;
@@ -1046,25 +1109,21 @@
                 const content = document.createElement('div');
                 content.className = 'item-list-content';
                 content.innerHTML = `
-                    <div>
-                        <span class="item-name">${item.name}</span>
-                    </div>
-                    <div class="stock-input-row">
-                        <span style="font-size:9px; color:#aaa;">STOCK</span>
-                        <input type="number" class="qty-input" value="${savedStock || ''}"
-                        style="width:40px; height:18px; padding:0; text-align:center;"
-                        onclick="event.stopPropagation()"
-                        onchange="updateStock('${item.name}', this.value)">
-                    </div>
-                `;
+                        <div><span class="item-name">${item.name}</span></div>
+                        <div class="stock-input-row">
+                            <span style="font-size:9px; color:#aaa;">STOCK</span>
+                            <input type="number" class="qty-input" value="${savedStock || ''}"
+                            style="width:40px; height:18px; padding:0; text-align:center;"
+                            onclick="event.stopPropagation()"
+                            onchange="updateStock('${item.name}', this.value)">
+                        </div>
+                    `;
 
                 itemDiv.appendChild(iconBox);
                 itemDiv.appendChild(content);
                 itemDiv.addEventListener('click', () => {
                     currentItem = item;
-                    updateMarketItems();
-                    showPrices();
-                    updatePreview();
+                    refreshUI();
                 });
                 container.appendChild(itemDiv);
             });
@@ -1072,22 +1131,21 @@
 
         function showPrices() {
             const list = document.getElementById('profit-list');
-            if (!list || !currentItem) return;
             list.innerHTML = '';
+            if (!currentItem) return;
 
             const type = document.getElementById('commerce-type-select').value;
             const origin = document.getElementById('city-select').value;
-            const saved = JSON.parse(localStorage.getItem('mabi_p')) || {};
+
             const dBuy = getDiscountedBuyPrice(currentItem.buy);
             const stats = getModifiedStats(document.getElementById('transport-dropdown').value);
-            const load = Math.min(Math.floor(stats.weight / currentItem.weight), stats.slots * currentItem.max);
+            const load = Math.min(Math.floor(stats.weight / currentItem.weight), stats.slots * currentItem.max, currentItem.limit);
 
             const divisor = (type === "Barter") ? 34 : 17;
             let targetPool = (type === "Barter") ? citiesByType["Normal"] : citiesByType[type];
 
             targetPool.filter(c => c !== origin).forEach(city => {
-                const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
-                const sellVal = parseInt(saved[priceKey], 10) || 0;
+                const sellVal = getPrice(currentItem.name, city);
                 const profit = sellVal ? (sellVal - dBuy) * load : 0;
                 const score = Math.max(0, Math.floor(((sellVal - (currentItem.buy || 0)) * load) / divisor));
                 const profitClass = profit < 0 ? 'profit-val negative' : 'profit-val';
@@ -1095,17 +1153,13 @@
                 const row = document.createElement('div');
                 row.className = 'market-row';
                 row.innerHTML = `
-                    <div class="market-left">
-                        <b>${city}</b>
-                        <input type="number" class="price-input" value="${sellVal || ''}" oninput="updatePrice('${city}', this.value)">
-                    </div>
-                    <div class="market-profit-col">
-                        <span class="${profitClass}">${profit.toLocaleString()}</span>
-                    </div>
-                    <div class="market-score-col">
-                        <span class="season-val">${score.toLocaleString()}</span>
-                    </div>
-                `;
+                        <div class="market-left">
+                            <b>${city}</b>
+                            <input type="number" class="price-input" value="${sellVal || ''}" oninput="updatePrice('${city}', this.value)">
+                        </div>
+                        <div class="market-profit-col"><span class="${profitClass}">${profit.toLocaleString()}</span></div>
+                        <div class="market-score-col"><span class="season-val">${score.toLocaleString()}</span></div>
+                    `;
                 list.appendChild(row);
             });
             updateRecommendationAndStats();
@@ -1115,7 +1169,6 @@
         function runManifest() {
             const type = document.getElementById('commerce-type-select').value;
             const origin = document.getElementById('city-select').value;
-            const savedPrices = JSON.parse(localStorage.getItem('mabi_p')) || {};
             const originItems = marketData[type] && marketData[type][origin] ? marketData[type][origin] : [];
 
             let bestTrip = null;
@@ -1131,14 +1184,14 @@
                     let remWeight = stats.weight, remSlots = stats.slots, totalP = 0, itemsToBuy = [];
 
                     const potential = originItems.map(item => {
-                        const priceKey = `${item.name}_${targetCity}`.replace(/[.#$[\]]/g, "_");
-                        const sell = parseInt(savedPrices[priceKey]) || 0;
+                        const sell = getPrice(item.name, targetCity);
                         const buy = getDiscountedBuyPrice(item.buy);
-                        return { ...item, unitP: sell - buy, eff: (sell - buy) / item.weight };
+                        const unitP = sell - buy;
+                        return { ...item, unitP, eff: unitP / Math.max(1, item.weight) };
                     }).filter(i => i.unitP > 0).sort((a, b) => b.eff - a.eff);
 
                     potential.forEach(item => {
-                        const stockAvailable = getStock(item.name) || 0;
+                        const stockAvailable = getStock(item.name);
                         let qty = Math.min(Math.floor(remWeight / item.weight), remSlots * item.max, item.limit, stockAvailable);
                         if (qty <= 0) return;
                         let slotsNeeded = Math.ceil(qty / item.max);
@@ -1155,10 +1208,10 @@
 
             const box = document.getElementById('manifest-box');
             if (!bestTrip || maxProfit <= 0) {
-                 box.style.display = 'block';
-                 document.getElementById('manifest-list').innerHTML = `<div style="color:#aaa; font-size:10px; padding:10px; text-align:center;">NO PROFITABLE ROUTES<br>CHECK STOCK & PRICES</div>`;
-                 document.getElementById('manifest-total').textContent = `PROFIT: 0`;
-                 return;
+                box.style.display = 'block';
+                document.getElementById('manifest-list').innerHTML = `<div style="color:#aaa; font-size:10px; padding:10px; text-align:center;">NO PROFITABLE ROUTES<br>CHECK STOCK & PRICES</div>`;
+                document.getElementById('manifest-total').textContent = `PROFIT: 0`;
+                return;
             }
             box.style.display = 'block';
 
@@ -1176,16 +1229,15 @@
             slotHtml += '</div>';
 
             document.getElementById('manifest-list').innerHTML = `
-                <div style="color:var(--accent); font-weight:bold;">DEST: ${bestTrip.dest}</div>
-                <div style="font-size:10px; opacity:0.6; margin-bottom:10px;">UNIT: ${bestTrip.mount}</div>
-                ${slotHtml}
-            `;
+                    <div style="color:var(--accent); font-weight:bold;">DEST: ${bestTrip.dest}</div>
+                    <div style="font-size:10px; opacity:0.6; margin-bottom:10px;">UNIT: ${bestTrip.mount}</div>
+                    ${slotHtml}
+                `;
             document.getElementById('manifest-total').textContent = `TOTAL PROFIT: ${bestTrip.profit.toLocaleString()} DUCATS`;
         }
 
         function runManifestAllOrigins() {
             const type = document.getElementById('commerce-type-select').value;
-            const savedPrices = JSON.parse(localStorage.getItem('mabi_p')) || {};
             const origins = citiesByType[type] || [];
             let globalBest = null;
             let globalMaxProfit = -1;
@@ -1200,8 +1252,7 @@
                         const stats = getModifiedStats(mKey);
                         let remWeight = stats.weight, remSlots = stats.slots, totalP = 0, itemsToBuy = [];
                         const potential = originItems.map(item => {
-                            const priceKey = `${item.name}_${targetCity}`.replace(/[.#$[\]]/g, "_");
-                            const sell = parseInt(savedPrices[priceKey]) || 0;
+                            const sell = getPrice(item.name, targetCity);
                             const buy = getDiscountedBuyPrice(item.buy);
                             return { ...item, unitP: sell - buy, eff: (sell - buy) / item.weight };
                         }).filter(i => i.unitP > 0).sort((a, b) => b.eff - a.eff);
@@ -1242,14 +1293,14 @@
             slotHtml += '</div>';
 
             anchor.innerHTML = `
-                <div class="recommendation-box">
-                    <div class="rec-title" style="color:#a29bfe;">GLOBAL_NETWORK_BEST</div>
-                    <div style="color:var(--accent); font-weight:bold;">${globalBest.origin} → ${globalBest.dest}</div>
-                    <div style="font-size:10px; opacity:0.6; margin-bottom:10px;">UNIT: ${globalBest.mount}</div>
-                    ${slotHtml}
-                    <div class="manifest-footer">PROFIT: ${globalBest.profit.toLocaleString()} DUCATS</div>
-                </div>
-            `;
+                    <div class="recommendation-box">
+                        <div class="rec-title" style="color:#a29bfe;">GLOBAL_NETWORK_BEST</div>
+                        <div style="color:var(--accent); font-weight:bold;">${globalBest.origin} → ${globalBest.dest}</div>
+                        <div style="font-size:10px; opacity:0.6; margin-bottom:10px;">UNIT: ${globalBest.mount}</div>
+                        ${slotHtml}
+                        <div class="manifest-footer">PROFIT: ${globalBest.profit.toLocaleString()} DUCATS</div>
+                    </div>
+                `;
         }
 
         // --- HELPERS ---
@@ -1270,25 +1321,12 @@
             return { slots: b.slots + bS, weight: b.weight + bW };
         }
 
-        function updateStock(itemName, quantity) {
-            const stockData = JSON.parse(localStorage.getItem('mabi_stock')) || {};
-            stockData[itemName] = parseInt(quantity) || 0;
-            localStorage.setItem('mabi_stock', JSON.stringify(stockData));
-            runManifest();
-            runManifestAllOrigins();
-        }
-
-        function getStock(itemName) {
-            const stockData = JSON.parse(localStorage.getItem('mabi_stock')) || {};
-            return stockData[itemName] || 0;
-        }
-
         function handleAirShipAvailability() {
             const airShipCheck = document.getElementById('air-travel-check');
             const dropdown = document.getElementById('transport-dropdown');
             const option = dropdown.querySelector('option[value="Air Ship"]');
             if (airShipCheck.checked) option.disabled = false;
-            else { option.disabled = true; if(dropdown.value === "Air Ship") dropdown.value = "Elephant"; }
+            else { option.disabled = true; if (dropdown.value === "Air Ship") dropdown.value = "Elephant"; }
         }
 
         function updateTownIcon() {
@@ -1300,37 +1338,13 @@
             }
         }
 
-        function savePrefs() {
-            const p = {
-                type: document.getElementById('commerce-type-select').value,
-                city: document.getElementById('city-select').value,
-                mount: document.getElementById('transport-dropdown').value,
-                gm: document.getElementById('gm-check').checked,
-                william: document.getElementById('william-check').checked,
-                alpaca: document.getElementById('alpaca-check').checked,
-                trader: document.getElementById('trader-qty').value,
-                trust: document.getElementById('trustworthy-qty').value
-            };
-            localStorage.setItem('mabi_prefs', JSON.stringify(p));
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            const refresh = () => {
-                updateMarketItems();
-                showPrices();
-                updateRecommendationAndStats();
-                updateTownIcon();
-                savePrefs();
-                runManifest();
-                runManifestAllOrigins();
-            };
             const saved = JSON.parse(localStorage.getItem('mabi_prefs')) || {};
 
             document.getElementById('commerce-type-select').onchange = (e) => {
                 const type = e.target.value;
                 document.getElementById('city-select').innerHTML = citiesByType[type].map(c => `<option value="${c}">${c}</option>`).join('');
-                if (saved.city && citiesByType[type].includes(saved.city)) document.getElementById('city-select').value = saved.city;
-                refresh();
+                refreshUI();
             };
 
             if (saved.type) document.getElementById('commerce-type-select').value = saved.type;
@@ -1338,30 +1352,24 @@
 
             if (saved.city) document.getElementById('city-select').value = saved.city;
             if (saved.mount) document.getElementById('transport-dropdown').value = saved.mount;
-            if (saved.trader) document.getElementById('trader-qty').value = saved.trader;
-            if (saved.trust) document.getElementById('trustworthy-qty').value = saved.trust;
 
-            document.getElementById('gm-check').checked = !!saved.gm;
-            document.getElementById('william-check').checked = !!saved.william;
-            document.getElementById('alpaca-check').checked = !!saved.alpaca;
-
-            document.getElementById('city-select').onchange = refresh;
-            document.getElementById('merchant-rating-select').onchange = refresh;
-            document.getElementById('transport-dropdown').onchange = refresh;
-            document.getElementById('gm-check').onchange = refresh;
-            document.getElementById('william-check').onchange = function() {
-                if(this.checked) document.getElementById('alpaca-check').checked = false;
-                refresh();
+            document.getElementById('city-select').onchange = refreshUI;
+            document.getElementById('merchant-rating-select').onchange = refreshUI;
+            document.getElementById('transport-dropdown').onchange = refreshUI;
+            document.getElementById('gm-check').onchange = refreshUI;
+            document.getElementById('william-check').onchange = function () {
+                if (this.checked) document.getElementById('alpaca-check').checked = false;
+                refreshUI();
             };
-            document.getElementById('alpaca-check').onchange = function() {
-                if(this.checked) document.getElementById('william-check').checked = false;
-                refresh();
+            document.getElementById('alpaca-check').onchange = function () {
+                if (this.checked) document.getElementById('william-check').checked = false;
+                refreshUI();
             };
-            document.getElementById('trader-qty').onchange = refresh;
-            document.getElementById('trustworthy-qty').onchange = refresh;
+            document.getElementById('trader-qty').onchange = refreshUI;
+            document.getElementById('trustworthy-qty').onchange = refreshUI;
 
             startGlobalSync();
-            refresh();
+            refreshUI();
         });
     </script>
 </body>
