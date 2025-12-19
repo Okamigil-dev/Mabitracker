@@ -130,6 +130,15 @@
             margin-bottom: 4px;
         }
 
+        .section-header-label {
+            width: 100%;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 9px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
         /* Inputs */
         .city-dropdown, .custom-dropdown, .qty-input-compact, .price-input, .qty-input, .search-input {
             background: #000;
@@ -161,22 +170,6 @@
         .commerce-type-section {
             padding: 15px;
             border-bottom: 1px solid var(--border);
-        }
-
-        .air-travel-row {
-            margin-top: 10px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            border-top: 1px solid #222;
-            padding-top: 8px;
-        }
-
-        .air-travel-label {
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 10px;
-            cursor: pointer;
         }
 
         .player-info {
@@ -394,8 +387,65 @@
             padding: 15px;
             border-bottom: 1px solid var(--border);
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap; /* Added wrap for 4th item */
+            gap: 12px;
         }
+
+        /* --- TOGGLE SWITCH STYLES --- */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 10px;
+            color: var(--text-dim);
+            user-select: none;
+            width: 45%; /* Approximately 2 per row */
+        }
+
+            .toggle-container:hover {
+                color: #fff;
+            }
+
+        .toggle-input {
+            display: none; /* Hide default checkbox */
+        }
+
+        .toggle-slider {
+            width: 28px;
+            height: 16px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 99px;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+            .toggle-slider::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 10px;
+                height: 10px;
+                background: #666;
+                border-radius: 50%;
+                transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+            }
+
+        /* Checked State */
+        .toggle-input:checked + .toggle-slider {
+            background: rgba(255, 215, 0, 0.15); /* Accent fade */
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+        }
+
+            .toggle-input:checked + .toggle-slider::after {
+                transform: translateX(12px);
+                background: var(--accent);
+                box-shadow: 0 0 5px var(--accent);
+            }
 
         .partner-info {
             padding: 15px;
@@ -520,7 +570,7 @@
         <div class="header-bar">
             <div class="decorative-border"></div>
             <div class="title-section">
-                <a href="index.html" class="hub-btn">← HUB</a>
+                <a href="index.html" class="hub-btn">HUB</a>
                 <div style="text-align:center;">
                     <span class="main-title">Trading Post</span>
                     <span class="sub-title">COMMERCE_NETWORK_SYNC</span>
@@ -546,11 +596,6 @@
                             <input type="text" id="global-search" class="search-input" placeholder="Search item...">
                             <div id="clear-search" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; display: none; color: #666; font-size: 10px;">✕</div>
                         </div>
-                    </div>
-
-                    <div class="air-travel-row">
-                        <input type="checkbox" id="air-travel-check" onchange="handleAirShipAvailability()">
-                        <label for="air-travel-check" class="air-travel-label">ENABLE_AIR_TRAVEL</label>
                     </div>
                 </div>
 
@@ -612,22 +657,77 @@
 
             <div class="right-panel">
                 <div class="buff-row-side">
-                    <label class="buff-item"><input type="checkbox" id="gm-check"> Grandmaster</label>
-                    <label class="buff-item"><input type="checkbox" id="william-check"> William</label>
-                    <label class="buff-item"><input type="checkbox" id="alpaca-check"> Alpaca</label>
+                    <div class="section-header-label">ACTIVE BUFFS</div>
+                    <label class="toggle-container">
+                        <input type="checkbox" id="gm-check" class="toggle-input">
+                        <div class="toggle-slider"></div>
+                        <span>Grandmaster</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="william-check" class="toggle-input">
+                        <div class="toggle-slider"></div>
+                        <span>William</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="alpaca-check" class="toggle-input">
+                        <div class="toggle-slider"></div>
+                        <span>Alpaca</span>
+                    </label>
+                </div>
+
+                <!-- New Owned Transports Section -->
+                <div class="buff-row-side" style="padding-top: 10px;">
+                    <div class="section-header-label">OWNED TRANSPORTS</div>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="handcart-check" class="toggle-input transport-toggle" data-mount="Hand Cart">
+                        <div class="toggle-slider"></div>
+                        <span>Hand Cart</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="wagon-check" class="toggle-input transport-toggle" data-mount="Wagon">
+                        <div class="toggle-slider"></div>
+                        <span>Wagon</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="elephant-check" class="toggle-input transport-toggle" data-mount="Elephant">
+                        <div class="toggle-slider"></div>
+                        <span>Elephant</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="husky-check" class="toggle-input transport-toggle" data-mount="Husky">
+                        <div class="toggle-slider"></div>
+                        <span>Husky</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="camel-check" class="toggle-input transport-toggle" data-mount="Camel">
+                        <div class="toggle-slider"></div>
+                        <span>Camel</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="skiff-check" class="toggle-input transport-toggle" data-mount="Skiff">
+                        <div class="toggle-slider"></div>
+                        <span>Skiff</span>
+                    </label>
+
+                    <label class="toggle-container">
+                        <input type="checkbox" id="airship-check" class="toggle-input transport-toggle" data-mount="Air Ship">
+                        <div class="toggle-slider"></div>
+                        <span>Air Ship</span>
+                    </label>
                 </div>
 
                 <div class="partner-info">
-                    <div class="partner-name">Transport Unit</div>
+                    <div class="partner-name">Current Transport</div>
                     <select id="transport-dropdown" class="custom-dropdown">
-                        <option value="Back Pack">Back Pack</option>
-                        <option value="Hand Cart">Hand Cart</option>
-                        <option value="Wagon">Wagon</option>
-                        <option value="Elephant" selected>Elephant</option>
-                        <option value="Husky">Husky</option>
-                        <option value="Camel">Camel</option>
-                        <option value="Skiff">Skiff</option>
-                        <option value="Air Ship">Air Ship</option>
+                        <!-- Populated by JS based on ownership -->
                     </select>
                 </div>
 
@@ -708,9 +808,9 @@
                 ],
                 "Bangor": [
                     { name: "Bangor Coal", buy: 49, weight: 8, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Bangor_Coal_Icon.png" },
-                    { name: "Marble", buy: 309, weight: 20, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Marble_Icon.png" },
-                    { name: "Topaz", buy: 387, weight: 18, max: 12, limit: Infinity, img: "tradeposts/normal/bangor/Topaz_Icon.png" },
-                    { name: "Highlander Ore", buy: 814, weight: 25, max: 8, limit: Infinity, img: "tradeposts/normal/bangor/Highlander_Ore_Icon.png" },
+                    { name: "Marble", buy: 309, weight: 20, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Marble_icon.png" },
+                    { name: "Topaz", buy: 387, weight: 18, max: 12, limit: Infinity, img: "tradeposts/normal/bangor/Topaz_icon.png" },
+                    { name: "Highlander Ore", buy: 814, weight: 25, max: 8, limit: Infinity, img: "tradeposts/normal/bangor/Highlander_Ore_icon.png" },
                     { name: "Lead", buy: 802, weight: 18, max: 16, limit: Infinity, img: "tradeposts/normal/bangor/Lead_Icon.png" }
                 ],
                 "Emain Macha": [
@@ -721,60 +821,60 @@
                     { name: "Whole BBQ", buy: 630, weight: 14, max: 12, limit: Infinity, img: "tradeposts/normal/emain/Whole_BBQ_Bear_Icon.png" }
                 ],
                 "Taillteann": [
-                    { name: "Heat Crystal", buy: 11, weight: 2, max: 33, limit: Infinity, img: "tradeposts/normal/taillteann/Heat_Crystal_Icon.png" },
+                    { name: "Heat Crystal", buy: 11, weight: 2, max: 33, limit: Infinity, img: "tradeposts/normal/taillteann/Heat_Crystal_icon.png" },
                     { name: "Music Box Stone", buy: 38, weight: 3, max: 24, limit: Infinity, img: "tradeposts/normal/taillteann/Music_Box_Preservation_Stone_Icon.png" },
-                    { name: "Palala Crystal", buy: 131, weight: 6, max: 38, limit: Infinity, img: "tradeposts/normal/taillteann/Palala_Crystal_Icon.png" },
+                    { name: "Palala Crystal", buy: 131, weight: 6, max: 38, limit: Infinity, img: "tradeposts/normal/taillteann/Palala_Crystal_icon.png" },
                     { name: "Circle Barrier Spikes", buy: 127, weight: 3, max: 30, limit: Infinity, img: "tradeposts/normal/taillteann/Circle_Barrier_Spike_Crystal_Icon.png" },
-                    { name: "Alchemy Crystal", buy: 693, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/taillteann/Alchemy_Crystal_Icon.png" }
+                    { name: "Alchemy Crystal", buy: 693, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/taillteann/Alchemy_Crystal_icon.png" }
                 ],
                 "Tara": [
-                    { name: "Mini Dressing Table", buy: 203, weight: 15, max: 10, limit: Infinity, img: "tradeposts/normal/tara/Mini_Dressing_Table_Icon.png" },
-                    { name: "Tea Table", buy: 910, weight: 38, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Tea_Table_Icon.png" },
-                    { name: "Rocking Chair", buy: 900, weight: 25, max: 5, limit: Infinity, img: "tradeposts/normal/tara/Rocking_Chair_Icon.png" },
-                    { name: "Bunk Bed", buy: 3768, weight: 60, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Bunk_Bed_Icon.png" },
-                    { name: "Giant Wine Rack", buy: 8429, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/tara/Giant_Wine_Rack_Icon.png" }
+                    { name: "Mini Dressing Table", buy: 203, weight: 15, max: 10, limit: Infinity, img: "tradeposts/normal/tara/Mini_Dressing_Table_icon.png" },
+                    { name: "Tea Table", buy: 910, weight: 38, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Tea_Table_icon.png" },
+                    { name: "Rocking Chair", buy: 900, weight: 25, max: 5, limit: Infinity, img: "tradeposts/normal/tara/Rocking_Chair_icon.png" },
+                    { name: "Bunk Bed", buy: 3768, weight: 60, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Bunk_Bed_icon.png" },
+                    { name: "Giant Wine Rack", buy: 8429, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/tara/Giant_Wine_Rack_icon.png" }
                 ],
                 "Cobh": [
-                    { name: "Cobh Seaweed", buy: 12, weight: 2, max: 32, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Seaweed_Icon.png" },
-                    { name: "Cobh Oyster", buy: 47, weight: 3, max: 26, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Oyster_Icon.png" },
-                    { name: "Shark Fin", buy: 266, weight: 10, max: 25, limit: Infinity, img: "tradeposts/normal/cobh/Shark_Fin_Icon.png" },
+                    { name: "Cobh Seaweed", buy: 12, weight: 2, max: 32, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Seaweed_icon.png" },
+                    { name: "Cobh Oyster", buy: 47, weight: 3, max: 26, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Oyster_icon.png" },
+                    { name: "Shark Fin", buy: 266, weight: 10, max: 25, limit: Infinity, img: "tradeposts/normal/cobh/Shark_Fin_icon.png" },
                     { name: "Jellyfish", buy: 200, weight: 6, max: 30, limit: Infinity, img: "tradeposts/normal/cobh/Jelly_Fish_Icon.png" },
                     { name: "Neid Scale", buy: 187, weight: 2, max: 28, limit: Infinity, img: "tradeposts/normal/cobh/Neid_Scales_Icon.png" }
                 ],
                 "Belvast": [
-                    { name: "Iron Whip", buy: 117, weight: 8, max: 15, limit: Infinity, img: "tradeposts/normal/belvast/Iron_Whip_Icon.png" },
-                    { name: "Dark Sword", buy: 494, weight: 12, max: 10, limit: Infinity, img: "tradeposts/normal/belvast/Dark_Sword_Icon.png" },
-                    { name: "Safe", buy: 10051, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/belvast/Safe_Icon.png" },
+                    { name: "Iron Whip", buy: 117, weight: 8, max: 15, limit: Infinity, img: "tradeposts/normal/belvast/Iron_Whip_icon.png" },
+                    { name: "Dark Sword", buy: 494, weight: 12, max: 10, limit: Infinity, img: "tradeposts/normal/belvast/Dark_Sword_icon.png" },
+                    { name: "Safe", buy: 10051, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/belvast/Safe_icon.png" },
                     { name: "Skeleton Armour", buy: 16193, weight: 115, max: 1, limit: Infinity, img: "tradeposts/normal/belvast/Skeleton_Ogre_Armor_Icon.png" },
                     { name: "Fake Helmet", buy: 4736, weight: 30, max: 6, limit: Infinity, img: "tradeposts/normal/belvast/Fake_Morgant_Helmet_Icon.png" }
                 ],
                 "Qilla": [
-                    { name: "Mint Chocolate Powder", buy: 35, weight: 1, max: 60, limit: Infinity, img: "tradeposts/normal/qilla/Mint_Chocolate_Powder_Icon.png" },
+                    { name: "Mint Chocolate Powder", buy: 35, weight: 1, max: 60, limit: Infinity, img: "tradeposts/normal/qilla/Mint_Chocolate_Powder_icon.png" },
                     { name: "Pomegranate", buy: 58, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/qilla/Fresh_Pomegranate_Icon.png" },
-                    { name: "Mana Tunnel Figure", buy: 102, weight: 2, max: 65, limit: Infinity, img: "tradeposts/normal/qilla/Mana_Tunnel_Figure_Icon.png" },
-                    { name: "Exploration Rescue Kit", buy: 247, weight: 3, max: 38, limit: Infinity, img: "tradeposts/normal/qilla/Exploration_Rescue_Kit_Icon.png" },
-                    { name: "Kaypi Cactus Essence", buy: 566, weight: 2, max: 26, limit: Infinity, img: "tradeposts/normal/qilla/Kaypi_Cactus_Essence_Icon.png" }
+                    { name: "Mana Tunnel Figure", buy: 102, weight: 2, max: 65, limit: Infinity, img: "tradeposts/normal/qilla/Mana_Tunnel_Figure_icon.png" },
+                    { name: "Exploration Rescue Kit", buy: 247, weight: 3, max: 38, limit: Infinity, img: "tradeposts/normal/qilla/Exploration_Rescue_Kit_icon.png" },
+                    { name: "Kaypi Cactus Essence", buy: 566, weight: 2, max: 26, limit: Infinity, img: "tradeposts/normal/qilla/Kaypi_Cactus_Essence_icon.png" }
                 ],
                 "Filia": [
-                    { name: "Small Glass Chunk", buy: 72, weight: 10, max: 60, limit: Infinity, img: "tradeposts/normal/filia/Small_Glass_Chunk_Icon.png" },
-                    { name: "Cinnamon Perfume", buy: 564, weight: 22, max: 15, limit: Infinity, img: "tradeposts/normal/filia/Cinnamon_Perfume_Icon.png" },
-                    { name: "Dried Saffron", buy: 906, weight: 25, max: 10, limit: Infinity, img: "tradeposts/normal/filia/Dried_Saffron_Icon.png" },
+                    { name: "Small Glass Chunk", buy: 72, weight: 10, max: 60, limit: Infinity, img: "tradeposts/normal/filia/Small_Glass_Chunk_icon.png" },
+                    { name: "Cinnamon Perfume", buy: 564, weight: 22, max: 15, limit: Infinity, img: "tradeposts/normal/filia/Cinnamon_Perfume_icon.png" },
+                    { name: "Dried Saffron", buy: 906, weight: 25, max: 10, limit: Infinity, img: "tradeposts/normal/filia/Dried_Saffron_icon.png" },
                     { name: "Longa Rock Salt", buy: 2342, weight: 40, max: 5, limit: Infinity, img: "tradeposts/normal/filia/Longa_Natural_Rock_Salt_Icon.png" },
-                    { name: "Filia Jerky", buy: 1567, weight: 20, max: 12, limit: Infinity, img: "tradeposts/normal/filia/Filia_Jerky_Icon.png" }
+                    { name: "Filia Jerky", buy: 1567, weight: 20, max: 12, limit: Infinity, img: "tradeposts/normal/filia/Filia_Jerky_icon.png" }
                 ],
                 "Cor": [
-                    { name: "Courcle Ruins Souvenir", buy: 8, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Ruins_Souvenir_Icon.png" },
-                    { name: "Large Ritual Mask", buy: 61, weight: 3, max: 40, limit: Infinity, img: "tradeposts/normal/cor/Large_Ritual_Mask_Icon.png" },
-                    { name: "La Terra Raspberry", buy: 56, weight: 2, max: 60, limit: Infinity, img: "tradeposts/normal/cor/La_Terra_Raspberry_Icon.png" },
+                    { name: "Courcle Ruins Souvenir", buy: 8, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Ruins_Souvenir_icon.png" },
+                    { name: "Large Ritual Mask", buy: 61, weight: 3, max: 40, limit: Infinity, img: "tradeposts/normal/cor/Large_Ritual_Mask_icon.png" },
+                    { name: "La Terra Raspberry", buy: 56, weight: 2, max: 60, limit: Infinity, img: "tradeposts/normal/cor/La_Terra_Raspberry_icon.png" },
                     { name: "Artifact Rest. Tool", buy: 81, weight: 2, max: 70, limit: Infinity, img: "tradeposts/normal/cor/Artifact_Restoration_Tool_Set_Icon.png" },
-                    { name: "Courcle Natural Rubber", buy: 935, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Natural_Rubber_Icon.png" }
+                    { name: "Courcle Natural Rubber", buy: 935, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Natural_Rubber_icon.png" }
                 ],
                 "Vales": [
                     { name: "Vales Coat", buy: 30, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Vales_Padded_Coat_Icon.png" },
                     { name: "Glacial Water", buy: 118, weight: 2, max: 35, limit: Infinity, img: "tradeposts/normal/vales/Natural_Glacial_Water_Icon.png" },
-                    { name: "Ice Skates", buy: 216, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Ice_Skates_Icon.png" },
-                    { name: "Snowboard", buy: 1079, weight: 3, max: 20, limit: Infinity, img: "tradeposts/normal/vales/Snowboard_Icon.png" },
-                    { name: "Vales Vodka", buy: 1204, weight: 2, max: 16, limit: Infinity, img: "tradeposts/normal/vales/Vales_Vodka_Icon.png" }
+                    { name: "Ice Skates", buy: 216, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Ice_Skates_icon.png" },
+                    { name: "Snowboard", buy: 1079, weight: 3, max: 20, limit: Infinity, img: "tradeposts/normal/vales/Snowboard_icon.png" },
+                    { name: "Vales Vodka", buy: 1204, weight: 2, max: 16, limit: Infinity, img: "tradeposts/normal/vales/Vales_Vodka_icon.png" }
                 ]
             },
             "Barter": {
@@ -853,6 +953,16 @@
         let currentItem = null;
         let publicPrices = {};
         let publicStocks = {};
+        let townRanks = {}; // New state for holding ranks per town
+        let transportOwnership = {
+            "Hand Cart": false,
+            "Wagon": false,
+            "Elephant": false,
+            "Husky": false,
+            "Camel": false,
+            "Skiff": false,
+            "Air Ship": false
+        };
 
         // --- 3. FIREBASE SYNC & STORAGE ---
         function startGlobalSync() {
@@ -882,6 +992,13 @@
                 trader: document.getElementById('trader-qty').value,
                 trust: document.getElementById('trustworthy-qty').value
             }));
+
+            // Save Transport Ownership
+            localStorage.setItem('mabi_transports', JSON.stringify(transportOwnership));
+        }
+
+        function saveTownRanks() {
+            localStorage.setItem('mabi_ranks', JSON.stringify(townRanks));
         }
 
         // --- 4. DATA UPDATE LOGIC ---
@@ -938,8 +1055,14 @@
 
         function getDiscountedBuyPrice(base) {
             const r = parseInt(document.getElementById('merchant-rating-select').value, 10) || 1;
+            // Rank 1-4: 0%, 5-6: 1%, 7-8: 2%, 9: 3%
             const mD = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 1, 6: 1, 7: 2, 8: 2, 9: 3 }[r] || 0;
-            const gear = (parseInt(document.getElementById('trader-qty').value, 10) || 0) * 3 + (parseInt(document.getElementById('trustworthy-qty').value, 10) || 0);
+
+            // Trader * 3 + Trust * 1
+            const traderVal = parseInt(document.getElementById('trader-qty').value, 10) || 0;
+            const trustVal = parseInt(document.getElementById('trustworthy-qty').value, 10) || 0;
+            const gear = (traderVal * 3) + trustVal;
+
             return Math.floor(base * (1 - ((mD + gear) / 100)));
         }
 
@@ -954,20 +1077,32 @@
         }
 
         // --- 6. MANIFEST LOGIC (CONSOLIDATED) ---
+        function getAvailableMounts() {
+            // Backpack always available
+            const mounts = ['Back Pack'];
+            const type = document.getElementById('commerce-type-select').value;
+
+            // Add owned transports
+            Object.keys(transportOwnership).forEach(key => {
+                if (transportOwnership[key]) {
+                    // Special logic for Air Ship: Only in Group Commerce
+                    if (key === 'Air Ship' && type !== 'Group') return;
+                    mounts.push(key);
+                }
+            });
+            return mounts;
+        }
+
         function calculateBestRouteForVector(originCity, targetCities, originItems, forcedMount = null) {
             let best = null;
             let maxP = -1;
 
             // Loop through all target cities
             targetCities.forEach(targetCity => {
-                // Loop through all mounts (or just the forced one)
-                const mountsToCheck = forcedMount ? [forcedMount] : Object.keys(transportData);
+                // Determine which mounts to check: Forced, or All Available
+                const mountsToCheck = forcedMount ? [forcedMount] : getAvailableMounts();
 
                 mountsToCheck.forEach(mKey => {
-                    // Check logic for Air Ship restrictions
-                    const type = document.getElementById('commerce-type-select').value;
-                    if (mKey === "Air Ship" && type !== "Group") return;
-
                     const stats = getModifiedStats(mKey);
                     let remWeight = stats.weight, remSlots = stats.slots, totalP = 0, itemsToBuy = [];
 
@@ -1007,9 +1142,9 @@
 
             // 1. Local Manifest (Current Origin -> Best Target)
             const originItems = (marketData[type] && marketData[type][origin]) || [];
-            // Note: We deliberately don't pass a mount to let it find the best mount, OR we can pass currently selected.
-            // The original code scanned ALL mounts for best profit.
-            const localResult = calculateBestRouteForVector(origin, targets, originItems);
+
+            // Pass NULL to let it pick from ANY AVAILABLE mount
+            const localResult = calculateBestRouteForVector(origin, targets, originItems, null);
             renderManifest(localResult.best, 'manifest-box', 'manifest-list', 'manifest-total');
 
             // 2. Global Manifest (All Origins -> All Targets)
@@ -1020,7 +1155,7 @@
             allOrigins.forEach(org => {
                 const orgItems = (marketData[type] && marketData[type][org]) || [];
                 const orgTargets = targetPool.filter(c => c !== org);
-                const res = calculateBestRouteForVector(org, orgTargets, orgItems);
+                const res = calculateBestRouteForVector(org, orgTargets, orgItems, null);
                 if (res.maxP > globalMax) {
                     globalMax = res.maxP;
                     globalBest = res.best;
@@ -1111,7 +1246,7 @@
 
             if (iconDiv) iconDiv.style.backgroundImage = `url('${getImagePath(currentItem.img)}')`;
             if (titleDiv) titleDiv.textContent = currentItem.name;
-            if (statsDiv) statsDiv.textContent = `W: ${currentItem.weight} • Slots: ${currentItem.max} • Base: ${currentItem.buy} Ducats`;
+            if (statsDiv) statsDiv.textContent = ` ${currentItem.weight} Weight • ${currentItem.max} Per Slot • Original Price: ${currentItem.buy} Ducats`;
         }
 
         function updateRecommendationAndStats() {
@@ -1241,14 +1376,26 @@
             });
         }
 
-        function handleAirShipAvailability() {
-            const airShipCheck = document.getElementById('air-travel-check');
+        function updateTransportDropdown() {
             const dropdown = document.getElementById('transport-dropdown');
-            const option = dropdown.querySelector('option[value="Air Ship"]');
-            if (airShipCheck.checked) option.disabled = false;
-            else {
-                option.disabled = true;
-                if (dropdown.value === "Air Ship") dropdown.value = "Elephant";
+            const currentSelection = dropdown.value || "Back Pack"; // Remember selection if possible
+            const available = getAvailableMounts();
+
+            dropdown.innerHTML = ''; // Clear existing
+
+            available.forEach(mount => {
+                const opt = document.createElement('option');
+                opt.value = mount;
+                opt.textContent = mount;
+                dropdown.appendChild(opt);
+            });
+
+            // Try to restore previous selection, or default to Back Pack
+            if (available.includes(currentSelection)) {
+                dropdown.value = currentSelection;
+            } else {
+                dropdown.value = "Back Pack";
+                savePrefs(); // Update saved pref if forced to change
             }
         }
 
@@ -1295,16 +1442,80 @@
         // --- 9. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             const saved = JSON.parse(localStorage.getItem('mabi_prefs')) || {};
+            const savedTransports = JSON.parse(localStorage.getItem('mabi_transports')) || {};
+            townRanks = JSON.parse(localStorage.getItem('mabi_ranks')) || {}; // Load ranks
+
+            // Load ownership state
+            if (savedTransports) {
+                Object.keys(savedTransports).forEach(k => {
+                    if (transportOwnership.hasOwnProperty(k)) {
+                        transportOwnership[k] = savedTransports[k];
+                    }
+                });
+            }
+
             const typeSelect = document.getElementById('commerce-type-select');
             const citySelect = document.getElementById('city-select');
+            const rankSelect = document.getElementById('merchant-rating-select');
             const searchInput = document.getElementById('global-search');
             const clearSearch = document.getElementById('clear-search');
 
+            // Initialize Transport Toggles in DOM
+            document.querySelectorAll('.transport-toggle').forEach(toggle => {
+                const mountName = toggle.dataset.mount;
+                toggle.checked = transportOwnership[mountName];
+
+                toggle.onchange = (e) => {
+                    transportOwnership[mountName] = e.target.checked;
+                    savePrefs();
+                    updateTransportDropdown();
+                    refreshUI();
+                };
+            });
+
+            // --- LISTENERS ---
+
             typeSelect.onchange = (e) => {
-                citySelect.innerHTML = citiesByType[e.target.value].map(c => `<option value="${c}">${c}</option>`).join('');
-                if (saved.city && citiesByType[e.target.value].includes(saved.city)) citySelect.value = saved.city;
+                const currentCity = citySelect.value; // Try to keep city if valid
+                const validCities = citiesByType[e.target.value];
+                citySelect.innerHTML = validCities.map(c => `<option value="${c}">${c}</option>`).join('');
+
+                // If previous city is valid in new mode, keep it. Else default to first.
+                if (validCities.includes(currentCity)) {
+                    citySelect.value = currentCity;
+                } else {
+                    citySelect.value = validCities[0];
+                }
+
+                // Trigger city update logic manually to load rank
+                updateCityContext();
+                updateTransportDropdown(); // Re-check Air Ship availability
+            };
+
+            citySelect.onchange = () => {
+                updateCityContext();
+                savePrefs();
+            };
+
+            // Rank Change: Save to dictionary
+            rankSelect.onchange = () => {
+                const city = citySelect.value;
+                townRanks[city] = rankSelect.value;
+                saveTownRanks();
                 refreshUI();
             };
+
+            // Helper to handle City Switches (Load Rank + Refresh)
+            function updateCityContext() {
+                const city = citySelect.value;
+                // Load rank for this city, default to 1 if not set
+                if (townRanks[city]) {
+                    rankSelect.value = townRanks[city];
+                } else {
+                    rankSelect.value = "1";
+                }
+                refreshUI();
+            }
 
             // Search Listeners
             searchInput.oninput = refreshUI;
@@ -1315,8 +1526,13 @@
 
             // Restore Prefs
             if (saved.type) typeSelect.value = saved.type;
-            typeSelect.dispatchEvent(new Event('change')); // Trigger populate
-            if (saved.city) citySelect.value = saved.city;
+            // Populate cities first based on saved type
+            citySelect.innerHTML = citiesByType[typeSelect.value].map(c => `<option value="${c}">${c}</option>`).join('');
+
+            if (saved.city && citiesByType[typeSelect.value].includes(saved.city)) {
+                citySelect.value = saved.city;
+            }
+
             if (saved.mount) document.getElementById('transport-dropdown').value = saved.mount;
             if (saved.trader) document.getElementById('trader-qty').value = saved.trader;
             if (saved.trust) document.getElementById('trustworthy-qty').value = saved.trust;
@@ -1324,12 +1540,16 @@
             document.getElementById('william-check').checked = !!saved.william;
             document.getElementById('alpaca-check').checked = !!saved.alpaca;
 
-            // Listeners
-            citySelect.onchange = () => { refreshUI(); savePrefs(); };
+            // Trigger initial rank load & Transport Check
+            updateCityContext();
+            updateTransportDropdown();
+
+            // Other Listeners
             document.getElementById('transport-dropdown').onchange = () => { refreshUI(); savePrefs(); };
-            document.getElementById('merchant-rating-select').onchange = refreshUI;
-            document.getElementById('trader-qty').onchange = () => { refreshUI(); savePrefs(); };
-            document.getElementById('trustworthy-qty').onchange = () => { refreshUI(); savePrefs(); };
+
+            // Changed from onchange to oninput for better responsiveness
+            document.getElementById('trader-qty').oninput = () => { refreshUI(); savePrefs(); };
+            document.getElementById('trustworthy-qty').oninput = () => { refreshUI(); savePrefs(); };
 
             document.getElementById('gm-check').onchange = () => { refreshUI(); savePrefs(); };
             document.getElementById('william-check').onchange = function () {
