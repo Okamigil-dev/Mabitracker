@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mabi Hub - Central Index</title>
+    <title>Mabi-Apps Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -35,13 +35,13 @@
         }
 
         .hub-header {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 900;
             letter-spacing: 4px;
             color: var(--accent);
             text-transform: uppercase;
             margin-bottom: 40px;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         .grid {
@@ -53,7 +53,9 @@
         .hub-link {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            padding: 20px;
+            /* Reset default left border so it can animate */
+            border-left: 1px solid var(--border); 
+            padding: 25px;
             border-radius: 8px;
             text-decoration: none;
             color: var(--text-main);
@@ -65,82 +67,113 @@
             overflow: hidden;
         }
 
+        /* Hover effect base */
         .hub-link:hover {
-            border-color: var(--accent);
             background: #161616;
             transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            /* Increase border width on hover for effect */
+            border-left-width: 3px; 
         }
 
+        /* Specific Hover Colors */
+        .hub-link.tracker:hover {
+            border-left-color: #00ff88; /* Neon Green */
+            border-color: #00ff88;      /* Optional: full border glow */
+        }
+
+        .hub-link.commerce:hover {
+            border-left-color: #ffd700; /* Neon Yellow */
+            border-color: #ffd700;      /* Optional: full border glow */
+        }
+
+        /* Arrow animation */
         .hub-link::after {
-            content: 'GO →';
+            content: 'ACCESS →';
             font-family: 'JetBrains Mono';
             font-size: 10px;
-            color: var(--accent);
+            color: var(--text-dim);
             font-weight: bold;
             opacity: 0;
-            transition: 0.2s;
+            transform: translateX(-10px);
+            transition: 0.3s;
         }
 
         .hub-link:hover::after {
             opacity: 1;
+            transform: translateX(0);
         }
+        
+        /* Change arrow color on hover specific to type */
+        .hub-link.tracker:hover::after { color: #00ff88; }
+        .hub-link.commerce:hover::after { color: #ffd700; }
 
         .link-info {
             text-align: left;
         }
 
         .link-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
             display: block;
             margin-bottom: 4px;
+            color: #fff;
+            transition: color 0.2s;
         }
+        
+        /* Light up text on hover */
+        .hub-link.tracker:hover .link-title { color: #00ff88; }
+        .hub-link.commerce:hover .link-title { color: #ffd700; }
 
         .link-desc {
             font-size: 11px;
             color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .footer {
             margin-top: 50px;
             font-family: 'JetBrains Mono';
             font-size: 10px;
-            color: #222;
+            color: #333;
         }
     </style>
 </head>
 <body>
 
     <div class="hub-container">
-        <div class="hub-header">System_Central_Index</div>
+        <div class="hub-header">Mabinogi_Apps_Portal</div>
         
         <div class="grid">
-            <a href="tracker.html" class="hub-link">
+            <!-- Link 1: The Tracker (Green Hover) -->
+            <a href="tracker.html" class="hub-link tracker">
                 <div class="link-info">
-                    <span class="link-title">MABI TRACKER</span>
-                    <span class="link-desc">Daily & Weekly Task Management</span>
+                    <span class="link-title">TASK TRACKER</span>
+                    <span class="link-desc">Daily & Weekly Reset Management</span>
                 </div>
             </a>
 
-            <a href="#" class="hub-link" style="opacity: 0.5; cursor: default;">
+            <!-- Link 2: The Commerce Tool (Yellow Hover) -->
+            <a href="commerce.html" class="hub-link commerce">
                 <div class="link-info">
-                    <span class="link-title">DATABASE</span>
-                    <span class="link-desc">System Offline</span>
+                    <span class="link-title">TRADING POST</span>
+                    <span class="link-desc">Commerce Routes & Profit Sync</span>
                 </div>
             </a>
 
-            <a href="#" class="hub-link" style="opacity: 0.5; cursor: default;">
+            <!-- Placeholder -->
+            <a href="#" class="hub-link" style="opacity: 0.3; cursor: default; border-color: #222;">
                 <div class="link-info">
-                    <span class="link-title">GUIDES</span>
+                    <span class="link-title" style="color:#555;">DATABASE</span>
                     <span class="link-desc">System Offline</span>
                 </div>
             </a>
         </div>
 
         <div class="footer">
-            V_HUB.01 // SESSION_ACTIVE
+            V_SYSTEM.2.4 // SESSION_ACTIVE
         </div>
     </div>
 
