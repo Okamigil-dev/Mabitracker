@@ -59,6 +59,7 @@
             width: 220px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
             display: flex; flex-direction: column; padding: 12px; gap: 12px; flex-shrink: 0; height: 100%;
         }
+        #sidebar-list { overflow-y: auto; flex-grow: 1; padding-right: 4px; }
         .sidebar-header { font-size: 9px; font-weight: 900; letter-spacing: 1px; color: #333; text-transform: uppercase; }
         .timer-card { background: rgba(255,255,255,0.02); padding: 6px; border-radius: 4px; border-left: 2px solid var(--accent); margin-bottom: 4px; text-align: left; opacity: 0.3; }
         .timer-card.active { opacity: 1; }
@@ -66,6 +67,10 @@
         .timer-card.sat { border-left-color: var(--sat); }
         .t-label { font-size: 8px; color: var(--text-dim); text-transform: uppercase; }
         .t-val { font-family: 'JetBrains Mono'; font-size: 12px; color: #eee; }
+
+        .side-cat { margin-top: 10px; margin-bottom: 4px; color: var(--accent); font-size: 8px; font-weight: 900; text-transform: uppercase; opacity: 0.5; }
+        .side-task { font-size: 10px; color: #777; padding: 4px 6px; border-left: 1px solid #222; margin-bottom: 2px; cursor: default; transition: 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .side-task:hover { color: #fff; border-left-color: var(--accent); background: rgba(255,255,255,0.03); }
 
         /* --- HUB CONTENT --- */
         .hub-container {
@@ -131,6 +136,15 @@
         <div class="timer-card" id="card-daily"><div class="t-label">Daily</div><div id="timer-daily" class="t-val">00:00:00</div></div>
         <div class="timer-card thu" id="card-thu"><div class="t-label">Thu</div><div id="timer-thu" class="t-val">00:00:00</div></div>
         <div class="timer-card sat" id="card-sat"><div class="t-label">Sat</div><div id="timer-sat" class="t-val">00:00:00</div></div>
+
+        <div id="pending-module" style="display:none; flex-direction:column; flex-grow:1; min-height:0;">
+            <div class="sidebar-header" style="margin-top:10px;">PENDING_TASKS</div>
+            <div style="display:flex; gap:5px; margin-top:5px; margin-bottom:5px;">
+                <button id="side-nav-daily" class="tab-btn active" onclick="setSideView('daily')" style="font-size:8px; padding:2px 6px;">DAILY</button>
+                <button id="side-nav-weekly" class="tab-btn" onclick="setSideView('weekly')" style="font-size:8px; padding:2px 6px;">WEEKLY</button>
+            </div>
+            <div id="sidebar-list"></div>
+        </div>
     </div>
 
     <div class="hub-container">
@@ -168,6 +182,9 @@
         const firebaseConfig = { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.database();
+
+        let tasks = [], catOrder = [], currentSideView = 'daily', currentUser = null;
 
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
@@ -176,23 +193,81 @@
             const loginBtn = document.getElementById('login-btn');
             const logoutBtn = document.getElementById('logout-btn');
             const cards = document.querySelectorAll('.timer-card');
+            const pendingMod = document.getElementById('pending-module');
 
             if (user) {
+                currentUser = user;
                 uInfo.innerText = user.email;
                 uInfo.style.color = "var(--accent)";
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
+                pendingMod.style.display = 'flex';
                 cards.forEach(c => c.classList.add('active'));
                 toggleAuthModal(false);
+                startSync();
             } else {
+                currentUser = null;
                 uInfo.innerText = "GUEST_MODE";
                 uInfo.style.color = "#444";
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
+                pendingMod.style.display = 'none';
                 cards.forEach(c => c.classList.remove('active'));
+                tasks = [];
+                renderSidebar();
             }
             document.body.classList.add('ready');
         });
+
+        function startSync() {
+            if (!currentUser) return;
+            db.ref(`users/${currentUser.uid}`).on('value', (snap) => {
+                const data = snap.val() || {};
+                tasks = data.tasks || [];
+                catOrder = data.catOrder || [];
+                renderSidebar();
+            });
+        }
+
+        function renderSidebar() {
+            const list = document.getElementById('sidebar-list');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            if (!currentUser || tasks.length === 0) return;
+
+            const visible = tasks.filter(t => 
+                (t.done < t.max) && 
+                (currentSideView === 'daily' ? t.type === 'daily' : t.type !== 'daily')
+            );
+
+            let catsInSidebar = [...new Set(visible.map(t => t.cat))].sort((a,b) => catOrder.indexOf(a) - catOrder.indexOf(b));
+            
+            catsInSidebar.forEach(cat => {
+                const divCat = document.createElement('div');
+                divCat.className = 'side-cat';
+                divCat.innerText = cat;
+                list.appendChild(divCat);
+                
+                visible.filter(t => t.cat === cat).forEach(t => {
+                    const divT = document.createElement('div');
+                    divT.className = 'side-task';
+                    divT.innerText = t.name;
+                    list.appendChild(divT);
+                });
+            });
+            
+            if (visible.length === 0) {
+                list.innerHTML = '<div style="font-size:10px; color:#222; padding:10px; text-align:center;">ALL_TASKS_COMPLETE</div>';
+            }
+        }
+
+        function setSideView(v) {
+            currentSideView = v;
+            document.getElementById('side-nav-daily').classList.toggle('active', v === 'daily');
+            document.getElementById('side-nav-weekly').classList.toggle('active', v === 'weekly');
+            renderSidebar();
+        }
 
         function toggleAuthModal(show) {
             document.getElementById('auth-overlay').style.display = show ? 'flex' : 'none';
