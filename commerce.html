@@ -1246,7 +1246,7 @@
 
             if (iconDiv) iconDiv.style.backgroundImage = `url('${getImagePath(currentItem.img)}')`;
             if (titleDiv) titleDiv.textContent = currentItem.name;
-            if (statsDiv) statsDiv.textContent = ` ${currentItem.weight} Weight • ${currentItem.max} Per Slot • Original Price: ${currentItem.buy} Ducats`;
+            if (statsDiv) statsDiv.textContent = ` Weight: ${currentItem.weight} • Stack Size: ${currentItem.max} • Original Price: ${currentItem.buy} Ducats`;
         }
 
         function updateRecommendationAndStats() {
