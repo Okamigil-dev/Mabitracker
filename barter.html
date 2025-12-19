@@ -6,13 +6,14 @@
     <title>Barter Material Sync</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase Modular SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        window.firebase = { initializeApp, getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot };
+        // Share modules with the main script
+        window.mabiFirebase = { initializeApp, getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot };
     </script>
 
     <style>
@@ -109,7 +110,7 @@
         .item-name { font-weight: 700; color: #eee; font-size: 11px; }
         .item-limit-tag { font-size: 8px; color: var(--text-dim); }
 
-        /* --- Inventory --- */
+        /* --- Inventory Grid (Right) --- */
         .inventory-window { 
             background: #000; border: 1px solid var(--border); 
             padding: 15px; position: relative; flex-grow: 1; 
@@ -138,7 +139,7 @@
             padding: 10px; font-family: 'JetBrains Mono'; font-size: 10px; color: var(--accent); line-height: 1.6;
         }
 
-        /* --- Materials --- */
+        /* --- Materials (Center) --- */
         .materials-dual-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; overflow: hidden; }
         .table-container { display: flex; flex-direction: column; overflow: hidden; }
         .data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono'; font-size: 11px; margin-bottom: 20px;}
@@ -201,9 +202,8 @@
     </div>
 
     <div class="interface-grid">
-        <!-- LEFT: CATALOG -->
         <div class="panel">
-            <div class="panel-header">Location Filter</div>
+            <div class="panel-header">NPC Location</div>
             <div class="town-header-container">
                 <div class="town-visual-box" id="town-icon-box"></div>
                 <select id="town-select" class="search-input" style="margin:0">
@@ -213,16 +213,14 @@
                     <option value="Pera Volcano">Pera Volcano</option>
                 </select>
             </div>
-            
-            <div class="panel-header">Barter Catalog</div>
+            <div class="panel-header">Catalog</div>
             <div class="scroll-area">
                 <div id="catalog-container" class="item-list"></div>
             </div>
         </div>
 
-        <!-- CENTER: MATERIALS -->
         <div class="panel" style="background: #080808;">
-            <div class="panel-header">Logistics Config</div>
+            <div class="panel-header">Context Settings</div>
             <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-shrink: 0;">
                 <div style="flex: 1;">
                     <label style="font-size: 8px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px;">PREP_DURATION (WEEKS)</label>
@@ -280,9 +278,8 @@
             </div>
         </div>
 
-        <!-- RIGHT: LOGISTICS -->
         <div class="panel">
-            <div class="panel-header">Transport Selection</div>
+            <div class="panel-header">Transport selection</div>
             <select id="transport-select" class="search-input">
                 <option value="Back Pack" data-slots="4" data-weight="400">Back Pack</option>
                 <option value="Hand Cart" data-slots="6" data-weight="800">Hand Cart</option>
@@ -293,36 +290,24 @@
                 <option value="Skiff" data-slots="8" data-weight="1200">Skiff</option>
             </select>
 
-            <div class="panel-header" style="margin-top: 20px;">Unit Buffs</div>
+            <div class="panel-header" style="margin-top: 20px;">Active Buffs</div>
             <div class="buff-container">
-                <div class="buff-toggle" id="buff-gm">GM</div>
-                <div class="buff-toggle" id="buff-william">William</div>
-                <div class="buff-toggle" id="buff-alpaca">Alpaca</div>
+                <div class="buff-toggle" id="buff-gm" onclick="toggleBuff('gm')">GM</div>
+                <div class="buff-toggle" id="buff-william" onclick="toggleBuff('william')">William</div>
+                <div class="buff-toggle" id="buff-alpaca" onclick="toggleBuff('alpaca')">Alpaca</div>
             </div>
 
             <div class="panel-header">Optimized Loadout (Trip 1)</div>
             <div class="inventory-window">
                 <div id="grid" class="grid-container"></div>
-                
                 <div class="load-stats-embedded">
-                    <div class="stat-row">
-                        <span>LOAD_WEIGHT</span>
-                        <span id="weight-label">0 / 0 kg</span>
-                    </div>
+                    <div class="stat-row"><span>LOAD_WEIGHT</span><span id="weight-label">0 / 0 kg</span></div>
                     <div class="progress-bar"><div id="weight-fill" class="progress-fill"></div></div>
-                    
-                    <div class="stat-row" style="margin-top: 12px;">
-                        <span>SLOT_USAGE</span>
-                        <span id="slot-label">0 / 0 Slots</span>
-                    </div>
+                    <div class="stat-row" style="margin-top: 12px;"><span>SLOT_USAGE</span><span id="slot-label">0 / 0 Slots</span></div>
                     <div class="progress-bar"><div id="slot-fill" class="progress-fill"></div></div>
                 </div>
-
-                <div id="trip-calculator" class="trip-planning">
-                    PLANNING_IDLE...
-                </div>
+                <div id="trip-calculator" class="trip-planning">PLANNING_IDLE...</div>
             </div>
-
             <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; opacity: 0.2;">
                 <div id="user-display" style="font-family: 'JetBrains Mono'; font-size: 8px;">USER_NOT_AUTH</div>
             </div>
@@ -336,19 +321,16 @@
             { town: "Pera Volcano", item: "Ixion Horn", weight: 20, stack: 7, limit: 10, mats: { "Marionette 500 Potion": 3, "Gold Plate": 5 }, img: "images/tradeposts/barter/pera/Ixion_Horn_Icon.png" },
             { town: "Pera Volcano", item: "Volcano Lizard Egg", weight: 25, stack: 7, limit: 8, mats: { "Glittering Paper": 5, "Finest Fabric": 5, "HP 500 Potion": 2 }, img: "images/tradeposts/barter/pera/Volcano_Lizard_Egg_Icon.png" },
             { town: "Pera Volcano", item: "Raspa Black Leopard Leather", weight: 30, stack: 5, limit: 3, mats: { "Mutant": 1, "Harmonious Cosmos Perfume": 2, "Special Firewood": 3 }, img: "images/tradeposts/barter/pera/Raspa_Black_Leopard_Leather_Icon.png" },
-            
             { town: "Oasis", item: "Fine Sand", weight: 15, stack: 10, limit: 25, mats: { "Stamina 500 Potion": 3, "Braid": 2 }, img: "images/tradeposts/barter/oasis/Fine_Sand_Icon.png" },
             { town: "Oasis", item: "Prison Ghost Wings", weight: 15, stack: 7, limit: 15, mats: { "Cotton Cushion Stuffing": 1, "Finest Silk": 2 }, img: "images/tradeposts/barter/oasis/Prison_Ghost_Wings_Icon.png" },
             { town: "Oasis", item: "Oasis Painting", weight: 20, stack: 7, limit: 10, mats: { "Finest Leather Strap": 1, "Tough Thread": 3 }, img: "images/tradeposts/barter/oasis/Oasis_Painting_Icon.png" },
             { town: "Oasis", item: "Cactus Flower", weight: 25, stack: 7, limit: 8, mats: { "Spirit Liqueur": 1, "Silver Plate": 2, "Fine Fabric": 4 }, img: "images/tradeposts/barter/oasis/Cactus_Flower_Icon.png" },
             { town: "Oasis", item: "Giant Canine Fossil", weight: 30, stack: 5, limit: 3, mats: { "Pet Playset": 1, "Hay Bale": 3, "Enchanted Firewood": 5 }, img: "images/tradeposts/barter/oasis/Giant_Canine_Fossil_Icon.png" },
-            
             { town: "Calida", item: "Elvan Egg", weight: 15, stack: 10, limit: 25, mats: { "MP 500 Potion": 1, "Fine Firewood": 2 }, img: "images/tradeposts/barter/calida/Elvan_Egg_Icon.png" },
             { town: "Calida", item: "Calida Salmon", weight: 15, stack: 7, limit: 15, mats: { "Energy Converter": 1, "Purified Rabbit Foot": 1 }, img: "images/tradeposts/barter/calida/Calida_Salmon_Icon.png" },
             { town: "Calida", item: "Hot Spring Bath Bomb", weight: 20, stack: 7, limit: 10, mats: { "Sundew": 3, "Finest Vanilla Scented Candle": 2 }, img: "images/tradeposts/barter/calida/Hot_Spring_Bath_Bomb_Icon.png" },
             { town: "Calida", item: "Large Camping Tent", weight: 25, stack: 7, limit: 8, mats: { "Artificial Turf": 1, "Emerald Fuse": 1, "Fine Leather Strap": 5 }, img: "images/tradeposts/barter/calida/Large_Camping_Tent_Icon.png" },
             { town: "Calida", item: "Pink Salt", weight: 30, stack: 5, limit: 3, mats: { "Large Mythril Nail": 3, "Poison Tip Wyvern Ballista Bolt": 3, "Finest Firewood": 3 }, img: "images/tradeposts/barter/calida/Pink_Salt_Icon.png" },
-            
             { town: "Karu Forest", item: "Wooden Table", weight: 15, stack: 10, limit: 25, mats: { "Shrimp Taming Bait": 4, "Shyllien": 2 }, img: "images/tradeposts/barter/karu/Wooden_Table_Icon.png" },
             { town: "Karu Forest", item: "Wooden Craft", weight: 15, stack: 7, limit: 15, mats: { "Magic Parchment": 1, "Tough String": 2 }, img: "images/tradeposts/barter/karu/Wooden_Craft_Icon.png" },
             { town: "Karu Forest", item: "Stone Horse Statue", weight: 20, stack: 7, limit: 10, mats: { "Hillwen Alloy": 2, "Wheat Flour": 5 }, img: "images/tradeposts/barter/karu/Stone_Horse_Statue_Icon.png" },
@@ -414,7 +396,16 @@
             "Karu Forest": "images/tradeposts/Commerce_Karu_Forest_Icon.png"
         };
 
-        // --- STATE & SYNC ---
+        // --- AUTH & CONFIG ---
+        const { initializeApp, getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.mabiFirebase;
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mabinogi-tracker';
+
+        let user = null;
+        let isSaving = false;
         let currentCargo = [];
         let ownedInventory = {};
         let activeBuffs = { gm: false, william: false, alpaca: false };
@@ -426,29 +417,18 @@
         let debounceTimer = null;
         const DEBOUNCE_DELAY = 1500;
 
-        const { initializeApp, getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.firebase;
-        
-        // Fallback for hardcoded config to ensure it works outside the preview environment
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : { 
-                apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", 
-                databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com" 
-            };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mabinogi-tracker';
-
-        let user = null;
-        let isSaving = false;
-
+        // --- AUTH FIRST RULE ---
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
-            } else { await signInAnonymously(auth); }
+            } else {
+                // Wait for existing session check from Hub
+                setTimeout(() => {
+                    if (!auth.currentUser) signInAnonymously(auth);
+                }, 1000);
+            }
         };
+
         initAuth();
 
         onAuthStateChanged(auth, (u) => {
@@ -458,34 +438,35 @@
                 document.getElementById('sync-status').textContent = 'CONNECTED';
                 document.getElementById('sync-status').classList.add('active');
                 
-                const stateRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'barterState');
+                const stateRef = doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'barterState');
                 onSnapshot(stateRef, (snapshot) => {
                     if (snapshot.exists() && !isSaving && !debounceTimer) {
                         loadFromCloud(snapshot.data());
                     }
                 }, (error) => console.error(error));
 
-                // Path corrected to match user structure
+                // Global Price listener
                 const priceRef = doc(db, 'public_commerce', 'prices');
                 onSnapshot(priceRef, (snapshot) => {
                     if (snapshot.exists()) {
                         publicPrices = snapshot.data();
                         calculateLoadout();
                     }
-                }, (error) => console.error(error));
+                });
             }
         });
 
+        // --- SYNC ---
         const saveToCloudDebounced = () => {
             if (!user) return;
-            document.getElementById('sync-status').textContent = 'CHANGES_PENDING';
+            document.getElementById('sync-status').textContent = 'PENDING';
             document.getElementById('sync-status').className = 'sync-indicator saving';
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
                 isSaving = true;
                 debounceTimer = null;
                 try {
-                    const stateRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'barterState');
+                    const stateRef = doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'barterState');
                     await setDoc(stateRef, {
                         cargo: JSON.stringify(currentCargo),
                         inventory: ownedInventory,
@@ -497,7 +478,7 @@
                     });
                     document.getElementById('sync-status').textContent = 'SYNCED';
                     document.getElementById('sync-status').className = 'sync-indicator active';
-                } catch (err) { console.error(err); } finally { setTimeout(() => { isSaving = false; }, 500); }
+                } catch (e) { console.error(e); } finally { setTimeout(() => { isSaving = false; }, 500); }
             }, DEBOUNCE_DELAY);
         };
 
@@ -525,7 +506,7 @@
             calculateLoadout();
         };
 
-        // --- OPTIMIZATION ENGINE ---
+        // --- OPTIMIZATION ---
         function calculateBestFirstTrip(manifest, maxW, maxS, destination) {
             const itemCounts = {};
             manifest.forEach(i => itemCounts[i.item] = (itemCounts[i.item] || 0) + 1);
@@ -555,10 +536,7 @@
                 potentialSlots.sort((a,b) => b.slotWeight - a.slotWeight);
             }
 
-            let tripSlots = [];
-            let tripW = 0;
-            let tripSCount = 0;
-
+            let tripSlots = [], tripW = 0, tripSCount = 0;
             for (const slot of potentialSlots) {
                 if (tripSCount < maxS && (tripW + slot.slotWeight) <= maxW) {
                     tripSlots.push(slot);
@@ -569,7 +547,7 @@
             return { tripSlots, tripW, tripSCount };
         }
 
-        // --- UI CORE ---
+        // --- RENDERING ---
         function renderCatalog() {
             const town = document.getElementById('town-select').value;
             const container = document.getElementById('catalog-container');
@@ -586,7 +564,7 @@
                     <div class="icon-square" style="background-image: url('${b.img}')"></div>
                     <div style="flex-grow:1;">
                         <div class="item-name">${b.item}</div>
-                        <div class="item-limit-tag">NPC LIMIT: ${totalInManifest}/${b.limit}</div>
+                        <div class="item-limit-tag">LIMIT: ${totalInManifest}/${b.limit}</div>
                     </div>
                     <span style="font-size: 8px; color: ${isAtLimit ? '#ff4444' : 'var(--accent)'};">${isAtLimit ? 'MAX' : '+ADD'}</span>
                 `;
@@ -658,11 +636,9 @@
             document.getElementById('weight-label').textContent = `${tripW} / ${stats.weight} kg`;
             document.getElementById('weight-fill').style.width = Math.min(100, (tripW / stats.weight) * 100) + '%';
             document.getElementById('weight-fill').className = tripW > stats.weight ? 'progress-fill over' : 'progress-fill';
-
             document.getElementById('slot-label').textContent = `${tripSCount} / ${stats.slots} Slots`;
             document.getElementById('slot-fill').style.width = (tripSCount / stats.slots) * 100 + '%';
 
-            // Estimated total trips logic
             const itemCounts = {};
             currentCargo.forEach(i => itemCounts[i.item] = (itemCounts[i.item] || 0) + 1);
             let totalSlotsManifest = 0;
@@ -672,15 +648,9 @@
             });
             let totalWeightManifest = currentCargo.reduce((sum, c) => sum + c.weight, 0);
 
-            const weightTrips = Math.ceil(totalWeightManifest / stats.weight);
-            const slotTrips = Math.ceil(totalSlotsManifest / stats.slots);
-            const tripCount = Math.max(weightTrips, slotTrips);
-
+            const tripCount = Math.ceil(Math.max(totalWeightManifest / stats.weight, totalSlotsManifest / stats.slots));
             const tripDisplay = document.getElementById('trip-calculator');
-            tripDisplay.innerHTML = `
-                TOTAL TRIPS REQUIRED: ${tripCount || 1} <br>
-                REMAINING LOAD: ${Math.max(0, totalWeightManifest - tripW)}kg / ${Math.max(0, totalSlotsManifest - tripSCount)} slots
-            `;
+            tripDisplay.innerHTML = `TRIPS REQUIRED: ${tripCount || 1} <br>MANIFEST: ${totalWeightManifest}kg / ${totalSlotsManifest} slots`;
             tripDisplay.style.color = tripCount > 1 ? '#ffd700' : 'var(--accent)';
 
             calculateMaterials();
@@ -714,22 +684,15 @@
 
         function calculateMaterials() {
             weekMult = parseInt(document.getElementById('week-mult').value) || 1;
-            const barterIngredients = {};
-            const rawResources = {};
-            const tempOwned = JSON.parse(JSON.stringify(ownedInventory));
+            const barterIngredients = {}, rawResources = {}, tempOwned = JSON.parse(JSON.stringify(ownedInventory));
 
             currentCargo.forEach(cargo => {
-                for (const [matName, matQty] of Object.entries(cargo.mats)) {
-                    barterIngredients[matName] = (barterIngredients[matName] || 0) + (matQty * weekMult);
-                }
+                for (const [matName, matQty] of Object.entries(cargo.mats)) barterIngredients[matName] = (barterIngredients[matName] || 0) + (matQty * weekMult);
             });
 
             function resolveRaw(name, needed) {
                 const recipe = recipeDb.find(r => r.item === name);
-                if (!recipe) {
-                    rawResources[name] = (rawResources[name] || 0) + needed;
-                    return;
-                }
+                if (!recipe) { rawResources[name] = (rawResources[name] || 0) + needed; return; }
                 for (const [m, a] of Object.entries(recipe.mats)) resolveRaw(m, a * needed);
             }
 
@@ -758,16 +721,10 @@
 
                 const rowId = `row-${item.replace(/[^a-zA-Z0-9]/g, '-')}`;
                 let tr = document.getElementById(rowId);
-
                 if (!tr) {
                     tr = document.createElement('tr');
                     tr.id = rowId;
-                    tr.innerHTML = `
-                        <td><div class="icon-small"></div><span class="item-name-cell"></span></td>
-                        <td style="text-align:center;"><input type="number" class="owned-input" data-item="${item}"></td>
-                        <td style="text-align:center;" class="need-qty"></td>
-                        <td style="text-align:right;" class="status-cell"></td>
-                    `;
+                    tr.innerHTML = `<td><div class="icon-small"></div><span class="item-name-cell"></span></td><td style="text-align:center;"><input type="number" class="owned-input" data-item="${item}"></td><td style="text-align:center;" class="need-qty"></td><td style="text-align:right;" class="status-cell"></td>`;
                     tbody.appendChild(tr);
                     tr.querySelector('.owned-input').oninput = (e) => {
                         ownedInventory[e.target.dataset.item] = parseInt(e.target.value) || 0;
@@ -775,12 +732,7 @@
                     };
                 }
 
-                const display = tr.querySelector('.item-name-cell');
-                const icon = tr.querySelector('.icon-small');
-                const input = tr.querySelector('.owned-input');
-                const need = tr.querySelector('.need-qty');
-                const status = tr.querySelector('.status-cell');
-
+                const display = tr.querySelector('.item-name-cell'), icon = tr.querySelector('.icon-small'), input = tr.querySelector('.owned-input'), need = tr.querySelector('.need-qty'), status = tr.querySelector('.status-cell');
                 icon.style.backgroundImage = `url('images/tradeposts/items/${item.replace(/\s+/g, '_')}_Icon.png')`;
                 display.textContent = item;
                 display.style.color = needed > 0 ? '#eee' : '#444';
@@ -800,7 +752,6 @@
             [...tbody.rows].forEach(r => { if (!activeRows.has(r.id)) r.remove(); });
         }
 
-        // --- LISTENERS ---
         document.getElementById('town-select').onchange = () => { renderCatalog(); saveToCloudDebounced(); };
         document.getElementById('dest-select').onchange = (e) => { targetDest = e.target.value; calculateLoadout(); saveToCloudDebounced(); };
         document.getElementById('transport-select').onchange = () => { calculateLoadout(); saveToCloudDebounced(); };
