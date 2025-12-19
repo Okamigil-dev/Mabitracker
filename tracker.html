@@ -36,6 +36,12 @@
             scrollbar-gutter: stable;
         }
 
+        /* Add this anywhere inside your <style> block */
+        .header-row .tab-btn:first-child:hover {
+            color: #fff !important;
+            text-shadow: 0 0 5px var(--accent);
+        }
+
         /* --- SCROLLBARS --- */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -160,7 +166,9 @@
     <div id="main-content">
         <div class="container" id="app">
             <div class="header-row">
-                <div style="background:#000; border:1px solid var(--border); padding:2px; border-radius:4px; display:flex;">
+                <div style="background:#000; border:1px solid var(--border); padding:2px; border-radius:4px; display:flex; align-items:center;">
+                    <button class="tab-btn" onclick="location.href='index.html'" style="color:var(--accent); padding: 4px 8px; border-right: 1px solid #222; border-radius: 0; margin-right: 4px;">HUB</button>
+
                     <button id="nav-daily" class="tab-btn active" onclick="setView('daily')">Dailies</button>
                     <button id="nav-weekly" class="tab-btn" onclick="setView('weekly')">Weeklies</button>
                 </div>
@@ -173,7 +181,7 @@
                 <!--IMPORT BOX <div style="color:var(--accent); font-weight:bold; margin-bottom:4px;">RESCUE IMPORT</div>
                 <textarea id="import-box" class="inp-s" style="width:100%; height:40px;" placeholder="Paste backup here..."></textarea>
                 <button class="tab-btn active" style="width:100%; margin:5px 0 10px 0; background:var(--accent); color:#000;" onclick="rescueData()">IMPORT TO ACCOUNT</button>-->
-                CHARS: <input type="text" id="char-input" class="inp-s" style="width:250px;" onchange="updateChars(this.value)">
+                CHARS: <input type="text" id="char-input" class="inp-s" style="width:px;" onchange="updateChars(this.value)">
             </div>
 
             <div id="list-container"></div>
