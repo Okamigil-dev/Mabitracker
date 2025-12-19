@@ -427,11 +427,19 @@
         const DEBOUNCE_DELAY = 1500;
 
         const { initializeApp, getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.firebase;
-        const firebaseConfig = JSON.parse(__firebase_config);
+        
+        // Fallback for hardcoded config to ensure it works outside the preview environment
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : { 
+                apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", 
+                databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com" 
+            };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mabinogi-tracker';
 
         let user = null;
         let isSaving = false;
@@ -457,6 +465,7 @@
                     }
                 }, (error) => console.error(error));
 
+                // Path corrected to match user structure
                 const priceRef = doc(db, 'public_commerce', 'prices');
                 onSnapshot(priceRef, (snapshot) => {
                     if (snapshot.exists()) {
@@ -649,6 +658,7 @@
             document.getElementById('weight-label').textContent = `${tripW} / ${stats.weight} kg`;
             document.getElementById('weight-fill').style.width = Math.min(100, (tripW / stats.weight) * 100) + '%';
             document.getElementById('weight-fill').className = tripW > stats.weight ? 'progress-fill over' : 'progress-fill';
+
             document.getElementById('slot-label').textContent = `${tripSCount} / ${stats.slots} Slots`;
             document.getElementById('slot-fill').style.width = (tripSCount / stats.slots) * 100 + '%';
 
@@ -746,8 +756,6 @@
                 const isCrafted = recipeDb.some(r => r.item === item);
                 if (isComponent !== isCrafted) return;
 
-                const owned = ownedInventory[item] || 0;
-                const deficit = Math.ceil(needed) - owned;
                 const rowId = `row-${item.replace(/[^a-zA-Z0-9]/g, '-')}`;
                 let tr = document.getElementById(rowId);
 
@@ -776,12 +784,14 @@
                 icon.style.backgroundImage = `url('images/tradeposts/items/${item.replace(/\s+/g, '_')}_Icon.png')`;
                 display.textContent = item;
                 display.style.color = needed > 0 ? '#eee' : '#444';
-                if (document.activeElement !== input) input.value = owned;
+                if (document.activeElement !== input) input.value = ownedInventory[item] || 0;
                 need.textContent = needed > 0 ? Math.ceil(needed).toLocaleString() : '-';
                 
                 if (needed === 0) {
                     status.textContent = ''; status.className = 'status-cell';
                 } else {
+                    const owned = ownedInventory[item] || 0;
+                    const deficit = Math.ceil(needed) - owned;
                     status.textContent = deficit <= 0 ? 'READY' : deficit.toLocaleString();
                     status.className = `status-cell ${deficit <= 0 ? 'ready' : 'deficit'}`;
                 }
