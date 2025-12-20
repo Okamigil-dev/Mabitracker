@@ -31,7 +31,7 @@
 
         * { box-sizing: border-box; outline: none; }
         body {
-            background-color: #000; /* Darker pitch black for outside the container */
+            background-color: #000;
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -40,7 +40,6 @@
             height: 100vh;
         }
 
-        /* --- App Wrapper to limit horizontal size --- */
         .app-shell {
             max-width: 1500px;
             margin: 0 auto;
@@ -53,13 +52,11 @@
             position: relative;
         }
 
-        /* Prevent text selection during rapid clicking */
         .hub-btn, .item-entry, .slot, .item-icon, .toggle-container, select, input, .town-visual-box {
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* --- Header --- */
         .header-bar { background: var(--sidebar-bg); border-bottom: 1px solid var(--border); height: 65px; flex-shrink: 0; }
         .neon-line { height: 2px; background: var(--accent); box-shadow: 0 0 15px var(--accent); width: 100%; }
         .title-section { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
@@ -77,7 +74,6 @@
         }
         .hub-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 12px var(--accent); border-color: var(--accent); }
 
-        /* --- Layout Grid --- */
         .interface-grid {
             display: grid;
             grid-template-columns: 320px 1fr 380px;
@@ -135,9 +131,9 @@
         }
         .item-entry:hover { background: #161616; border-left-color: var(--accent); }
         .item-entry.at-limit { opacity: 0.4; cursor: not-allowed; border-left-color: #ff4444; }
+        .item-entry.full-capacity { opacity: 0.4; cursor: not-allowed; border-left-color: #555; }
         .item-name { font-weight: 700; color: #eee; font-size: 11px; }
         .item-limit-tag { font-size: 8px; color: var(--text-dim); }
-        
         .icon-square {
             width: 32px; height: 32px; background: #000; border: 1px solid #222;
             flex-shrink: 0; background-size: contain; background-repeat: no-repeat; background-position: center;
@@ -152,7 +148,13 @@
         .grid-container {
             display: grid; grid-template-columns: repeat(auto-fill, var(--slot-size));
             gap: 2px; background: #151515; padding: 2px; border: 1px solid #222;
+            margin-bottom: 20px;
         }
+        .loadout-section-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+            padding-bottom: 5px; border-bottom: 1px dashed #222;
+        }
+        .loadout-label { font-size: 9px; font-weight: 900; color: var(--text-dim); letter-spacing: 1px; }
         .slot {
             width: var(--slot-size); height: var(--slot-size); background: #0a0a0a; border: 1px solid #1a1a1a;
             position: relative; display: flex; align-items: center; justify-content: center;
@@ -164,23 +166,9 @@
         }
         .stack-label { position: absolute; bottom: 2px; right: 4px; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; pointer-events: none; }
 
-        .logistics-hud {
-            margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border); border-radius: 4px; flex-shrink: 0;
-        }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 10px; font-family: 'JetBrains Mono'; }
-        .progress-bar { height: 4px; background: #151515; margin-top: 5px; position: relative; border-radius: 2px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
-        .progress-fill.over { background: #ff4444; box-shadow: 0 0 8px #ff4444; }
-
-        .trip-planning { 
-            margin-top: 12px; background: rgba(0, 243, 255, 0.05); border: 1px dashed rgba(0, 243, 255, 0.2); 
-            padding: 8px; font-family: 'JetBrains Mono'; font-size: 10px; color: var(--accent); line-height: 1.6;
-        }
-
         /* --- Tables --- */
-        .materials-dual-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; overflow: hidden; }
-        .table-container { display: flex; flex-direction: column; overflow: hidden; }
+        .materials-dual-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; overflow: hidden; min-height: 0; }
+        .table-container { display: flex; flex-direction: column; overflow: hidden; height: 100%; }
         .data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono'; font-size: 11px; margin-bottom: 20px;}
         .data-table thead { position: sticky; top: 0; background: #080808; z-index: 10; }
         .data-table th { text-align: left; color: var(--text-dim); font-size: 9px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
@@ -248,31 +236,10 @@
 
             <!-- CENTER: MATERIALS -->
             <div class="panel" style="background: #080808;">
-                <div class="panel-header">Logistics Config</div>
-                <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-shrink: 0;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 8px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px;">PREP_DURATION (WEEKS)</label>
-                        <input type="number" id="week-mult" value="1" min="1" class="search-input" style="margin-top: 5px;">
-                    </div>
-                    <div style="flex: 1.5;">
-                        <label style="font-size: 8px; color: var(--text-dim); font-weight: 900; letter-spacing: 1px;">TARGET_DESTINATION</label>
-                        <select id="dest-select" class="search-input" style="margin-top: 5px;">
-                            <option value="None">None (Priority by Weight)</option>
-                            <option value="Tir Chonaill">Tir Chonaill</option>
-                            <option value="Dunbarton">Dunbarton</option>
-                            <option value="Bangor">Bangor</option>
-                            <option value="Emain Macha">Emain Macha</option>
-                            <option value="Taillteann">Taillteann</option>
-                            <option value="Tara">Tara</option>
-                            <option value="Cobh">Cobh</option>
-                            <option value="Belvast">Belvast</option>
-                        </select>
-                    </div>
-                </div>
-
+                <div class="panel-header">Ingredients Needed</div>
                 <div class="materials-dual-layout">
                     <div class="table-container">
-                        <div class="panel-header" style="color: var(--accent); opacity: 0.8;">Base Resources (Raw)</div>
+                        <div class="panel-header" style="color: var(--accent); opacity: 0.8; font-size: 9px;">Base Resources (Raw)</div>
                         <div class="scroll-area">
                             <table class="data-table">
                                 <thead>
@@ -288,7 +255,7 @@
                         </div>
                     </div>
                     <div class="table-container">
-                        <div class="panel-header" style="color: #fff; opacity: 0.8;">Barter Components</div>
+                        <div class="panel-header" style="color: #fff; opacity: 0.8; font-size: 9px;">Barter Components</div>
                         <div class="scroll-area">
                             <table class="data-table">
                                 <thead>
@@ -308,18 +275,7 @@
 
             <!-- RIGHT: LOGISTICS -->
             <div class="panel">
-                <div class="panel-header">Transport selection (Auto)</div>
-                <select id="transport-select" class="search-input" style="pointer-events: none; opacity: 0.8;">
-                    <option value="Back Pack">Back Pack</option>
-                    <option value="Hand Cart">Hand Cart</option>
-                    <option value="Wagon">Wagon</option>
-                    <option value="Elephant">Elephant</option>
-                    <option value="Husky">Husky</option>
-                    <option value="Camel">Camel</option>
-                    <option value="Skiff">Skiff</option>
-                </select>
-
-                <div class="panel-header" style="margin-top: 20px;">Active Buffs</div>
+                <div class="panel-header">Active Buffs</div>
                 <div class="buff-row-side">
                     <label class="toggle-container">
                         <input type="checkbox" id="buff-gm" class="toggle-input">
@@ -338,16 +294,39 @@
                     </label>
                 </div>
 
-                <div class="panel-header">Run Loadout</div>
+                <div class="panel-header">Run Loadouts</div>
                 <div class="inventory-window">
-                    <div id="grid" class="grid-container"></div>
-                    <div class="logistics-hud">
-                        <div class="stat-row"><span>RUN_WEIGHT</span><span id="weight-label">0 / 0 kg</span></div>
-                        <div class="progress-bar"><div id="weight-fill" class="progress-fill"></div></div>
-                        <div class="stat-row" style="margin-top: 12px;"><span>SLOT_USAGE</span><span id="slot-label">0 / 0 Slots</span></div>
-                        <div class="progress-bar"><div id="slot-fill" class="progress-fill"></div></div>
-                        <div id="trip-calculator" class="trip-planning">SELECT ITEMS TO PLAN...</div>
+                    <!-- Loadout A -->
+                    <div class="loadout-section-header">
+                        <span class="loadout-label">LOADOUT A</span>
+                        <div id="transport-stats-1" style="font-family:'JetBrains Mono'; font-size:9px; color:var(--accent); font-weight:900;"></div>
                     </div>
+                    <select id="transport-select-1" class="search-input" style="width: 100%; margin-bottom: 5px;">
+                        <option value="Back Pack">Back Pack</option>
+                        <option value="Hand Cart">Hand Cart</option>
+                        <option value="Wagon">Wagon</option>
+                        <option value="Elephant">Elephant</option>
+                        <option value="Husky">Husky</option>
+                        <option value="Camel">Camel</option>
+                        <option value="Skiff">Skiff</option>
+                    </select>
+                    <div id="grid-1" class="grid-container"></div>
+
+                    <!-- Loadout B -->
+                    <div class="loadout-section-header" style="margin-top: 10px;">
+                        <span class="loadout-label">LOADOUT B (SPILL-OVER)</span>
+                        <div id="transport-stats-2" style="font-family:'JetBrains Mono'; font-size:9px; color:var(--accent); font-weight:900;"></div>
+                    </div>
+                    <select id="transport-select-2" class="search-input" style="width: 100%; margin-bottom: 5px;">
+                        <option value="Back Pack">Back Pack</option>
+                        <option value="Hand Cart">Hand Cart</option>
+                        <option value="Wagon">Wagon</option>
+                        <option value="Elephant">Elephant</option>
+                        <option value="Husky">Husky</option>
+                        <option value="Camel">Camel</option>
+                        <option value="Skiff">Skiff</option>
+                    </select>
+                    <div id="grid-2" class="grid-container"></div>
                 </div>
                 <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; opacity: 0.2;">
                     <div id="user-display" style="font-family: 'JetBrains Mono'; font-size: 8px;">GUEST_MODE</div>
@@ -375,19 +354,16 @@
             { town: "Pera Volcano", item: "Ixion Horn", weight: 20, stack: 7, limit: 10, mats: { "Marionette 500 Potion": 3, "Gold Plate": 5 } },
             { town: "Pera Volcano", item: "Volcano Lizard Egg", weight: 25, stack: 7, limit: 8, mats: { "Glittering Paper": 5, "Finest Fabric": 5, "HP 500 Potion": 2 } },
             { town: "Pera Volcano", item: "Raspa Black Leopard Leather", weight: 30, stack: 5, limit: 3, mats: { "Mutant": 1, "Harmonious Cosmos Perfume": 2, "Special Firewood": 3 } },
-            
             { town: "Oasis", item: "Fine Sand", weight: 15, stack: 10, limit: 25, mats: { "Stamina 500 Potion": 3, "Braid": 2 } },
             { town: "Oasis", item: "Prison Ghost Wings", weight: 15, stack: 7, limit: 15, mats: { "Cotton Cushion Stuffing": 1, "Finest Silk": 2 } },
             { town: "Oasis", item: "Oasis Painting", weight: 20, stack: 7, limit: 10, mats: { "Finest Leather Strap": 1, "Tough Thread": 3 } },
             { town: "Oasis", item: "Cactus Flower", weight: 25, stack: 7, limit: 8, mats: { "Spirit Liqueur": 1, "Silver Plate": 2, "Fine Fabric": 4 } },
             { town: "Oasis", item: "Giant Canine Fossil", weight: 30, stack: 5, limit: 3, mats: { "Pet Playset": 1, "Hay Bale": 3, "Enchanted Firewood": 5 } },
-            
             { town: "Lake Calida", item: "Elvan Egg", weight: 15, stack: 10, limit: 25, mats: { "MP 500 Potion": 1, "Fine Firewood": 2 } },
             { town: "Lake Calida", item: "Calida Salmon", weight: 15, stack: 7, limit: 15, mats: { "Energy Converter": 1, "Purified Rabbit Foot": 1 } },
             { town: "Lake Calida", item: "Hot Spring Bath Bomb", weight: 20, stack: 7, limit: 10, mats: { "Sundew": 3, "Finest Vanilla Scented Candle": 2 } },
             { town: "Lake Calida", item: "Large Camping Tent", weight: 25, stack: 7, limit: 8, mats: { "Artificial Turf": 1, "Emerald Fuse": 1, "Fine Leather Strap": 5 } },
             { town: "Lake Calida", item: "Pink Salt", weight: 30, stack: 5, limit: 3, mats: { "Large Mythril Nail": 3, "Poison Tip Wyvern Ballista Bolt": 3, "Finest Firewood": 3 } },
-            
             { town: "Karu Forest", item: "Wooden Table", weight: 15, stack: 10, limit: 25, mats: { "Shrimp Taming Bait": 4, "Shyllien": 2 } },
             { town: "Karu Forest", item: "Wooden Craft", weight: 15, stack: 7, limit: 15, mats: { "Magic Parchment": 1, "Tough String": 2 } },
             { town: "Karu Forest", item: "Stone Horse Statue", weight: 20, stack: 7, limit: 10, mats: { "Hillwen Alloy": 2, "Wheat Flour": 5 } },
@@ -466,10 +442,11 @@
         };
 
         // --- 2. STATE ---
-        let currentCargo = [], ownedInventory = {}, activeBuffs = { gm: false, william: false, alpaca: false }, weekMult = 1, selectedTown = "Karu Forest", targetDest = "None", debounceTimer = null;
+        let currentCargo = [], ownedInventory = {}, activeBuffs = { gm: false, william: false, alpaca: false }, selectedTown = "Karu Forest", debounceTimer = null;
         const DEBOUNCE_DELAY = 1500;
+        let isFullCapacity = false;
 
-        // --- 3. FIREBASE CORE (YOUR CONFIG) ---
+        // --- 3. FIREBASE CORE ---
         const { initializeApp, getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.mabiFirebase;
         
         let app, auth, db, appId;
@@ -528,10 +505,9 @@
                         cargo: JSON.stringify(currentCargo), 
                         inventory: ownedInventory, 
                         buffs: activeBuffs, 
-                        multiplier: weekMult, 
                         town: selectedTown, 
-                        dest: targetDest, 
-                        transport: document.getElementById('transport-select').value
+                        transport1: document.getElementById('transport-select-1').value,
+                        transport2: document.getElementById('transport-select-2').value
                     });
                     document.getElementById('sync-status').textContent = 'SYNCED';
                     document.getElementById('sync-status').className = 'sync-indicator active';
@@ -547,19 +523,20 @@
         const loadFromCloud = (data) => {
             if (data.cargo) currentCargo = JSON.parse(data.cargo);
             if (data.inventory) ownedInventory = data.inventory;
-            if (data.multiplier) { weekMult = data.multiplier; document.getElementById('week-mult').value = weekMult; }
             if (data.town) { selectedTown = data.town; document.getElementById('town-select').value = selectedTown; }
-            if (data.dest) { targetDest = data.dest; document.getElementById('dest-select').value = targetDest; }
             if (data.buffs) {
                 activeBuffs = data.buffs;
                 document.getElementById('buff-gm').checked = !!activeBuffs.gm;
                 document.getElementById('buff-william').checked = !!activeBuffs.william;
                 document.getElementById('buff-alpaca').checked = !!activeBuffs.alpaca;
             }
+            if (data.transport1) document.getElementById('transport-select-1').value = data.transport1;
+            if (data.transport2) document.getElementById('transport-select-2').value = data.transport2;
+            
             renderCatalog(); calculateLoadout();
         };
 
-        // --- 5. AUTO LOGISTICS ---
+        // --- 5. LOGISTICS ---
         function getStatsForTransport(name) {
             const b = transportData[name];
             if (!b) return { slots: 0, weight: 0, speed: 0 };
@@ -570,97 +547,109 @@
             return { slots: b.slots + bS, weight: b.weight + bW, speed: b.speed };
         }
 
-        function autoSelectTransport(requiredWeight, requiredSlots) {
-            const allTransports = Object.keys(transportData);
-            
-            const validCandidates = allTransports.filter(name => {
-                const stats = getStatsForTransport(name);
-                return requiredWeight <= stats.weight && requiredSlots <= stats.slots;
-            });
-
-            let bestMatch;
-            if (validCandidates.length > 0) {
-                bestMatch = validCandidates.reduce((prev, curr) => {
-                    const statsPrev = getStatsForTransport(prev);
-                    const statsCurr = getStatsForTransport(curr);
-                    return statsCurr.speed > statsPrev.speed ? curr : prev;
-                });
-            } else {
-                bestMatch = allTransports.reduce((prev, curr) => {
-                    const statsPrev = getStatsForTransport(prev);
-                    const statsCurr = getStatsForTransport(curr);
-                    return statsCurr.weight > statsPrev.weight ? curr : prev;
-                });
-            }
-            
-            const select = document.getElementById('transport-select');
-            if (select.value !== bestMatch) {
-                select.value = bestMatch;
-            }
-            return getStatsForTransport(bestMatch);
-        }
-
-        function calculateLoadout() {
+        function packCargo(cargoList) {
             const itemCounts = {};
-            currentCargo.forEach(i => itemCounts[i.item] = (itemCounts[i.item] || 0) + 1);
+            cargoList.forEach(i => itemCounts[i.item] = (itemCounts[i.item] || 0) + 1);
 
-            let runWeight = 0, runSlots = 0;
-            const displaySlots = [];
-
+            const slotStream = [];
             barterDb.forEach(proto => {
                 if (itemCounts[proto.item]) {
                     let remaining = itemCounts[proto.item];
                     while (remaining > 0) {
                         const take = Math.min(remaining, proto.stack);
-                        displaySlots.push({ ...proto, qtyInSlot: take });
-                        runWeight += (take * proto.weight);
-                        runSlots++;
+                        slotStream.push({ ...proto, qtyInSlot: take });
                         remaining -= take;
                     }
                 }
             });
 
-            const stats = autoSelectTransport(runWeight, runSlots);
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            for (let i = 0; i < stats.slots; i++) { 
-                grid.appendChild(Object.assign(document.createElement('div'), { className: 'slot', id: `slot-${i}` })); 
+            const t1 = document.getElementById('transport-select-1').value;
+            const t2 = document.getElementById('transport-select-2').value;
+            const s1 = getStatsForTransport(t1);
+            const s2 = getStatsForTransport(t2);
+
+            const slots1 = [];
+            const slots2 = [];
+            let w1 = 0, c1 = 0;
+            let w2 = 0, c2 = 0;
+            let overflow = false;
+
+            for (const slotObj of slotStream) {
+                const slotWeight = slotObj.qtyInSlot * slotObj.weight;
+                
+                if (c1 < s1.slots && (w1 + slotWeight) <= s1.weight) {
+                    slots1.push(slotObj);
+                    w1 += slotWeight;
+                    c1++;
+                } else if (c2 < s2.slots && (w2 + slotWeight) <= s2.weight) {
+                    slots2.push(slotObj);
+                    w2 += slotWeight;
+                    c2++;
+                } else {
+                    overflow = true;
+                }
             }
 
-            displaySlots.forEach((slotData, idx) => {
-                if (idx < stats.slots) {
-                    const slotEl = document.getElementById(`slot-${idx}`);
-                    if (slotEl) {
-                        slotEl.classList.add('filled');
-                        const icon = Object.assign(document.createElement('div'), { className: 'item-icon' });
-                        icon.style.backgroundImage = `url('${slotData.img}')`;
-                        icon.innerHTML = `<span class="stack-label">${slotData.qtyInSlot}</span>`;
-                        icon.onmouseenter = (e) => showTooltip(e, slotData);
-                        icon.onmouseleave = hideTooltip;
-                        icon.onclick = () => window.removeItemFromManifest(slotData.item);
-                        slotEl.appendChild(icon);
-                    }
-                }
+            return { slots1, slots2, overflow, s1, s2 };
+        }
+
+        function addItem(itemData) {
+             const testCargo = [...currentCargo, itemData];
+             const result = packCargo(testCargo);
+             
+             if (result.overflow) {
+                 return; // Rejects add if it doesn't fit
+             }
+
+             currentCargo.push(itemData);
+             calculateLoadout();
+             renderCatalog();
+             saveToCloudDebounced();
+        }
+
+        function calculateLoadout() {
+            const result = packCargo(currentCargo);
+            
+            document.getElementById('transport-stats-1').textContent = `${result.s1.slots} SLOTS / ${result.s1.weight} KG`;
+            document.getElementById('transport-stats-2').textContent = `${result.s2.slots} SLOTS / ${result.s2.weight} KG`;
+
+            const grid1 = document.getElementById('grid-1');
+            grid1.innerHTML = '';
+            for (let i = 0; i < result.s1.slots; i++) { 
+                const slotEl = Object.assign(document.createElement('div'), { className: 'slot', id: `g1-slot-${i}` });
+                grid1.appendChild(slotEl); 
+            }
+            result.slots1.forEach((slotData, idx) => {
+                const slotEl = document.getElementById(`g1-slot-${idx}`);
+                if (slotEl) renderSlotContent(slotEl, slotData);
             });
 
-            document.getElementById('weight-label').textContent = `${runWeight.toLocaleString()} / ${stats.weight.toLocaleString()} kg`;
-            document.getElementById('weight-fill').style.width = Math.min(100, (runWeight / stats.weight) * 100) + '%';
-            document.getElementById('weight-fill').className = runWeight > stats.weight ? 'progress-fill over' : 'progress-fill';
-            
-            document.getElementById('slot-label').textContent = `${runSlots} / ${stats.slots} Slots`;
-            document.getElementById('slot-fill').style.width = Math.min(100, (runSlots / stats.slots) * 100) + '%';
-            document.getElementById('slot-fill').className = runSlots > stats.slots ? 'progress-fill over' : 'progress-fill';
-
-            const tripDisplay = document.getElementById('trip-calculator');
-            if (currentCargo.length > 0) {
-                tripDisplay.innerHTML = `AUTO-SELECTED ${document.getElementById('transport-select').value.toUpperCase()}.`;
-                if (runWeight > stats.weight || runSlots > stats.slots) tripDisplay.innerHTML += ` <span style="color:#ff4444;">(LIMIT EXCEEDED)</span>`;
-                tripDisplay.style.color = 'var(--accent)';
-            } else {
-                tripDisplay.innerHTML = `SELECT ITEMS TO PLAN...`;
-                tripDisplay.style.color = 'var(--text-dim)';
+            const grid2 = document.getElementById('grid-2');
+            grid2.innerHTML = '';
+            for (let i = 0; i < result.s2.slots; i++) { 
+                const slotEl = Object.assign(document.createElement('div'), { className: 'slot', id: `g2-slot-${i}` });
+                grid2.appendChild(slotEl); 
             }
+            result.slots2.forEach((slotData, idx) => {
+                const slotEl = document.getElementById(`g2-slot-${idx}`);
+                if (slotEl) renderSlotContent(slotEl, slotData);
+            });
+
+            isFullCapacity = result.overflow;
+            
             calculateMaterials();
+            renderCatalog();
+        }
+
+        function renderSlotContent(element, data) {
+            element.classList.add('filled');
+            const icon = Object.assign(document.createElement('div'), { className: 'item-icon' });
+            icon.style.backgroundImage = `url('${data.img}')`;
+            icon.innerHTML = `<span class="stack-label">${data.qtyInSlot}</span>`;
+            icon.onmouseenter = (e) => showTooltip(e, data);
+            icon.onmouseleave = hideTooltip;
+            icon.onclick = () => window.removeItemFromManifest(data.item);
+            element.appendChild(icon);
         }
 
         // --- 6. UI HELPERS ---
@@ -670,15 +659,30 @@
             const iconBox = document.getElementById('town-icon-box');
             iconBox.style.backgroundImage = `url('${townIcons[town]}')`;
             container.innerHTML = '';
+            
+            // For catalog buttons, we need to know if adding ONE more item would overflow.
+            // But checking every single item is expensive. We'll use a heuristic:
+            // If isFullCapacity is true, block everything.
+            
             barterDb.filter(b => b.town === town).forEach(b => {
                 const totalInManifest = currentCargo.filter(c => c.item === b.item).length;
-                const isAtLimit = totalInManifest >= b.limit;
+                const isLimitReached = totalInManifest >= b.limit;
+                
+                const blockAdd = isLimitReached || isFullCapacity;
+                
                 const div = document.createElement('div');
-                div.className = 'item-entry' + (isAtLimit ? ' at-limit' : '');
+                div.className = 'item-entry' + (blockAdd ? (isLimitReached ? ' at-limit' : ' full-capacity') : '');
+                
+                let btnText = '+ADD';
+                let btnColor = 'var(--accent)';
+                if (isLimitReached) { btnText = 'MAX'; btnColor = '#ff4444'; }
+                else if (isFullCapacity) { btnText = 'FULL'; btnColor = '#888'; }
+
                 div.innerHTML = `<div class="icon-square" style="background-image: url('${b.img}')"></div>
                     <div style="flex-grow:1;"><div class="item-name">${b.item}</div><div class="item-limit-tag">LIMIT: ${totalInManifest}/${b.limit}</div></div>
-                    <span style="font-size: 8px; color: ${isAtLimit ? '#ff4444' : 'var(--accent)'};">${isAtLimit ? 'MAX' : '+ADD'}</span>`;
-                if (!isAtLimit) div.onclick = () => addItem(b);
+                    <span style="font-size: 8px; color: ${btnColor};">${btnText}</span>`;
+                
+                if (!blockAdd) div.onclick = () => addItem(b);
                 container.appendChild(div);
             });
         }
@@ -695,14 +699,6 @@
 
         function hideTooltip() { document.getElementById('item-tooltip').style.display = 'none'; }
 
-        function addItem(itemData) {
-            if (currentCargo.filter(c => c.item === itemData.item).length >= itemData.limit) return;
-            currentCargo.push({ ...itemData });
-            calculateLoadout(); 
-            renderCatalog(); 
-            saveToCloudDebounced();
-        }
-
         window.removeItemFromManifest = (itemName) => {
             const idx = currentCargo.findLastIndex(c => c.item === itemName);
             if (idx !== -1) currentCargo.splice(idx, 1);
@@ -712,16 +708,26 @@
         };
 
         function calculateMaterials() {
-            weekMult = parseInt(document.getElementById('week-mult').value) || 1;
-            const bIngredients = {}, rawRes = {}, tempOwned = JSON.parse(JSON.stringify(ownedInventory));
+            const bIngredients = {};
+            const tempOwned = JSON.parse(JSON.stringify(ownedInventory));
+            
             currentCargo.forEach(c => { 
-                for (const [m, q] of Object.entries(c.mats)) { bIngredients[m] = (bIngredients[m] || 0) + (q * weekMult); } 
+                for (const [m, q] of Object.entries(c.mats)) { 
+                    bIngredients[m] = (bIngredients[m] || 0) + q; 
+                } 
             });
 
+            // Flatten recipes
+            const rawRes = {};
             function resolve(n, need) {
                 const r = recipeDb.find(x => x.item === n);
-                if (!r) { rawRes[n] = (rawRes[n] || 0) + need; return; }
-                for (const [m, a] of Object.entries(r.mats)) { resolve(m, a * need); }
+                if (!r) { 
+                    rawRes[n] = (rawRes[n] || 0) + need; 
+                    return; 
+                }
+                for (const [m, a] of Object.entries(r.mats)) { 
+                    resolve(m, a * need); 
+                }
             }
 
             Object.entries(bIngredients).forEach(([n, c]) => {
@@ -782,12 +788,8 @@
 
         // --- 7. LISTENERS ---
         document.getElementById('town-select').onchange = (e) => { selectedTown = e.target.value; renderCatalog(); saveToCloudDebounced(); };
-        document.getElementById('dest-select').onchange = (e) => { targetDest = e.target.value; calculateLoadout(); saveToCloudDebounced(); };
-        document.getElementById('week-mult').oninput = (e) => { 
-            weekMult = parseInt(e.target.value) || 1; 
-            calculateMaterials();
-            saveToCloudDebounced(); 
-        };
+        document.getElementById('transport-select-1').onchange = (e) => { calculateLoadout(); saveToCloudDebounced(); };
+        document.getElementById('transport-select-2').onchange = (e) => { calculateLoadout(); saveToCloudDebounced(); };
         
         document.querySelectorAll('.toggle-input').forEach(chk => {
             chk.onchange = (e) => {
