@@ -117,11 +117,23 @@
         .toggle-input:checked + .toggle-slider::after { transform: translateX(12px); background: var(--accent); box-shadow: 0 0 5px var(--accent); }
 
         .town-header-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-shrink: 0; }
+        
+        .town-visual-box, .icon-square, .item-icon, .icon-small {
+            background-color: #1a1a1a;
+            color: rgba(255,255,255,0.7);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-family: 'JetBrains Mono';
+            user-select: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
         .town-visual-box {
-            width: 44px; height: 44px; background: #000; border: 1px solid var(--accent);
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
-            background-size: contain; background-repeat: no-repeat; background-position: center;
+            width: 44px; height: 44px; border: 1px solid var(--accent);
+            flex-shrink: 0; box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+            font-size: 18px;
         }
         .search-input { 
             width: 100%; background: #000; border: 1px solid #333; 
@@ -137,9 +149,10 @@
         .item-entry.full-capacity { opacity: 0.4; cursor: not-allowed; border-left-color: #555; }
         .item-name { font-weight: 700; color: #eee; font-size: 11px; }
         .item-limit-tag { font-size: 8px; color: var(--text-dim); }
+        
         .icon-square {
-            width: 32px; height: 32px; background: #000; border: 1px solid #222;
-            flex-shrink: 0; background-size: contain; background-repeat: no-repeat; background-position: center;
+            width: 32px; height: 32px; border: 1px solid #222;
+            flex-shrink: 0; font-size: 14px;
         }
 
         .inventory-window { 
@@ -162,11 +175,12 @@
             position: relative; display: flex; align-items: center; justify-content: center;
         }
         .slot.filled { border-color: rgba(0, 243, 255, 0.3); background: #111; }
+        
         .item-icon { 
-            width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; 
-            cursor: pointer; position: relative;
+            width: 48px; height: 48px; 
+            cursor: pointer; position: relative; font-size: 20px;
         }
-        .stack-label { position: absolute; bottom: 2px; right: 4px; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; pointer-events: none; }
+        .stack-label { position: absolute; bottom: 2px; right: 4px; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px #000; pointer-events: none; z-index: 2; }
 
         .materials-dual-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; overflow: hidden; min-height: 0; }
         .table-container { display: flex; flex-direction: column; overflow: hidden; height: 100%; }
@@ -179,7 +193,10 @@
         .status-cell { font-weight: 900; }
         .status-cell.deficit { color: #ff4444; }
         .status-cell.ready { color: #00ff88; }
-        .icon-small { width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px; background-size: contain; background-repeat: no-repeat; }
+        .icon-small { 
+            width: 16px; height: 16px; margin-right: 5px; font-size: 8px; 
+            vertical-align: middle; display: inline-flex;
+        }
 
         /* Modal Styles */
         .modal-overlay {
@@ -271,7 +288,7 @@
             <div class="panel">
                 <div class="panel-header">Trade Posts</div>
                 <div class="town-header-container">
-                    <div class="town-visual-box" id="town-icon-box"></div>
+                    <div class="town-visual-box" id="town-icon-box">T</div>
                     <select id="town-select" class="search-input" style="margin:0">
                         <option value="Karu Forest">Karu Forest</option>
                         <option value="Oasis">Oasis</option>
@@ -385,15 +402,65 @@
 
     <script type="module">
         // --- 1. CONFIG & DATA ---
-        const getIconUrl = (name, category = 'items', townKey = '') => {
-            const cleanName = name.replace(/\s+/g, '_');
-            if (category === 'towns') return `images/tradeposts/Commerce_${cleanName}_Icon.png`;
-            if (category === 'barter') {
-                const townSubfolderMap = { "Karu Forest": "karu", "Oasis": "oasis", "Lake Calida": "calida", "Pera Volcano": "pera" };
-                const subfolder = townSubfolderMap[townKey] || 'items';
-                return `images/tradeposts/barter/${subfolder}/${cleanName}_Icon.png`;
+        
+        // UTILITY: Generate a color from string (Procedural Icon Color)
+        const stringToColor = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
             }
-            return `images/tradeposts/items/${cleanName}_Icon.png`;
+            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+            return '#' + '00000'.substring(0, 6 - c.length) + c;
+        };
+
+        // NEW: Get the folder name for a given Town
+        const getTownFolder = (townName) => {
+            const map = {
+                "Pera Volcano": "pera",
+                "Lake Calida": "calida",
+                "Oasis": "oasis",
+                "Karu Forest": "karu"
+            };
+            return map[townName];
+        }
+        
+        // HYBRID ICON SYSTEM: Matches your specific folder structure
+        const applyIcon = (el, name) => {
+            // A. Set Fallback (Procedural)
+            el.style.backgroundColor = stringToColor(name);
+            el.style.backgroundImage = 'none';
+            el.style.color = 'rgba(255,255,255,0.9)';
+            el.style.textShadow = '0 1px 3px rgba(0,0,0,0.8)';
+            el.innerText = name.charAt(0).toUpperCase();
+
+            // B. Attempt Image Load using Database lookup
+            let imagePath = null;
+            
+            // Check if it's a known trade item to find its town
+            const itemData = barterDb.find(i => i.item === name);
+            
+            if (itemData) {
+                const folder = getTownFolder(itemData.town);
+                if (folder) {
+                    // Structure: images/tradeposts/barter/karu/Wooden Table.png
+                    imagePath = `images/tradeposts/barter/${folder}/${name}.png`;
+                }
+            } else {
+                // It's a raw material or town icon (not in barterDb)
+                // Leave as procedural so they look distinct from trade goods.
+            }
+
+            if (imagePath) {
+                const img = new Image();
+                img.src = imagePath;
+                img.onload = () => {
+                    el.style.backgroundColor = 'transparent'; 
+                    el.style.backgroundImage = `url('${imagePath}')`;
+                    el.innerText = ''; // Remove letter
+                    el.style.boxShadow = 'none'; 
+                };
+                // onerror: do nothing, keeps fallback visible
+            }
         };
 
         const barterDb = [
@@ -403,11 +470,11 @@
             { town: "Pera Volcano", item: "Volcano Lizard Egg", weight: 25, stack: 7, limit: 8, mats: { "Glittering Paper": 5, "Finest Fabric": 5, "HP 500 Potion": 2 } },
             { town: "Pera Volcano", item: "Raspa Black Leopard Leather", weight: 30, stack: 5, limit: 3, mats: { "Mutant": 1, "Harmonious Cosmos Perfume": 2, "Special Firewood": 3 } },
             { town: "Oasis", item: "Fine Sand", weight: 15, stack: 10, limit: 25, mats: { "Stamina 500 Potion": 3, "Braid": 2 } },
-            { town: "Oasis", item: "Prison Ghost Wings", weight: 15, stack: 7, limit: 15, mats: { "Cotton Cushion Stuffing": 1, "Finest Silk": 2 } },
+            { town: "Oasis", item: "Prison Ghost Wing", weight: 15, stack: 7, limit: 15, mats: { "Cotton Cushion Stuffing": 1, "Finest Silk": 2 } },
             { town: "Oasis", item: "Oasis Painting", weight: 20, stack: 7, limit: 10, mats: { "Finest Leather Strap": 1, "Tough Thread": 3 } },
             { town: "Oasis", item: "Cactus Flower", weight: 25, stack: 7, limit: 8, mats: { "Spirit Liqueur": 1, "Silver Plate": 2, "Fine Fabric": 4 } },
             { town: "Oasis", item: "Giant Canine Fossil", weight: 30, stack: 5, limit: 3, mats: { "Pet Playset": 1, "Hay Bale": 3, "Enchanted Firewood": 5 } },
-            { town: "Lake Calida", item: "Elvan Egg", weight: 15, stack: 10, limit: 25, mats: { "MP 500 Potion": 1, "Fine Firewood": 2 } },
+            { town: "Lake Calida", item: "Elven Egg", weight: 15, stack: 10, limit: 25, mats: { "MP 500 Potion": 1, "Fine Firewood": 2 } },
             { town: "Lake Calida", item: "Calida Salmon", weight: 15, stack: 7, limit: 15, mats: { "Energy Converter": 1, "Purified Rabbit Foot": 1 } },
             { town: "Lake Calida", item: "Hot Spring Bath Bomb", weight: 20, stack: 7, limit: 10, mats: { "Sundew": 3, "Finest Vanilla Scented Candle": 2 } },
             { town: "Lake Calida", item: "Large Camping Tent", weight: 25, stack: 7, limit: 8, mats: { "Artificial Turf": 1, "Emerald Fuse": 1, "Fine Leather Strap": 5 } },
@@ -427,13 +494,6 @@
             "Husky": { slots: 11, weight: 700, speed: 165 },
             "Camel": { slots: 7, weight: 1400, speed: 155 },
             "Skiff": { slots: 8, weight: 1200, speed: 140 }
-        };
-
-        const townIcons = {
-            "Pera Volcano": getIconUrl("Pera", "towns"),
-            "Oasis": getIconUrl("Oasis", "towns"),
-            "Lake Calida": getIconUrl("Calida", "towns"),
-            "Karu Forest": getIconUrl("Karu Forest", "towns")
         };
 
         const recipeDb = [
@@ -718,8 +778,9 @@
         function renderSlotContent(element, data) {
             element.classList.add('filled');
             const icon = Object.assign(document.createElement('div'), { className: 'item-icon' });
-            icon.style.backgroundImage = `url('${data.img}')`;
-            icon.innerHTML = `<span class="stack-label">${data.qtyInSlot}</span>`;
+            applyIcon(icon, data.item); // Use Hybrid Icon
+            
+            icon.innerHTML += `<span class="stack-label">${data.qtyInSlot}</span>`; // Add stack label
             icon.onmouseenter = (e) => showTooltip(e, data);
             icon.onmouseleave = hideTooltip;
             icon.onclick = () => window.removeItemFromManifest(data.item);
@@ -778,7 +839,8 @@
             const town = document.getElementById('town-select').value;
             const container = document.getElementById('catalog-container');
             const iconBox = document.getElementById('town-icon-box');
-            iconBox.style.backgroundImage = `url('${townIcons[town]}')`;
+            applyIcon(iconBox, town); // Procedural Town Icon
+            
             container.innerHTML = '';
             
             barterDb.filter(b => b.town === town).forEach(b => {
@@ -795,9 +857,14 @@
                 if (isLimitReached) { btnText = 'MAX'; btnColor = '#ff4444'; }
                 else if (isFullCapacity) { btnText = 'FULL'; btnColor = '#888'; }
 
-                div.innerHTML = `<div class="icon-square" style="background-image: url('${b.img}')"></div>
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'icon-square';
+                applyIcon(iconDiv, b.item); // Procedural Item Icon
+
+                div.appendChild(iconDiv);
+                div.insertAdjacentHTML('beforeend', `
                     <div style="flex-grow:1;"><div class="item-name">${b.item}</div><div class="item-limit-tag">LIMIT: ${totalInManifest}/${b.limit}</div></div>
-                    <span style="font-size: 8px; color: ${btnColor};">${btnText}</span>`;
+                    <span style="font-size: 8px; color: ${btnColor};">${btnText}</span>`);
                 
                 if (!blockAdd) div.onclick = () => window.openQtyModal(b.item);
                 container.appendChild(div);
@@ -888,7 +955,11 @@
                 }
                 
                 tbody.appendChild(tr);
-                tr.querySelector('.icon-small').style.backgroundImage = `url('${getIconUrl(item)}')`;
+                
+                // Use procedural icons here too
+                const iconSmall = tr.querySelector('.icon-small');
+                applyIcon(iconSmall, item);
+
                 tr.querySelector('.item-name-cell').textContent = item;
                 tr.querySelector('.item-name-cell').style.color = needed > 0 ? '#eee' : '#444';
                 if (document.activeElement !== tr.querySelector('.owned-input')) { tr.querySelector('.owned-input').value = ownedInventory[item] || 0; }
