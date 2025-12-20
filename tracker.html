@@ -22,7 +22,7 @@
             --text-dim: #444;
         }
 
-        * { box-sizing: border-box; outline: none; }
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -34,7 +34,6 @@
             overflow: hidden;
             font-size: 12px;
             scrollbar-gutter: stable;
-            /* Anti-bounce flicker protection */
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -55,7 +54,6 @@
         #sidebar-list { overflow-y: auto; flex-grow: 1; padding-right: 4px; }
         .sidebar-header { font-size: 9px; font-weight: 900; letter-spacing: 1px; color: #333; text-transform: uppercase; }
         
-        /* Fixed Username wrapping */
         #user-info { 
             font-size: 10px; 
             color: var(--accent); 
@@ -86,7 +84,7 @@
         summary::before { content: '▶'; font-size: 7px; transition: 0.2s; color: #222; }
         details[open] summary::before { transform: rotate(90deg); color: var(--accent); }
 
-        .task-card { background: var(--card-bg); border-bottom: 1px solid var(--bg); padding: 5px 10px; display: flex; align-items: center; position: relative; border-left: 2px solid transparent; transition: 0.2s; }
+        .task-card { background: var(--card-bg); border-bottom: 1px solid var(--bg); padding: 8px 10px; display: flex; align-items: center; position: relative; border-left: 2px solid transparent; transition: 0.2s; min-height: 50px; }
         .task-card.type-thu { border-left-color: var(--thu); }
         .task-card.type-sat { border-left-color: var(--sat); }
         .task-card.complete { opacity: 0.15; filter: grayscale(1); }
@@ -97,15 +95,18 @@
         .tag-sat { background: var(--sat); color: #fff; }
 
         .t-info { flex-grow: 1; display: flex; align-items: center; gap: 10px; overflow: hidden; }
-        .t-char-tag { font-size: 8px; font-weight: 900; color: var(--accent); width: 55px; opacity: 0.7; }
-        .t-name { font-size: 12px; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .t-char-tag { font-size: 8px; font-weight: 900; color: var(--accent); width: 55px; opacity: 0.7; flex-shrink: 0; }
+        .t-name { font-size: 13px; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
 
         .pips { display: flex; gap: 2px; margin-right: 15px; }
         .pip { width: 6px; height: 2px; background: #222; border-radius: 1px; }
         .pip.on { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
 
-        .btn-c { width: 28px; height: 28px; border: 1px solid #222; background: #000; color: #fff; cursor: pointer; border-radius: 2px; font-size: 12px; display: flex; align-items: center; justify-content: center; }
-        .prog-bar { position: absolute; bottom: 0; left: 0; height: 1px; background: var(--accent); transition: width 0.3s; opacity: 0.4; }
+        /* BIGGER BUTTONS FOR MOBILE */
+        .btn-c { width: 38px; height: 38px; border: 1px solid #333; background: #000; color: #fff; cursor: pointer; border-radius: 4px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 0.1s, transform 0.1s; }
+        .btn-c:active { background: #222; transform: scale(0.95); }
+        
+        .prog-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent); transition: width 0.3s; opacity: 0.4; }
 
         .mgmt-p { background: #000; border: 1px solid var(--border); padding: 8px; border-radius: 4px; margin-bottom: 10px; font-size: 10px; }
         .inp-s { background: #111; border: 1px solid #222; color: #fff; padding: 6px; border-radius: 2px; font-size: 11px; }
@@ -125,6 +126,12 @@
         @media (max-width: 600px) {
             #sidebar { display: none; }
             #main-content { padding: 10px 15px; }
+            .t-info { flex-direction: column; align-items: flex-start; gap: 2px; }
+            .t-char-tag { width: auto; font-size: 7px; }
+            .t-name { font-size: 14px; width: 100%; }
+            .pips { margin-right: 0; margin-top: 4px; }
+            .btn-c { width: 42px; height: 42px; font-size: 22px; } /* Even bigger on very small screens */
+            .header-row { padding: 5px 0; }
         }
     </style>
 </head>
@@ -133,7 +140,6 @@
     <div id="sidebar">
         <div class="sidebar-header">USER_IDENTITY</div>
         <div id="user-info" style="font-size:10px; color:var(--accent);">...</div>
-        <!-- Auth Buttons -->
         <button id="logout-btn" onclick="firebase.auth().signOut()" class="tab-btn" style="padding:0; text-align:left; font-size:8px;">[ LOGOUT ]</button>
         <button id="login-redirect-btn" onclick="window.location.href='index.html'" class="tab-btn" style="display:none; padding:0; text-align:left; font-size:8px; color:var(--accent);">[ LOGIN_TO_SAVE_CLOUD ]</button>
         
@@ -190,7 +196,6 @@
             document.getElementById('login-redirect-btn').style.display = 'none';
             startSync(); 
         } else { 
-            // Guest Mode Logic
             currentUser = { uid: 'local_guest', isGuest: true };
             document.getElementById('user-info').innerText = "GUEST_SESSION (LOCAL)";
             document.getElementById('user-info').style.color = "#555";
@@ -198,9 +203,14 @@
             document.getElementById('login-redirect-btn').style.display = 'block';
             startSync();
         }
-        // Body visibility transition
         document.body.classList.add('ready');
     });
+
+    function haptic() {
+        if ("vibrate" in navigator) {
+            navigator.vibrate(10);
+        }
+    }
 
     function startSync() {
         if (currentUser.isGuest) {
@@ -302,9 +312,9 @@
                         </div>
                         <div class="prog-bar" style="width:${(t.done/t.max)*100}%"></div>
                     </div>
-                    <div class="view-ui" style="display:flex; align-items:center; gap:5px;">
+                    <div class="view-ui" style="display:flex; align-items:center; gap:8px;">
                         <button class="btn-c" onclick="mod(${t.id},-1)">-</button>
-                        <div style="font-family:'JetBrains Mono'; font-size:10px; width:15px; text-align:center;">${t.done}</div>
+                        <div style="font-family:'JetBrains Mono'; font-size:12px; width:20px; text-align:center; color:#fff;">${t.done}</div>
                         <button class="btn-c" onclick="mod(${t.id},1)">+</button>
                     </div>`;
                 list.appendChild(card);
@@ -336,7 +346,13 @@
         if(card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.classList.add('highlight'); setTimeout(() => card.classList.remove('highlight'), 1500); }
     }
 
-    function mod(id, d) { const t = tasks.find(x => x.id == id); t.done = Math.max(0, Math.min(t.max, t.done + d)); pushData(); }
+    function mod(id, d) { 
+        haptic();
+        const t = tasks.find(x => x.id == id); 
+        t.done = Math.max(0, Math.min(t.max, t.done + d)); 
+        pushData(); 
+    }
+    
     function upd(id, f, v) { const t = tasks.find(x => x.id == id); t[f] = (f==='max'?parseInt(v):v); pushData(); }
     function del(id) { tasks = tasks.filter(x => x.id != id); pushData(); }
     function addTask(cat) { tasks.push({ id: Date.now(), name: "New Task", cat, done: 0, max: 1, type: currentView === 'daily' ? "daily" : "thu", char: chars[0] }); pushData(); }
