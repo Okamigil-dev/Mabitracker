@@ -6,7 +6,10 @@
     <title>Trading Post Interface</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
@@ -606,7 +609,7 @@
                         <select class="city-dropdown" id="city-select"></select>
                     </div>
                     <div style="display: flex; flex-direction: column; width: 50px;">
-                        <label class="panel-small-label">Rank</label>
+                        <label class="panel-small-label">Post Lv.</label>
                         <select id="merchant-rating-select" class="city-dropdown">
                             <option value="1">1</option>
                             <option value="2">2</option>
@@ -656,6 +659,34 @@
             </div>
 
             <div class="right-panel">
+                 <!-- PROFIT MODIFIERS -->
+                 <div class="buff-row-side">
+                    <div class="section-header-label">PROFIT MODIFIERS</div>
+                    
+                    <div style="width: 100%; margin-bottom: 5px;">
+                        <label class="panel-small-label">Commerce Mastery</label>
+                        <select id="mastery-rank" class="city-dropdown" style="width:100%">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <div style="width: 100%; display: flex; align-items: flex-end; gap: 5px;">
+                        <div style="flex-grow: 1;">
+                            <label class="panel-small-label">Letter of Guarantee</label>
+                            <select id="letter-select" class="city-dropdown" style="width:100%">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <label class="panel-small-label" style="font-size: 8px; margin-bottom:5px;">FINE</label>
+                            <label class="toggle-container" style="width: auto; margin:0;">
+                                <input type="checkbox" id="fine-letter-check" class="toggle-input">
+                                <div class="toggle-slider"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="buff-row-side">
                     <div class="section-header-label">ACTIVE BUFFS</div>
                     <label class="toggle-container">
@@ -664,11 +695,17 @@
                         <span>Grandmaster</span>
                     </label>
 
-                    <label class="toggle-container">
-                        <input type="checkbox" id="william-check" class="toggle-input">
-                        <div class="toggle-slider"></div>
-                        <span>William</span>
-                    </label>
+                    <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
+                        <label class="toggle-container" style="width: auto;">
+                            <input type="checkbox" id="william-check" class="toggle-input">
+                            <div class="toggle-slider"></div>
+                            <span>William</span>
+                        </label>
+                        <div id="william-like-box" style="display:none; align-items: center; gap: 5px;">
+                             <span style="font-size: 9px; color: #666;">LIKE</span>
+                             <input type="number" id="william-likeability" class="qty-input-compact" min="0" max="249" value="249" placeholder="249">
+                        </div>
+                    </div>
 
                     <label class="toggle-container">
                         <input type="checkbox" id="alpaca-check" class="toggle-input">
@@ -754,10 +791,14 @@
         // --- 1. CONFIGURATION & DATA ---
         const firebaseConfig = {
             apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
-            databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com"
+            databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
+            projectId: "mabinogi-tracker-default"
         };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const rtdb = firebase.database(); // Realtime DB for Public Prices
+        const firestoreDb = firebase.firestore(); // Firestore for User Settings
+        const auth = firebase.auth();
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         function getImagePath(path) {
             if (!path) return "";
@@ -789,7 +830,21 @@
             "Group": ["Qilla", "Filia", "Cor", "Vales"]
         };
 
-        // Compact Data Structure (Logic remains identical)
+        // NEW: Mastery Ranks Data
+        const masteryRanks = {
+            "1": 0.15, "2": 0.14, "3": 0.13, "4": 0.12, "5": 0.11,
+            "6": 0.10, "7": 0.09, "8": 0.08, "9": 0.07, "A": 0.06,
+            "B": 0.05, "C": 0.04, "D": 0.03, "E": 0.02, "F": 0.01
+        };
+
+        // NEW: Letter of Guarantee Data (Base)
+        const guaranteeLetters = {
+            "None": { normal: 0, barter: 0, fine_normal: 0, fine_barter: 0 },
+            "Goblin": { normal: 0.15, barter: 0.05, fine_normal: 0.20, fine_barter: 0.075 },
+            "Imp": { normal: 0.30, barter: 0.10, fine_normal: 0.40, fine_barter: 0.15 },
+            "Ogre": { normal: 0.40, barter: 0.15, fine_normal: 0.50, fine_barter: 0.20 }
+        };
+
         const marketData = {
             "Normal": {
                 "Tir Chonaill": [
@@ -953,7 +1008,7 @@
         let currentItem = null;
         let publicPrices = {};
         let publicStocks = {};
-        let townRanks = {}; // New state for holding ranks per town
+        let townRanks = {}; 
         let transportOwnership = {
             "Hand Cart": false,
             "Wagon": false,
@@ -964,37 +1019,125 @@
             "Air Ship": false
         };
 
+        let currentUser = null;
+        let saveTimeout = null;
+
         // --- 3. FIREBASE SYNC & STORAGE ---
-        function startGlobalSync() {
-            // Prices
-            db.ref('public_commerce/prices').on('value', (snapshot) => {
+        function initApp() {
+            // Public Data Sync (Realtime DB)
+            rtdb.ref('public_commerce/prices').on('value', (snapshot) => {
                 publicPrices = snapshot.val() || {};
                 const localPrices = JSON.parse(localStorage.getItem('mabi_p')) || {};
                 localStorage.setItem('mabi_p', JSON.stringify({ ...localPrices, ...publicPrices }));
                 refreshUI();
             });
 
-            // Stocks
-            db.ref('public_commerce/stocks').on('value', (snapshot) => {
+            rtdb.ref('public_commerce/stocks').on('value', (snapshot) => {
                 publicStocks = snapshot.val() || {};
                 refreshUI();
             });
+
+            // Auth & User Settings (Firestore)
+            initAuth();
+        }
+
+        async function initAuth() {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await auth.signInWithCustomToken(__initial_auth_token);
+            } else {
+                await auth.signInAnonymously();
+            }
+
+            auth.onAuthStateChanged((user) => {
+                currentUser = user;
+                if (user) {
+                    loadUserSettings(user.uid);
+                }
+            });
+        }
+
+        function loadUserSettings(userId) {
+            // Listen for changes in user settings
+            firestoreDb.collection('artifacts').doc(appId)
+                .collection('users').doc(userId)
+                .collection('data').doc('settings')
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data) {
+                            applySettings(data);
+                        }
+                    }
+                }, (error) => {
+                    console.error("Error getting settings:", error);
+                });
+        }
+
+        function applySettings(data) {
+            // Apply Profit Modifiers
+            if (data.mastery) document.getElementById('mastery-rank').value = data.mastery;
+            if (data.letter) document.getElementById('letter-select').value = data.letter;
+            if (data.fineLetter !== undefined) document.getElementById('fine-letter-check').checked = data.fineLetter;
+            if (data.trader) document.getElementById('trader-qty').value = data.trader;
+            if (data.trust) document.getElementById('trustworthy-qty').value = data.trust;
+
+            // Apply Active Buffs
+            if (data.gm !== undefined) document.getElementById('gm-check').checked = data.gm;
+            if (data.william !== undefined) document.getElementById('william-check').checked = data.william;
+            if (data.williamLike) document.getElementById('william-likeability').value = data.williamLike;
+            if (data.alpaca !== undefined) document.getElementById('alpaca-check').checked = data.alpaca;
+
+            // Apply Transport Ownership
+            if (data.transports) {
+                Object.keys(data.transports).forEach(k => {
+                    if (transportOwnership.hasOwnProperty(k)) {
+                        transportOwnership[k] = data.transports[k];
+                        // Update UI checkbox
+                        const toggle = document.querySelector(`.transport-toggle[data-mount="${k}"]`);
+                        if (toggle) toggle.checked = transportOwnership[k];
+                    }
+                });
+            }
+            
+            // Apply Mount Selection (if valid)
+            if (data.mount) document.getElementById('transport-dropdown').value = data.mount;
+            
+            updateTransportDropdown();
+            refreshUI();
         }
 
         function savePrefs() {
-            localStorage.setItem('mabi_prefs', JSON.stringify({
+            const prefs = {
                 type: document.getElementById('commerce-type-select').value,
                 city: document.getElementById('city-select').value,
                 mount: document.getElementById('transport-dropdown').value,
                 gm: document.getElementById('gm-check').checked,
                 william: document.getElementById('william-check').checked,
+                williamLike: document.getElementById('william-likeability').value, 
                 alpaca: document.getElementById('alpaca-check').checked,
                 trader: document.getElementById('trader-qty').value,
-                trust: document.getElementById('trustworthy-qty').value
-            }));
+                trust: document.getElementById('trustworthy-qty').value,
+                mastery: document.getElementById('mastery-rank').value,
+                letter: document.getElementById('letter-select').value,
+                fineLetter: document.getElementById('fine-letter-check').checked,
+                transports: transportOwnership // Include ownership in main save
+            };
 
-            // Save Transport Ownership
+            // 1. Local Cache
+            localStorage.setItem('mabi_prefs', JSON.stringify(prefs));
             localStorage.setItem('mabi_transports', JSON.stringify(transportOwnership));
+
+            // 2. Cloud Sync (Debounced)
+            if (currentUser) {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    firestoreDb.collection('artifacts').doc(appId)
+                        .collection('users').doc(currentUser.uid)
+                        .collection('data').doc('settings')
+                        .set(prefs, { merge: true })
+                        .catch(err => console.error("Save failed", err));
+                }, 1000); // 1 second delay
+            }
         }
 
         function saveTownRanks() {
@@ -1008,31 +1151,25 @@
             const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
 
             publicPrices[priceKey] = sellVal; // Optimistic
-            db.ref(`public_commerce/prices/${priceKey}`).set(sellVal);
+            rtdb.ref(`public_commerce/prices/${priceKey}`).set(sellVal);
 
             // Fast DOM Update for current row
             const activeInput = document.activeElement;
             if (activeInput && activeInput.classList.contains('price-input')) {
                 const row = activeInput.closest('.market-row');
                 if (row) {
-                    const dBuy = getDiscountedBuyPrice(currentItem.buy);
-                    const stats = getModifiedStats(document.getElementById('transport-dropdown').value);
-                    const load = Math.min(Math.floor(stats.weight / currentItem.weight), stats.slots * currentItem.max, currentItem.limit);
-
-                    const profit = (val !== "") ? (sellVal - dBuy) * load : 0;
-                    const divisor = (document.getElementById('commerce-type-select').value === "Barter") ? 34 : 17;
-                    const score = Math.max(0, Math.floor(((sellVal - (currentItem.buy || 0)) * load) / divisor));
-
+                    const result = calculateItemProfit(currentItem, city, sellVal);
+                    
                     const profitEl = row.querySelector('.market-profit-col span');
                     const scoreEl = row.querySelector('.market-score-col span');
 
                     if (profitEl) {
-                        profitEl.textContent = profit.toLocaleString();
-                        profitEl.className = profit < 0 ? 'profit-val negative' : 'profit-val';
+                        profitEl.textContent = result.profit.toLocaleString();
+                        profitEl.className = result.profit < 0 ? 'profit-val negative' : 'profit-val';
                     }
                     if (scoreEl) {
-                        scoreEl.textContent = score.toLocaleString();
-                        scoreEl.className = score < 0 ? 'season-val negative' : 'season-val';
+                        scoreEl.textContent = result.score.toLocaleString();
+                        scoreEl.className = result.score < 0 ? 'season-val negative' : 'season-val';
                     }
                 }
             }
@@ -1042,7 +1179,7 @@
         function updateStock(itemName, quantity) {
             const qty = parseInt(quantity) || 0;
             publicStocks[itemName] = qty;
-            db.ref(`public_commerce/stocks/${itemName}`).set(qty);
+            rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty);
             refreshUI();
         }
 
@@ -1076,6 +1213,54 @@
             return { slots: b.slots + bS, weight: b.weight + bW };
         }
 
+        // Core Profit Calculator to unify Logic
+        function calculateItemProfit(item, targetCity, sellPriceOverride = null) {
+            const sellVal = sellPriceOverride !== null ? sellPriceOverride : getPrice(item.name, targetCity);
+            const dBuy = getDiscountedBuyPrice(item.buy);
+            const stats = getModifiedStats(document.getElementById('transport-dropdown').value);
+            const load = Math.min(Math.floor(stats.weight / item.weight), stats.slots * item.max, item.limit);
+            
+            // Basic Profit
+            const baseProfit = (sellVal !== "") ? (sellVal - dBuy) * load : 0;
+            
+            // Modifiers
+            const commerceType = document.getElementById('commerce-type-select').value;
+            const masteryRank = document.getElementById('mastery-rank').value;
+            const masteryBonus = masteryRanks[masteryRank] || 0;
+            
+            const letterName = document.getElementById('letter-select').value;
+            const isFine = document.getElementById('fine-letter-check').checked;
+            const letterInfo = guaranteeLetters[letterName] || guaranteeLetters["None"];
+            
+            // Logic for Fine/Normal and Barter/Normal
+            let letterMultiplier = 0;
+            if (commerceType === "Barter") {
+                letterMultiplier = isFine ? letterInfo.fine_barter : letterInfo.barter;
+            } else {
+                letterMultiplier = isFine ? letterInfo.fine_normal : letterInfo.normal;
+            }
+
+            // William Bonus (Applies to Profit, NOT score)
+            // 0% to 3% based on 249 Likeability
+            let williamBonus = 0;
+            if (document.getElementById('william-check').checked) {
+                const likeability = parseInt(document.getElementById('william-likeability').value) || 0;
+                // Clamp 0-249
+                const validLike = Math.max(0, Math.min(249, likeability));
+                williamBonus = (validLike / 249) * 0.03; 
+            }
+
+            // Total Profit = Base * (1 + Mastery + Letter + William)
+            const finalProfit = Math.floor(baseProfit * (1 + masteryBonus + letterMultiplier + williamBonus));
+
+            // Score Logic - RAW (Sell - Buy) * Load / Divisor
+            const divisor = (commerceType === "Barter") ? 34 : 17;
+            const score = Math.max(0, Math.floor(((sellVal - (item.buy || 0)) * load) / divisor));
+
+            return { profit: finalProfit, score: score, load: load };
+        }
+
+
         // --- 6. MANIFEST LOGIC (CONSOLIDATED) ---
         function getAvailableMounts() {
             // Backpack always available
@@ -1096,6 +1281,31 @@
         function calculateBestRouteForVector(originCity, targetCities, originItems, forcedMount = null) {
             let best = null;
             let maxP = -1;
+            
+            // Need current Modifiers for accurate calculation
+            const commerceType = document.getElementById('commerce-type-select').value;
+            const masteryRank = document.getElementById('mastery-rank').value;
+            const masteryBonus = masteryRanks[masteryRank] || 0;
+            
+            const letterName = document.getElementById('letter-select').value;
+            const isFine = document.getElementById('fine-letter-check').checked;
+            const letterInfo = guaranteeLetters[letterName] || guaranteeLetters["None"];
+            
+            let letterMultiplier = 0;
+            if (commerceType === "Barter") {
+                letterMultiplier = isFine ? letterInfo.fine_barter : letterInfo.barter;
+            } else {
+                letterMultiplier = isFine ? letterInfo.fine_normal : letterInfo.normal;
+            }
+
+            let williamBonus = 0;
+            if (document.getElementById('william-check').checked) {
+                const likeability = parseInt(document.getElementById('william-likeability').value) || 0;
+                const validLike = Math.max(0, Math.min(249, likeability));
+                williamBonus = (validLike / 249) * 0.03; 
+            }
+
+            const totalMultiplier = (1 + masteryBonus + letterMultiplier + williamBonus);
 
             // Loop through all target cities
             targetCities.forEach(targetCity => {
@@ -1110,7 +1320,13 @@
                     const potential = originItems.map(item => {
                         const sell = getPrice(item.name, targetCity);
                         const buy = getDiscountedBuyPrice(item.buy);
-                        const unitP = sell - buy;
+                        
+                        // Base Unit Profit
+                        let unitP = sell - buy;
+                        
+                        // Apply Modifiers to Unit Profit estimate
+                        unitP = unitP * totalMultiplier;
+
                         return { ...item, unitP, eff: unitP / Math.max(1, item.weight) };
                     }).filter(i => i.unitP > 0).sort((a, b) => b.eff - a.eff);
 
@@ -1121,8 +1337,8 @@
                         if (qty <= 0) return;
 
                         let slotsNeeded = Math.ceil(qty / item.max);
-                        itemsToBuy.push({ n: item.name, q: qty, p: qty * item.unitP, img: item.img, s: slotsNeeded, maxPerSlot: item.max });
-                        remWeight -= (qty * item.weight); remSlots -= slotsNeeded; totalP += (qty * item.unitP);
+                        itemsToBuy.push({ n: item.name, q: qty, p: Math.floor(qty * item.unitP), img: item.img, s: slotsNeeded, maxPerSlot: item.max });
+                        remWeight -= (qty * item.weight); remSlots -= slotsNeeded; totalP += Math.floor(qty * item.unitP);
                     });
 
                     if (totalP > maxP) {
@@ -1236,6 +1452,13 @@
             updateRecommendationAndStats();
             updateTownIcon();
             runManifests();
+
+            // William Likeability Visibility
+            const wCheck = document.getElementById('william-check');
+            const wBox = document.getElementById('william-like-box');
+            if(wCheck && wBox) {
+                wBox.style.display = wCheck.checked ? 'flex' : 'none';
+            }
         }
 
         function updatePreview() {
@@ -1252,12 +1475,6 @@
         function updateRecommendationAndStats() {
             const transportEl = document.getElementById('transport-dropdown');
             if (!transportEl || !currentItem) return;
-
-            // Note: We calculate stats here for display, but removed the code that tried to update non-existent IDs like w-limit-text
-            const stats = getModifiedStats(transportEl.value);
-            const load = Math.min(Math.floor(stats.weight / currentItem.weight), stats.slots * currentItem.max, currentItem.limit);
-
-            // Removed: wLimitEl, wFillEl, maxQtyEl checks (IDs did not exist in HTML)
         }
 
         function updateTownIcon() {
@@ -1314,7 +1531,7 @@
                 const safeName = item.name.replace(/'/g, "\\'");
                 const currentStock = getStock(item.name);
                 const displayStock = currentStock === 0 ? "" : currentStock;
-
+                
                 // If searching, show the town badge
                 const townBadgeHtml = item._townName ? `<span class="item-town-badge">📍 ${item._townName}</span>` : '';
 
@@ -1327,8 +1544,8 @@
                                 </div>
                                 <div class="stock-input-row">
                                     <span style="font-size:9px; color:#aaa;">STOCK</span>
-                                    <input type="number" class="qty-input" value="${displayStock}"
-                                    placeholder="0"
+                                    <input type="number" class="qty-input" value="${displayStock}" 
+                                    placeholder="0" 
                                     style="width:70px; height:18px; padding:0; text-align:right;"
                                     onclick="event.stopPropagation()"
                                     onchange="updateStock('${safeName}', this.value)">
@@ -1349,28 +1566,22 @@
 
             const type = document.getElementById('commerce-type-select').value;
             const origin = document.getElementById('city-select').value;
-            const dBuy = getDiscountedBuyPrice(currentItem.buy);
-            const stats = getModifiedStats(document.getElementById('transport-dropdown').value);
-            const load = Math.min(Math.floor(stats.weight / currentItem.weight), stats.slots * currentItem.max, currentItem.limit);
-            const divisor = (type === "Barter") ? 34 : 17;
             const targetPool = (type === "Barter") ? citiesByType["Normal"] : citiesByType[type];
 
-            // Filter out origin city, unless searching (where origin might differ from selected dropdown)
-            // Ideally we should use the item's own town as origin if in search mode
+            // Filter out origin city, unless searching
             const itemOrigin = currentItem._townName || origin;
 
             targetPool.filter(c => c !== itemOrigin).forEach(city => {
                 const sellVal = getPrice(currentItem.name, city);
-                const profit = sellVal ? (sellVal - dBuy) * load : 0;
-                const score = Math.max(0, Math.floor(((sellVal - (currentItem.buy || 0)) * load) / divisor));
+                const result = calculateItemProfit(currentItem, city, sellVal);
 
                 const row = document.createElement('div');
                 row.className = 'market-row';
                 row.innerHTML = `
                             <div class="market-left"><b>${city}</b></div>
                             <div class="col-price"><input type="number" class="price-input" value="${sellVal || ''}" oninput="updatePrice('${city}', this.value)"></div>
-                            <div class="market-profit-col"><span class="${profit < 0 ? 'profit-val negative' : 'profit-val'}">${profit.toLocaleString()}</span></div>
-                            <div class="market-score-col"><span class="season-val">${score.toLocaleString()}</span></div>
+                            <div class="market-profit-col"><span class="${result.profit < 0 ? 'profit-val negative' : 'profit-val'}">${result.profit.toLocaleString()}</span></div>
+                            <div class="market-score-col"><span class="season-val">${result.score.toLocaleString()}</span></div>
                         `;
                 list.appendChild(row);
             });
@@ -1397,6 +1608,34 @@
                 dropdown.value = "Back Pack";
                 savePrefs(); // Update saved pref if forced to change
             }
+        }
+
+        function populateModifierDropdowns() {
+            // Mastery
+            const masterySelect = document.getElementById('mastery-rank');
+            masterySelect.innerHTML = '';
+            Object.keys(masteryRanks).forEach(rank => {
+                const opt = document.createElement('option');
+                opt.value = rank;
+                opt.textContent = `Rank ${rank} (+${Math.round(masteryRanks[rank]*100)}%)`;
+                masterySelect.appendChild(opt);
+            });
+            masterySelect.value = "F"; // Default
+
+            // Letters
+            const letterSelect = document.getElementById('letter-select');
+            letterSelect.innerHTML = '';
+            
+            // Explicit order based on profit: Ogre > Imp > Goblin
+            const letterOrder = ["None", "Ogre", "Imp", "Goblin"];
+            
+            letterOrder.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                letterSelect.appendChild(opt);
+            });
+            letterSelect.value = "None";
         }
 
         // --- 8. IMPORT TOOL ---
@@ -1432,7 +1671,7 @@
             }
 
             if (count > 0) {
-                await db.ref('public_commerce/prices').update(updates);
+                await rtdb.ref('public_commerce/prices').update(updates);
                 status.textContent = `Done! Imported ${count} prices.`;
             } else {
                 status.textContent = "No valid data found.";
@@ -1442,29 +1681,21 @@
         // --- 9. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             const saved = JSON.parse(localStorage.getItem('mabi_prefs')) || {};
-            const savedTransports = JSON.parse(localStorage.getItem('mabi_transports')) || {};
             townRanks = JSON.parse(localStorage.getItem('mabi_ranks')) || {}; // Load ranks
-
-            // Load ownership state
-            if (savedTransports) {
-                Object.keys(savedTransports).forEach(k => {
-                    if (transportOwnership.hasOwnProperty(k)) {
-                        transportOwnership[k] = savedTransports[k];
-                    }
-                });
-            }
 
             const typeSelect = document.getElementById('commerce-type-select');
             const citySelect = document.getElementById('city-select');
             const rankSelect = document.getElementById('merchant-rating-select');
             const searchInput = document.getElementById('global-search');
             const clearSearch = document.getElementById('clear-search');
+            
+            // Populate New Dropdowns
+            populateModifierDropdowns();
 
             // Initialize Transport Toggles in DOM
             document.querySelectorAll('.transport-toggle').forEach(toggle => {
                 const mountName = toggle.dataset.mount;
-                toggle.checked = transportOwnership[mountName];
-
+                // Checked status will be set by loadUserSettings
                 toggle.onchange = (e) => {
                     transportOwnership[mountName] = e.target.checked;
                     savePrefs();
@@ -1524,7 +1755,7 @@
                 refreshUI();
             };
 
-            // Restore Prefs
+            // Restore Prefs (Initial local load before cloud sync)
             if (saved.type) typeSelect.value = saved.type;
             // Populate cities first based on saved type
             citySelect.innerHTML = citiesByType[typeSelect.value].map(c => `<option value="${c}">${c}</option>`).join('');
@@ -1532,12 +1763,17 @@
             if (saved.city && citiesByType[typeSelect.value].includes(saved.city)) {
                 citySelect.value = saved.city;
             }
-
             if (saved.mount) document.getElementById('transport-dropdown').value = saved.mount;
+            
+            // Apply other saved prefs immediately from local storage for instant feedback
             if (saved.trader) document.getElementById('trader-qty').value = saved.trader;
             if (saved.trust) document.getElementById('trustworthy-qty').value = saved.trust;
+            if (saved.mastery) document.getElementById('mastery-rank').value = saved.mastery;
+            if (saved.letter) document.getElementById('letter-select').value = saved.letter;
+            document.getElementById('fine-letter-check').checked = !!saved.fineLetter;
             document.getElementById('gm-check').checked = !!saved.gm;
             document.getElementById('william-check').checked = !!saved.william;
+            if(saved.williamLike) document.getElementById('william-likeability').value = saved.williamLike;
             document.getElementById('alpaca-check').checked = !!saved.alpaca;
 
             // Trigger initial rank load & Transport Check
@@ -1546,22 +1782,27 @@
 
             // Other Listeners
             document.getElementById('transport-dropdown').onchange = () => { refreshUI(); savePrefs(); };
-
-            // Changed from onchange to oninput for better responsiveness
             document.getElementById('trader-qty').oninput = () => { refreshUI(); savePrefs(); };
             document.getElementById('trustworthy-qty').oninput = () => { refreshUI(); savePrefs(); };
+            
+            // New Listeners
+            document.getElementById('mastery-rank').onchange = () => { refreshUI(); savePrefs(); };
+            document.getElementById('letter-select').onchange = () => { refreshUI(); savePrefs(); };
+            document.getElementById('fine-letter-check').onchange = () => { refreshUI(); savePrefs(); };
 
             document.getElementById('gm-check').onchange = () => { refreshUI(); savePrefs(); };
             document.getElementById('william-check').onchange = function () {
                 if (this.checked) document.getElementById('alpaca-check').checked = false;
                 refreshUI(); savePrefs();
             };
+            document.getElementById('william-likeability').oninput = () => { refreshUI(); savePrefs(); };
+
             document.getElementById('alpaca-check').onchange = function () {
                 if (this.checked) document.getElementById('william-check').checked = false;
                 refreshUI(); savePrefs();
             };
 
-            startGlobalSync();
+            initApp();
             refreshUI();
         });
     </script>
