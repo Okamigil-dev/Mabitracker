@@ -73,7 +73,7 @@
 
         /* MAIN CONTENT */
         #main-content { flex-grow: 1; padding: 15px 30px; overflow-y: auto; scroll-behavior: smooth; }
-        .container { width: 100%; max-width: 850px; margin: 0 auto; padding-bottom: 100px; }
+        .container { width: 100%; max-width: 1500px; margin: 0 auto; padding-bottom: 100px; }
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 10px 0; }
         
         /* UNIFORM HUB BUTTON */
@@ -180,10 +180,12 @@
     <div id="main-content">
         <div class="container" id="app">
             <div class="header-row">
-                <div style="background:#000; border:1px solid var(--border); padding:2px; border-radius:4px; display:flex; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
                     <button class="hub-btn" onclick="location.href='index.html'">HUB</button>
-                    <button id="nav-daily" class="tab-btn active" onclick="setView('daily')">Dailies</button>
-                    <button id="nav-weekly" class="tab-btn" onclick="setView('weekly')">Weeklies</button>
+                    <div style="background:#000; border:1px solid var(--border); padding:2px; border-radius:4px; display:flex; align-items:center;">
+                        <button id="nav-daily" class="tab-btn active" onclick="setView('daily')">Dailies</button>
+                        <button id="nav-weekly" class="tab-btn" onclick="setView('weekly')">Weeklies</button>
+                    </div>
                 </div>
                 <button onclick="toggleMgmt()" class="tab-btn" style="color:#222; white-space:nowrap;">[ SYSTEM_CONFIG ]</button>
             </div>
