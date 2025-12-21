@@ -977,30 +977,38 @@
             refreshUI();
 
             // 5. Firebase Init (Graceful)
-            try {
-                const firebaseConfig = { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com", projectId: "mabinogi-tracker-default" };
-                firebase.initializeApp(firebaseConfig);
-                rtdb = firebase.database();
-                auth = firebase.auth();
-                
-                // Public Data Listeners
-                rtdb.ref('public_commerce/prices').on('value', (s) => { publicPrices = s.val() || {}; refreshUI(); });
-                rtdb.ref('public_commerce/stocks').on('value', (s) => { publicStocks = s.val() || {}; refreshUI(); });
+            function initApp() {
+                try {
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", // Key provided by env or set here
+                        databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
+                        projectId: "mabinogi-tracker-default"
+                    };
+                    firebase.initializeApp(firebaseConfig);
+                    rtdb = firebase.database();
+                    auth = firebase.auth();
+                    
+                    // Public Data Listeners
+                    rtdb.ref('public_commerce/prices').on('value', (s) => { publicPrices = s.val() || {}; refreshUI(); });
+                    rtdb.ref('public_commerce/stocks').on('value', (s) => { publicStocks = s.val() || {}; refreshUI(); });
 
-                // User Data
-                if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) auth.signInWithCustomToken(__initial_auth_token);
-                else auth.signInAnonymously().catch(e => console.log("Auth skipped (offline)"));
+                    // User Data
+                    if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) auth.signInWithCustomToken(__initial_auth_token);
+                    else auth.signInAnonymously().catch(e => console.log("Auth skipped (offline)"));
 
-                auth.onAuthStateChanged((user) => {
-                    currentUser = user;
-                    if (user) {
-                        rtdb.ref(`artifacts/${appId}/users/${user.uid}/settings`).on('value', (s) => { if(s.val()) { const d=s.val(); if(d.transports) transportOwnership=d.transports; refreshUI(); } });
-                        rtdb.ref(`artifacts/${appId}/users/${user.uid}/town_ranks`).on('value', (s) => { if(s.val()) { townRanks = s.val(); updateCityContext(); } });
-                    }
-                });
-            } catch(e) {
-                console.log("Running in offline mode (Firebase init failed)");
+                    auth.onAuthStateChanged((user) => {
+                        currentUser = user;
+                        if (user) {
+                            rtdb.ref(`artifacts/${appId}/users/${user.uid}/settings`).on('value', (s) => { if(s.val()) { const d=s.val(); if(d.transports) transportOwnership=d.transports; refreshUI(); } });
+                            rtdb.ref(`artifacts/${appId}/users/${user.uid}/town_ranks`).on('value', (s) => { if(s.val()) { townRanks = s.val(); updateCityContext(); } });
+                        }
+                    });
+                } catch(e) {
+                    console.log("Running in offline mode (Firebase init failed)");
+                }
             }
+
+            initApp();
         });
     </script>
 </body>
