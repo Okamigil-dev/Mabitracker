@@ -205,7 +205,17 @@
     </div>
 
     <script>
-    const firebaseConfig = { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com" };
+    // UPDATED CONFIGURATION TO MATCH HUB
+    const firebaseConfig = {
+        apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
+        authDomain: "mabinogi-tracker.firebaseapp.com",
+        databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
+        projectId: "mabinogi-tracker",
+        storageBucket: "mabinogi-tracker.firebasestorage.app",
+        messagingSenderId: "267690802644",
+        appId: "1:267690802644:web:fccdd005d5c8990504ea41",
+        measurementId: "G-VBDBKQ3M1B"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
@@ -248,6 +258,7 @@
             lastReset = localData.lastReset || { daily: 0, thu: 0, sat: 0 };
             checkAndReset(); render();
         } else {
+            // Note: This maintains the simple users/$uid path used in this file
             db.ref(`users/${currentUser.uid}`).on('value', (snap) => {
                 const data = snap.val() || {};
                 tasks = data.tasks || []; chars = data.chars || ["Main"]; catOrder = data.catOrder || []; lastReset = data.lastReset || { daily: 0, thu: 0, sat: 0 };
@@ -417,9 +428,12 @@
             const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000), s = Math.floor((ms%60000)/1000);
             return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
         };
-        document.getElementById('timer-daily').innerText = formatDiff(getNextReset(null));
-        document.getElementById('timer-thu').innerText = formatDiff(getNextReset(4));
-        document.getElementById('timer-sat').innerText = formatDiff(getNextReset(6));
+        const dElem = document.getElementById('timer-daily');
+        const tElem = document.getElementById('timer-thu');
+        const sElem = document.getElementById('timer-sat');
+        if(dElem) dElem.innerText = formatDiff(getNextReset(null));
+        if(tElem) tElem.innerText = formatDiff(getNextReset(4));
+        if(sElem) sElem.innerText = formatDiff(getNextReset(6));
     }
 
     setInterval(updateEngine, 1000);
