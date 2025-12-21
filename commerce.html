@@ -603,6 +603,7 @@
         let saveTimeout = null;
         let rtdb = null;
         let auth = null;
+        let skipRender = false; // Prevents focus loss when typing
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // --- 3. LOGIC ---
@@ -852,6 +853,9 @@
             const sellVal = parseInt(val, 10) || 0;
             const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
             publicPrices[priceKey] = sellVal;
+            
+            skipRender = true; // Fix focus loss
+            
             // Try to update DB, ignore errors
             if(rtdb) { try { rtdb.ref(`public_commerce/prices/${priceKey}`).set(sellVal); } catch(e){} }
             // Optimistic Row Update
@@ -872,6 +876,9 @@
         function updateStock(itemName, quantity) {
             const qty = parseInt(quantity) || 0;
             publicStocks[itemName] = qty;
+            
+            skipRender = true; // Fix focus loss
+            
             if(rtdb) { try { rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty); } catch(e){} }
             refreshUI();
         }
@@ -1001,8 +1008,14 @@
                     auth = firebase.auth();
                     
                     // Public Data Listeners
-                    rtdb.ref('public_commerce/prices').on('value', (s) => { publicPrices = s.val() || {}; refreshUI(); });
-                    rtdb.ref('public_commerce/stocks').on('value', (s) => { publicStocks = s.val() || {}; refreshUI(); });
+                    rtdb.ref('public_commerce/prices').on('value', (s) => { 
+                        if (skipRender) { skipRender = false; return; }
+                        publicPrices = s.val() || {}; refreshUI(); 
+                    });
+                    rtdb.ref('public_commerce/stocks').on('value', (s) => { 
+                        if (skipRender) { skipRender = false; return; }
+                        publicStocks = s.val() || {}; refreshUI(); 
+                    });
 
                     // User Data
                     if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) auth.signInWithCustomToken(__initial_auth_token);
