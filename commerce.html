@@ -896,13 +896,13 @@
             localStorage.setItem('mabi_transports', JSON.stringify(transportOwnership));
             if (currentUser && rtdb) {
                 clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(() => { try { rtdb.ref(`artifacts/${appId}/users/${currentUser.uid}/settings`).update(prefs); } catch(e){} }, 1000);
+                saveTimeout = setTimeout(() => { try { rtdb.ref(`users/${currentUser.uid}/settings`).update(prefs); } catch(e){} }, 1000);
             }
         }
 
         function saveTownRanks() {
             localStorage.setItem('mabi_ranks', JSON.stringify(townRanks));
-            if (currentUser && rtdb) { try { rtdb.ref(`artifacts/${appId}/users/${currentUser.uid}/town_ranks`).set(townRanks); } catch(e){} }
+            if (currentUser && rtdb) { try { rtdb.ref(`users/${currentUser.uid}/town_ranks`).set(townRanks); } catch(e){} }
         }
 
         function updateCityContext() {
@@ -1011,7 +1011,7 @@
                     auth.onAuthStateChanged((user) => {
                         currentUser = user;
                         if (user) {
-                            rtdb.ref(`artifacts/${appId}/users/${user.uid}/settings`).on('value', (s) => { 
+                            rtdb.ref(`users/${user.uid}/settings`).on('value', (s) => { 
                                 if(s.val()) { 
                                     const d=s.val(); 
                                     if(d.transports) {
@@ -1025,7 +1025,7 @@
                                     refreshUI(); 
                                 } 
                             });
-                            rtdb.ref(`artifacts/${appId}/users/${user.uid}/town_ranks`).on('value', (s) => { if(s.val()) { townRanks = s.val(); updateCityContext(); } });
+                            rtdb.ref(`users/${user.uid}/town_ranks`).on('value', (s) => { if(s.val()) { townRanks = s.val(); updateCityContext(); } });
                         }
                     });
                 } catch(e) {
