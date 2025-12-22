@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mabi-Apps Hub - v2.6</title>
+    <title>Mabi-Apps Hub - v2.7</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -77,11 +77,15 @@
         }
         .tab-btn.login-trigger:hover { background: var(--accent-dim); }
 
-        /* --- SIDEBAR --- */
-        #sidebar {
-            width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
+        /* --- SIDEBARS --- */
+        .sidebar {
+            width: 240px; background: var(--sidebar-bg);
             display: flex; flex-direction: column; padding: 20px; gap: 16px; flex-shrink: 0; height: 100%;
         }
+
+        #sidebar-left { border-right: 1px solid var(--border); }
+        #sidebar-right { border-left: 1px solid var(--border); }
+
         #sidebar-list { overflow-y: auto; flex-grow: 1; padding-right: 4px; }
         
         .sidebar-header { 
@@ -185,8 +189,8 @@
 
         .footer { margin-top: 60px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444; }
 
-        @media (max-width: 768px) { 
-            #sidebar { display: none; } 
+        @media (max-width: 900px) { 
+            #sidebar-left, #sidebar-right { display: none; } 
             .hub-container { padding: 20px; }
             .hub-header { font-size: 20px; margin-bottom: 30px; }
         }
@@ -212,25 +216,8 @@
         </div>
     </div>
 
-    <div id="sidebar">
-        <div class="user-profile-box">
-            <div id="user-avatar" class="user-avatar"></div>
-            <div>
-                <div id="user-info">Guest</div>
-                <div id="guest-mode-label" class="guest-label">Local Mode</div>
-            </div>
-        </div>
-        
-        <div id="auth-ui-stack">
-            <button id="login-btn" onclick="toggleAuthModal(true)" class="tab-btn login-trigger">Log In / Sign Up</button>
-            <div id="logged-in-controls" style="display:none; display:flex; flex-direction:column; gap:5px;">
-                <button onclick="window.location.href='settings.html'" class="tab-btn" style="text-align:left;">Settings</button>
-                <button onclick="firebase.auth().signOut()" class="tab-btn" style="text-align:left; color:#ff5555;">Log Out</button>
-            </div>
-        </div>
-
-        <div style="height:1px; background:var(--border); margin:10px 0;"></div>
-        
+    <!-- LEFT SIDEBAR: System Info -->
+    <div id="sidebar-left" class="sidebar">
         <div class="sidebar-header">Server Resets</div>
         <div class="timer-card" id="card-daily"><span class="t-label">Daily</span><span id="timer-daily" class="t-val">00:00:00</span></div>
         <div class="timer-card thu" id="card-thu"><span class="t-label">Thursday</span><span id="timer-thu" class="t-val">00:00:00</span></div>
@@ -273,7 +260,27 @@
         </div>
 
         <div class="footer">
-            System v2.6 // Ready
+            System v2.7 // Ready
+        </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: User Info -->
+    <div id="sidebar-right" class="sidebar">
+        <div class="sidebar-header">USER IDENTITY</div>
+        <div class="user-profile-box">
+            <div id="user-avatar" class="user-avatar"></div>
+            <div>
+                <div id="user-info">Guest</div>
+                <div id="guest-mode-label" class="guest-label">Local Mode</div>
+            </div>
+        </div>
+        
+        <div id="auth-ui-stack">
+            <button id="login-btn" onclick="toggleAuthModal(true)" class="tab-btn login-trigger">Log In / Sign Up</button>
+            <div id="logged-in-controls" style="display:none; display:flex; flex-direction:column; gap:5px;">
+                <button onclick="window.location.href='settings.html'" class="tab-btn" style="text-align:left;">Settings</button>
+                <button onclick="firebase.auth().signOut()" class="tab-btn" style="text-align:left; color:#ff5555;">Log Out</button>
+            </div>
         </div>
     </div>
 
