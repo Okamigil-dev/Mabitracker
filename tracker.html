@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mabi Tracker - v2.7</title>
+    <title>Mabi Tracker - v0.9</title>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -37,7 +37,9 @@
             margin: 0;
             font-size: 13px;
             overflow: hidden;
+            /* Use dvh for mobile address bar handling, fallback to vh */
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
         }
@@ -133,12 +135,15 @@
         input:checked + .toggle-switch { background: var(--accent); }
         input:checked + .toggle-switch::after { transform: translateX(16px); }
 
+        /* FIX: Hide the default checkbox input */
+        .toggle-input { display: none; }
+
         /* Mobile Nav */
         .mobile-nav { display: none; }
         .mobile-backdrop { display: none; }
 
         @media (max-width: 1000px) {
-            .content-grid { display: block; height: calc(100vh - 50px); }
+            .content-grid { display: block; height: calc(100dvh - 50px); }
             .header-bar { display: none; }
             .mobile-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); height: 50px; z-index: 50; flex-shrink: 0; }
             .nav-trigger { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; }
@@ -155,7 +160,9 @@
             
             /* Mobile Task Card Adjustments */
             .task-card { padding: 15px; min-height: 55px; }
+            .t-name { font-size: 15px; width: 100%; font-weight: 600; color: #fff; white-space: normal; /* Fix for cutting off text */ }
             .btn-c { width: 32px; height: 32px; font-size: 16px; }
+            .task-list { padding-bottom: 60px; /* Fix for bottom scroll */ }
         }
     </style>
 </head>
@@ -224,7 +231,7 @@
                     
                     <div class="toggle-row">
                         <span class="toggle-label">Edit Mode</span>
-                        <label><input type="checkbox" id="edit-mode-toggle" onchange="toggleMgmt()"><div class="toggle-switch"></div></label>
+                        <label><input type="checkbox" id="edit-mode-toggle" class="toggle-input" onchange="toggleMgmt()"><div class="toggle-switch"></div></label>
                     </div>
                     
                     <div style="margin-top:20px;">
