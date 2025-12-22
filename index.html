@@ -216,21 +216,31 @@
         </div>
     </div>
 
-    <!-- LEFT SIDEBAR: System Info -->
+    <!-- LEFT SIDEBAR: System Info & User Identity -->
     <div id="sidebar-left" class="sidebar">
+        <div class="sidebar-header">USER IDENTITY</div>
+        <div class="user-profile-box">
+            <div id="user-avatar" class="user-avatar"></div>
+            <div>
+                <div id="user-info">Guest</div>
+                <div id="guest-mode-label" class="guest-label">Local Mode</div>
+            </div>
+        </div>
+        
+        <div id="auth-ui-stack">
+            <button id="login-btn" onclick="toggleAuthModal(true)" class="tab-btn login-trigger">Log In / Sign Up</button>
+            <div id="logged-in-controls" style="display:none; display:flex; flex-direction:column; gap:5px;">
+                <button onclick="window.location.href='settings.html'" class="tab-btn" style="text-align:left;">Settings</button>
+                <button onclick="firebase.auth().signOut()" class="tab-btn" style="text-align:left; color:#ff5555;">Log Out</button>
+            </div>
+        </div>
+
+        <div style="height:1px; background:var(--border); margin:10px 0;"></div>
+
         <div class="sidebar-header">Server Resets</div>
         <div class="timer-card" id="card-daily"><span class="t-label">Daily</span><span id="timer-daily" class="t-val">00:00:00</span></div>
         <div class="timer-card thu" id="card-thu"><span class="t-label">Thursday</span><span id="timer-thu" class="t-val">00:00:00</span></div>
         <div class="timer-card sat" id="card-sat"><span class="t-label">Saturday</span><span id="timer-sat" class="t-val">00:00:00</span></div>
-
-        <div id="pending-module" style="display:none; flex-direction:column; flex-grow:1; min-height:0; margin-top:10px;">
-            <div class="sidebar-header">Pending Tasks</div>
-            <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <button id="side-nav-daily" class="tab-btn active" onclick="setSideView('daily')" style="flex:1; padding:4px;">Daily</button>
-                <button id="side-nav-weekly" class="tab-btn" onclick="setSideView('weekly')" style="flex:1; padding:4px;">Weekly</button>
-            </div>
-            <div id="sidebar-list"></div>
-        </div>
     </div>
 
     <div class="hub-container">
@@ -264,23 +274,15 @@
         </div>
     </div>
 
-    <!-- RIGHT SIDEBAR: User Info -->
+    <!-- RIGHT SIDEBAR: Pending Tasks -->
     <div id="sidebar-right" class="sidebar">
-        <div class="sidebar-header">USER IDENTITY</div>
-        <div class="user-profile-box">
-            <div id="user-avatar" class="user-avatar"></div>
-            <div>
-                <div id="user-info">Guest</div>
-                <div id="guest-mode-label" class="guest-label">Local Mode</div>
+        <div id="pending-module" style="display:none; flex-direction:column; flex-grow:1; min-height:0;">
+            <div class="sidebar-header">Pending Tasks</div>
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <button id="side-nav-daily" class="tab-btn active" onclick="setSideView('daily')" style="flex:1; padding:4px;">Daily</button>
+                <button id="side-nav-weekly" class="tab-btn" onclick="setSideView('weekly')" style="flex:1; padding:4px;">Weekly</button>
             </div>
-        </div>
-        
-        <div id="auth-ui-stack">
-            <button id="login-btn" onclick="toggleAuthModal(true)" class="tab-btn login-trigger">Log In / Sign Up</button>
-            <div id="logged-in-controls" style="display:none; display:flex; flex-direction:column; gap:5px;">
-                <button onclick="window.location.href='settings.html'" class="tab-btn" style="text-align:left;">Settings</button>
-                <button onclick="firebase.auth().signOut()" class="tab-btn" style="text-align:left; color:#ff5555;">Log Out</button>
-            </div>
+            <div id="sidebar-list"></div>
         </div>
     </div>
 
@@ -364,24 +366,14 @@
                 const profile = data.profile || {};
                 const uInfo = document.getElementById('user-info');
                 const uAvatar = document.getElementById('user-avatar');
-                
-                // 1. Update Display Name
-                const displayName = profile.username || currentUser.email;
-                uInfo.innerText = displayName;
 
-                // 2. Update Avatar
+                if (profile.username) {
+                    uInfo.innerText = profile.username;
+                }
+                
                 if (profile.avatar) {
                     uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
-                } else {
-                    // Revert to placeholder if removed
-                    uAvatar.style.backgroundImage = "url('https://placehold.co/36x36/111/444?text=?')";
                 }
-
-                // 3. Save to Local Cache for next reload
-                localStorage.setItem('mabi_user_cache_' + currentUser.uid, JSON.stringify({
-                    username: displayName,
-                    avatar: profile.avatar || ''
-                }));
 
                 renderSidebar();
             });
