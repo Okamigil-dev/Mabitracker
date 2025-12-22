@@ -71,7 +71,7 @@
         .panel:last-child { border-right: none; }
         .center-panel { background: #0c0c0e; }
 
-        /* Mobile Components - Hidden by default on Desktop */
+        /* Mobile Components - Hidden on Desktop */
         .mobile-nav { display: none; }
         .mobile-backdrop { display: none; }
 
@@ -83,7 +83,13 @@
         }
         .item-entry:hover { background: var(--card-bg); }
         .item-entry.at-limit { opacity: 0.5; }
-        .item-icon-box { width: 40px; height: 40px; background-size: contain; background-repeat: no-repeat; background-position: center; flex-shrink: 0; }
+        
+        .item-icon-box { 
+            width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; 
+            background-position: center; flex-shrink: 0; border: 1px solid var(--border); 
+            border-radius: 4px; background-color: rgba(255, 255, 255, 0.03);
+        }
+        
         .item-name-sidebar { font-weight: 600; color: #fff; font-size: 13px; }
         .item-meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 
@@ -126,18 +132,33 @@
             background-color: rgba(255, 255, 255, 0.03);
         }
 
+        /* Toggles Styling */
         .toggle-switch { width: 34px; height: 18px; background: var(--border); border-radius: 99px; position: relative; transition: 0.2s; flex-shrink: 0; }
         .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: 0.2s; }
         input:checked + .toggle-switch { background: var(--accent); }
         input:checked + .toggle-switch::after { transform: translateX(16px); }
         .toggle-input { display: none; }
 
+        /* Sidebar Tabs / Picker Buttons */
         .tab-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin-bottom: 15px; }
         .picker-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.15s; }
         .picker-btn.active { background: var(--accent-dim); border-color: var(--accent); }
-        .picker-icon { width: 32px; height: 32px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+        
+        .picker-icon { 
+            width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat; background-position: center; 
+            border: 1px solid var(--border); border-radius: 4px; background-color: rgba(255, 255, 255, 0.03);
+        }
         .picker-label { font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; text-align: center; }
 
+        /* Transport Slots */
+        .slot {
+            width: var(--slot-size); height: var(--slot-size); background-color: rgba(255, 255, 255, 0.03); 
+            border: 1px solid var(--border); border-radius: 4px; position: relative; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .slot.filled { background-color: var(--accent-dim); border-color: var(--accent); }
+
+        /* Mobile Layout */
         @media (max-width: 1000px) {
             .content-grid { display: block; height: calc(100dvh - 50px); }
             .header-bar { display: none; }
@@ -224,8 +245,9 @@
                 <div style="padding:20px; border-bottom:1px solid var(--border);">
                     <label style="font-size:11px; font-weight:600; color:var(--text-dim); display:block; text-transform:uppercase; margin-bottom:10px;">Buffs</label>
                     <div style="display:flex; flex-direction:column; gap:8px;">
-                        <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"><span style="font-size:12px;">William</span><input type="checkbox" id="buff-william" class="toggle-input"><div class="toggle-switch"></div></label>
-                        <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"><span style="font-size:12px;">Alpaca</span><input type="checkbox" id="buff-alpaca" class="toggle-input"><div class="toggle-switch"></div></label>
+                        <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"><span style="font-size:12px;">Grandmaster Merchant</span><input type="checkbox" id="buff-gm" class="toggle-input"><div class="toggle-switch"></div></label>
+                        <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"><span style="font-size:12px;">William (Partner)</span><input type="checkbox" id="buff-william" class="toggle-input"><div class="toggle-switch"></div></label>
+                        <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"><span style="font-size:12px;">Alpaca (Wagon Only)</span><input type="checkbox" id="buff-alpaca" class="toggle-input"><div class="toggle-switch"></div></label>
                     </div>
                 </div>
                 <div style="padding:20px; overflow-y:auto;">
@@ -250,6 +272,30 @@
 
     <script>
         const townIcons={"Karu Forest":"tradeposts/Commerce_Karu_Forest_Icon.png","Oasis":"tradeposts/Commerce_Oasis_Icon.png","Lake Calida":"tradeposts/Commerce_Calida_Icon.png","Pera Volcano":"tradeposts/Commerce_Pera_Icon.png","Scathach Beach":"tradeposts/Commerce_Beach_of_Scathach_Icon.png"};
+        
+        // TRANSPORT ICON MAPPING
+        const transportIcons={
+            "Elephant":"images/transports/Elephant_Icon.png",
+            "Wagon":"images/transports/Wagon_Icon.png",
+            "Camel":"images/transports/Camel_Icon.png",
+            "Skiff":"images/transports/Trader's_Skiff_Icon.png",
+            "Husky":"images/transports/Dog_Sled_Icon.png",
+            "Hand Cart":"images/transports/Handcart_Icon.png",
+            "Back Pack":"images/transports/Backpack_Icon.png",
+            "Airship":"images/transports/Airship_Icon.png"
+        };
+        
+        // Standard Order - Backpack, Hand Cart, Wagon, Elephant, Husky, Camel, Skiff
+        const transportData={
+            "Back Pack":{slots:4,weight:400},
+            "Hand Cart":{slots:6,weight:800},
+            "Wagon":{slots:8,weight:900},
+            "Elephant":{slots:7,weight:1700},
+            "Husky":{slots:11,weight:700},
+            "Camel":{slots:7,weight:1400},
+            "Skiff":{slots:8,weight:1200}
+        };
+
         const barterDb = [
             { town: "Pera Volcano", item: "Volcanic Mud Pack", weight: 15, stack: 10, limit: 25, img: "tradeposts/barter/pera/Volcanic_Mud_Pack_Icon.png", mats: { "Copper Plate": 2, "Mysterious Herb Powder": 3 } },
             { town: "Pera Volcano", item: "Magma Stone", weight: 15, stack: 7, limit: 15, img: "tradeposts/barter/pera/Magma_Stone_Icon.png", mats: { "Mythril Plate": 2, "Barley Flour": 3 } },
@@ -280,10 +326,9 @@
             { town: "Scathach Beach", item: "Fish", weight: 5, stack: 20, limit: 100, img: "tradeposts/barter/scathach/Unidentified_Fish.png", mats: { "Unknown": 0 } },
             { town: "Scathach Beach", item: "Crystal Blade", weight: 15, stack: 10, limit: 100, img: "tradeposts/barter/scathach/Crystal_Blade.png", mats: { "Unknown": 0 } }
         ];
-        const transportData = {"Elephant":{slots:7,weight:1700},"Wagon":{slots:8,weight:900},"Camel":{slots:7,weight:1400},"Husky":{slots:11,weight:700},"Hand Cart":{slots:6,weight:800},"Back Pack":{slots:4,weight:400}};
         const recipeDb = [{item:"Artificial Turf",mats:{"Fresh Grass":20,"Bundle of Flowers":5}},{item:"Cotton Cushion Stuffing",mats:{"Fine Wool":20,"Thin Thread":5}},{item:"Hay Bale",mats:{"Wheat Chaff":20,"Finest Leather Strap":1}},{item:"Poison Tip Wyvern Ballista Bolt",mats:{"Firewood":1,"Wyvern Claw":1,"Poison Potion":1}},{item:"Average Firewood",mats:{Firewood:3}},{item:"Fine Firewood",mats:{"Average Firewood":3}},{item:"Finest Firewood",mats:{"Fine Firewood":3}},{item:"Special Firewood",mats:{"Finest Firewood":1,"Purified Enhancer":1}},{item:"Braid",mats:{"Thick Thread":1,"Thin Thread":1}},{item:"Fine Fabric",mats:{"Thick Thread":5}},{item:"Fine Leather Strap",mats:{"Fine Leather":1}},{item:"Fine Silk",mats:{"Thin Thread":5}},{item:"Finest Fabric",mats:{"Thick Thread":6}},{item:"Finest Leather Strap",mats:{"Finest Leather":1}},{item:"Finest Silk",mats:{"Thin Thread":6}},{item:"Sturdy Loop",mats:{Braid:1,"Infernal Blade Fragment":1}},{item:"Tough String",mats:{"Thick Thread":5}},{item:"Tough Thread",mats:{"Thin Thread":5}},{item:"Copper Plate",mats:{"Cooper Ingot":1}},{item:"Gold Plate",mats:{"Gold Ingot":1}},{item:"Large Mythril Nail",mats:{"Mythril Ingot":20}},{item:"Mythril Plate",mats:{"Mythril Ingot":1}},{item:"Silver Plate",mats:{"Silver Ingot":1}},{item:"Emerald Fuse",mats:{"Emerald Core":1}},{item:"Energy Amplifier",mats:{"Emerald Core":3,"Energy Converter":3}},{item:"Energy Converter",mats:{Hillwen:1,Shyllien:1}},{item:"Hillwen Alloy",mats:{"Soft Hillwen Ore Fragment":15}},{item:"Enchanted Firewood",mats:{Hillwen:1,Shyllien:1,"Average Firewood":1}},{item:"Mutant",mats:{"Mutant Rabbit Foot":10,"Mutant Plant Mucilage":5,"Sasquatch Heart":3}},{item:"Mysterious Herb Powder",mats:{"Bloody Herb":1,"Mana Herb":1,"Poison Herb":1}},{item:"Purified Rabbit Foot",mats:{"Mutant Rabbit Foot":1,Shyllien:1}},{item:"Shyllien",mats:{"Shyllien Crystal":5}},{item:"Sundew",mats:{"Mutant Plant Mucilage":1,Shyllien:1}},{item:"Glittering Paper",mats:{Paper:10,"Small Silver Gem":1,"Small Red Gem":1,"Small Blue Gem":1,"Small Green Gem":1}},{item:"HP 500 Potion",mats:{"Four-Leaf Clover":1,"HP 300 Potion":1,"Bottled Water":1}},{item:"Marionette 500 Potion",mats:{"Gold Herb":1,"Base Potion":1,"Tin Ore Fragment":1,"Zinc Ore Fragment":1,"Nickel Ore Fragment":1}},{item:"MP 500 Potion",mats:{"Four-Leaf Clover":1,"MP 300 Potion":1,"Bottled Water":1}},{item:"Spirit Liqueur",mats:{"White Herb":1,"Piece of Ancient Spirit Fossil":1,"Elemental Remover":2}},{item:"Stamina 500 Potion",mats:{"Four-Leaf Clover":1,"Stamina 300 Potion":1,"Bottled Water":1}},{item:"Shrimp Taming Bait",mats:{Shrimp:1,Sugar:1,Garlic:1}},{item:"Magic Parchment",mats:{"Soft Parchment":1,"Mana Herb":10,"Sunlight Herb":10}},{item:"Magic Quill Pen",mats:{"Vital Feather":1,"Mana Herb":10,"Gold Herb":10}},{item:"Harmonious Cosmos Perfume",mats:{"Empty Bottle":1,"Magic Powder":10,"Base Herb":10,"Cosmos Extract":1}},{item:"Pet Playset",mats:{"Pet's Favorite Knickknack":1,"Wood Board":1}},{item:"Barley Flour",mats:{Barley:10}},{item:"Wheat Flour",mats:{Wheat:10}}];
 
-        let currentCargo=[], ownedInventory={}, activeBuffs={william:false,alpaca:false}, selectedTown="Karu Forest", transportA="Elephant", transportB="Back Pack", currentUser=null, isSaving=false;
+        let currentCargo=[], ownedInventory={}, activeBuffs={gm:false,william:false,alpaca:false}, selectedTown="Karu Forest", transportA="Elephant", transportB="Back Pack", currentUser=null, isSaving=false;
 
         firebase.initializeApp({apiKey:"AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",authDomain: "mabinogi-tracker.firebaseapp.com",databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",projectId: "mabinogi-tracker",storageBucket: "mabinogi-tracker.firebasestorage.app",appId: "1:267690802644:web:fccdd005d5c8990504ea41"});
         const auth=firebase.auth();
@@ -306,13 +351,20 @@
             if(data.cargo) currentCargo=JSON.parse(data.cargo);
             if(data.inventory) ownedInventory=data.inventory;
             if(data.town) selectedTown=data.town;
-            if(data.buffs){ activeBuffs=data.buffs; document.getElementById('buff-william').checked=!!activeBuffs.william; document.getElementById('buff-alpaca').checked=!!activeBuffs.alpaca; }
+            if(data.buffs){ activeBuffs=data.buffs; document.getElementById('buff-gm').checked=!!activeBuffs.gm; document.getElementById('buff-william').checked=!!activeBuffs.william; document.getElementById('buff-alpaca').checked=!!activeBuffs.alpaca; }
             if(data.transport1) transportA=data.transport1;
             if(data.transport2) transportB=data.transport2;
             renderTownTabs(); renderTransportTabs(1); renderTransportTabs(2); calculateLoadout();
         }
 
-        function getStats(n){ const b=transportData[n]||{slots:0,weight:0}; let w=0,s=0; if(activeBuffs.william){w+=200;s+=1;} if(n==="Wagon"&&activeBuffs.alpaca){w+=200;s+=2;} return {slots:b.slots+s,weight:b.weight+w}; }
+        function getStats(n){ 
+            const b=transportData[n]||{slots:0,weight:0}; 
+            let w=0,s=0; 
+            if(activeBuffs.gm){ w+=100; s+=1; }
+            if(activeBuffs.william){ w+=200; s+=1; } 
+            if(n==="Wagon"&&activeBuffs.alpaca){ w+=200; s+=2; } 
+            return {slots:b.slots+s,weight:b.weight+w}; 
+        }
 
         function packCargo(cargoList){
             const counts={}; cargoList.forEach(i=>counts[i.item]=(counts[i.item]||0)+1);
@@ -328,15 +380,15 @@
             document.getElementById('transport-stats-1').innerText=`${res.s1.slots} SLOTS / ${res.s1.weight} KG`;
             document.getElementById('transport-stats-2').innerText=`${res.s2.slots} SLOTS / ${res.s2.weight} KG`;
             ['grid-1','grid-2'].forEach((id,i)=>{
-                const g=document.getElementById(id); g.innerHTML=''; const slots=i===0?res.slots1:res.slots2, max=i===0?res.s1.slots:res.s2.slots;
-                for(let k=0;k<max;k++){
-                    const slot=document.createElement('div'); slot.className='slot'+(slots[k]?' filled':'');
-                    slot.style.width='50px'; slot.style.height='50px'; slot.style.position='relative';
-                    if(slots[k]){ 
-                        const icon=document.createElement('div'); icon.className='item-icon'; icon.style.width='100%'; icon.style.height='100%'; applyIcon(icon,slots[k].item); 
-                        icon.innerHTML=`<span class="stack-label" style="position:absolute;bottom:2px;right:2px;font-size:9px;color:#fff;pointer-events:none;">${slots[k].qtyInSlot}</span>`; 
-                        icon.onclick=(e)=> { if(e.shiftKey) clearItem(slots[k].item); else updateItemQty(slots[k].item,-1); }; 
-                        icon.onmouseenter=(e)=>showTooltip(e,slots[k]); icon.onmouseleave=()=>document.getElementById('item-tooltip').style.display='none'; 
+                const g=document.getElementById(id); g.innerHTML=''; const stats=i===0?res.s1:res.s2, slots=i===0?res.slots1:res.slots2;
+                for(let k=0;k<stats.slots;k++){
+                    const item=slots[k];
+                    const slot=document.createElement('div'); slot.className='slot'+(item?' filled':'');
+                    if(item){ 
+                        const icon=document.createElement('div'); icon.className='item-icon'; icon.style.width='100%'; icon.style.height='100%'; applyIcon(icon,item.item); 
+                        icon.innerHTML=`<span class="stack-label" style="position:absolute;bottom:2px;right:2px;font-size:9px;color:#fff;pointer-events:none;text-shadow:0 1px 2px #000;">${item.qtyInSlot}</span>`; 
+                        icon.onclick=(e)=> { if(e.shiftKey) clearItem(item.item); else updateItemQty(item.item,-1); }; 
+                        icon.onmouseenter=(e)=>showTooltip(e,item); icon.onmouseleave=()=>document.getElementById('item-tooltip').style.display='none'; 
                         slot.appendChild(icon); 
                     }
                     g.appendChild(slot);
@@ -345,9 +397,21 @@
             calculateMaterials(); renderCatalog();
         }
 
+        /* UPDATED: Dynamic icon handling with Alpaca logic */
         const applyIcon=(el,name)=>{
-            let p=townIcons[name]?`images/${townIcons[name]}`:null; if(!p){ const i=barterDb.find(x=>x.item===name); if(i) p=`images/${i.img}`; }
-            if(p) el.style.backgroundImage=`url('${p}')`; else el.style.backgroundImage='none';
+            let p=null; 
+            if(townIcons[name]) {
+                p=`images/${townIcons[name]}`; 
+            } else if(name === "Wagon") {
+                p = activeBuffs.alpaca ? 'images/transports/Alpaca_Wagon_Icon.png' : 'images/transports/Wagon_Icon.png';
+            } else if(transportIcons[name]) {
+                p = transportIcons[name];
+            } else { 
+                const i=barterDb.find(x=>x.item===name); 
+                if(i) p=`images/${i.img}`; 
+            }
+            if(p) el.style.backgroundImage=`url('${p}')`; 
+            else el.style.backgroundImage='none';
         };
 
         function renderTownTabs(){
@@ -358,7 +422,13 @@
         function renderTransportTabs(n){
             const id=n===1?'transport-tabs-1':'transport-tabs-2', cur=n===1?transportA:transportB;
             const c=document.getElementById(id); if(!c) return; c.innerHTML='';
-            Object.keys(transportData).forEach(t=>{ const b=document.createElement('div'); b.className=`picker-btn ${cur===t?'active':''}`; b.style.minHeight="40px"; b.onclick=()=>{if(n===1)transportA=t;else transportB=t;renderTransportTabs(n);calculateLoadout();saveData();}; const l=document.createElement('div'); l.className='picker-label'; l.innerText=t; b.append(l); c.appendChild(b); });
+            Object.keys(transportData).forEach(t=>{ 
+                const b=document.createElement('div'); b.className=`picker-btn ${cur===t?'active':''}`; 
+                b.onclick=()=>{if(n===1)transportA=t;else transportB=t;renderTransportTabs(n);calculateLoadout();saveData();}; 
+                const i=document.createElement('div'); i.className='picker-icon'; applyIcon(i,t);
+                const l=document.createElement('div'); l.className='picker-label'; l.innerText=t; 
+                b.append(i,l); c.appendChild(b); 
+            });
         }
 
         function renderCatalog(){
@@ -369,8 +439,9 @@
                 e.innerHTML=`<div class="item-icon-box"></div><div style="flex-grow:1;"><div class="item-name-sidebar">${item.item}</div><div class="item-meta">${item.weight}kg | Limit: ${item.limit}</div></div><div class="qty-control"><button class="q-btn minus">−</button><div class="q-val">${qty}</div><button class="q-btn plus">+</button></div>`;
                 applyIcon(e.querySelector('.item-icon-box'),item.item);
                 const bM=e.querySelector('.minus'), bP=e.querySelector('.plus');
-                bM.onclick=(ev)=>{ev.stopPropagation(); if(ev.shiftKey) clearItem(item.item); else updateItemQty(item.item,-1);};
-                bP.onclick=(ev)=>{ev.stopPropagation(); if(ev.shiftKey) fillMax(item); else updateItemQty(item.item,1);};
+                const onMClick=(ev)=>{ev.stopPropagation(); if(ev.shiftKey) clearItem(item.item); else updateItemQty(item.item,-1);};
+                const onPClick=(ev)=>{ev.stopPropagation(); if(ev.shiftKey) fillMax(item); else updateItemQty(item.item,1);};
+                bM.onclick=onMClick; bP.onclick=onPClick;
                 setupLongPress(bM,()=>clearItem(item.item)); setupLongPress(bP,()=>fillMax(item));
                 c.appendChild(e);
             });
@@ -385,15 +456,7 @@
 
         function fillMax(item){ while(currentCargo.filter(x=>x.item===item.item).length<item.limit && !packCargo([...currentCargo,item]).overflow){ currentCargo.push(item); } calculateLoadout(); saveData(); }
         function clearItem(name){ currentCargo=currentCargo.filter(x=>x.item!==name); calculateLoadout(); saveData(); }
-        
-        function setupLongPress(b,h){ 
-            let t; 
-            const start=()=>{ t=setTimeout(()=>{ if("vibrate" in navigator) navigator.vibrate(40); h(); t=null; }, 600); };
-            const cancel=()=>{ if(t){ clearTimeout(t); t=null; } };
-            b.addEventListener('mousedown',start); b.addEventListener('touchstart',start,{passive:true});
-            ['mouseup','mouseleave','touchend'].forEach(e=>b.addEventListener(e,cancel));
-        }
-
+        function setupLongPress(b,h){ let t; const start=()=>{ t=setTimeout(()=>{ if("vibrate" in navigator) navigator.vibrate(40); h(); t=null; }, 600); }; const cancel=()=>{ if(t){ clearTimeout(t); t=null; } }; b.addEventListener('mousedown',start); b.addEventListener('touchstart',start,{passive:true}); ['mouseup','mouseleave','touchend'].forEach(e=>b.addEventListener(e,cancel)); }
         function showTooltip(e,d){ const tt=document.getElementById('item-tooltip'); document.getElementById('tt-name').textContent=d.item; document.getElementById('tt-weight').textContent=d.weight+'kg'; tt.style.display='block'; const r=e.target.getBoundingClientRect(); tt.style.left=(r.left-170)+'px'; tt.style.top=r.top+'px'; }
 
         function calculateMaterials(){
