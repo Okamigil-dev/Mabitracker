@@ -42,6 +42,8 @@
             height: 100dvh;
             display: flex;
             flex-direction: column;
+            /* PERFORMANCE: Isolate the whole body from expensive paint operations */
+            contain: content;
         }
 
         /* Scrollbars */
@@ -58,16 +60,38 @@
         .main-title { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
         .sub-title { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-left: 10px; }
         
-        .content-grid { display: grid; grid-template-columns: 300px 1fr 320px; flex-grow: 1; overflow: hidden; }
-        .panel { background: var(--bg); display: flex; flex-direction: column; border-right: 1px solid var(--border); overflow-y: auto; }
+        .content-grid { display: grid; grid-template-columns: 320px 1fr 320px; flex-grow: 1; overflow: hidden; }
+        
+        /* PERFORMANCE: 'contain' is much faster than 'will-change' for simple panels */
+        .panel { 
+            background: var(--bg); 
+            display: flex; 
+            flex-direction: column; 
+            border-right: 1px solid var(--border); 
+            overflow-y: auto; 
+            contain: layout style;
+        }
         .panel:last-child { border-right: none; }
         .center-panel { background: #0c0c0e; }
 
         /* Components */
-        .hub-btn { color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 6px; transition: 0.2s; border: 1px solid transparent; background: transparent; cursor: pointer; }
+        .hub-btn { color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 6px; transition: 0.1s; border: 1px solid transparent; background: transparent; cursor: pointer; }
         .hub-btn:hover { color: #fff; background: var(--border); }
 
-        .input-dark { background: var(--card-bg); border: 1px solid var(--border); color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px; border-radius: 6px; width: 100%; transition: border-color 0.2s; }
+        /* PERFORMANCE: Removed heavy transitions from dropdowns to stop click-lag */
+        .input-dark { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border); 
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            font-size: 13px; 
+            padding: 8px; 
+            border-radius: 6px; 
+            width: 100%; 
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
         .input-dark:focus { border-color: var(--accent); }
 
         .panel-label { font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; display: block; text-transform: uppercase; }
@@ -85,12 +109,28 @@
         .item-list { flex-grow: 1; overflow-y: auto; }
         
         .item-entry {
-            display: flex; gap: 12px; padding: 10px 15px; border-bottom: 1px solid var(--border);
-            cursor: pointer; align-items: center; transition: 0.15s; border-left: 2px solid transparent;
+            display: flex; gap: 12px; padding: 12px 15px; border-bottom: 1px solid var(--border);
+            align-items: center; border-left: 2px solid transparent;
+            position: relative;
+            transition: background 0.05s;
         }
         .item-entry:hover { background: var(--card-bg); }
-        .item-entry.at-limit { opacity: 0.5; border-left-color: var(--danger); }
-        .item-entry.full-capacity { opacity: 0.5; border-left-color: var(--text-dim); }
+        .item-entry.at-limit { opacity: 0.6; }
+        .item-entry.pulse { animation: pulseCyan 0.4s ease; }
+        @keyframes pulseCyan {
+            0% { background: var(--accent-dim); }
+            100% { background: transparent; }
+        }
+
+        /* Qty Control Widget */
+        .qty-control {
+            display: flex; align-items: center; gap: 4px; background: #000; padding: 2px; border-radius: 6px; border: 1px solid var(--border); margin-left: auto; flex-shrink: 0;
+        }
+        .q-btn { width: 28px; height: 28px; border-radius: 4px; border: none; background: var(--card-bg); color: #fff; font-weight: 700; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .q-btn:hover { background: #27272a; color: var(--accent); }
+        .q-btn.plus { color: var(--accent); }
+        .q-btn.minus { color: var(--danger); }
+        .q-val { width: 24px; text-align: center; font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; color: #fff; }
 
         .item-icon-box {
             width: 40px; height: 40px; 
@@ -99,9 +139,8 @@
             background-position: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
         }
         
-        .item-name { font-weight: 600; font-size: 13px; color: #fff; }
-        .item-meta { font-size: 11px; color: var(--text-dim); }
-        .add-status { font-size: 9px; font-weight: 700; margin-left: auto; color: var(--accent); }
+        .item-name { font-weight: 600; font-size: 13px; color: #fff; line-height: 1.2; }
+        .item-meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 
         /* Center Panel (Tables) */
         .table-container { padding: 20px; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -176,41 +215,18 @@
         /* Toggles */
         .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; cursor: pointer; }
         .toggle-label { font-size: 13px; color: var(--text-main); }
-        .toggle-switch { width: 36px; height: 20px; background: var(--border); border-radius: 99px; position: relative; transition: 0.2s; }
-        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: 0.2s; }
+        .toggle-switch { width: 36px; height: 20px; background: var(--border); border-radius: 99px; position: relative; transition: 0.15s; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: 0.15s; }
         input:checked + .toggle-switch { background: var(--accent); }
         input:checked + .toggle-switch::after { transform: translateX(16px); }
         .toggle-input { display: none; }
 
-        /* Modal */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: 0.2s; backdrop-filter: blur(4px);
-        }
-        .modal-overlay.active { opacity: 1; pointer-events: all; }
-        .modal-box {
-            background: var(--card-bg); border: 1px solid var(--border); padding: 25px;
-            width: 300px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-        .modal-title { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; }
-        .range-container { display: flex; align-items: center; gap: 10px; margin: 20px 0; }
-        .modal-range { flex-grow: 1; accent-color: var(--accent); }
-        .modal-number { width: 50px; background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 5px; text-align: center; border-radius: 4px; }
-        
-        .modal-btn { flex: 1; padding: 10px; cursor: pointer; font-weight: 700; font-size: 11px; border-radius: 6px; border: none; text-transform: uppercase; transition: 0.2s; }
-        .btn-cancel { background: var(--bg); color: var(--text-dim); border: 1px solid var(--border); }
-        .btn-cancel:hover { color: #fff; border-color: #fff; }
-        .btn-confirm { background: var(--accent); color: #000; margin-left: 10px; }
-        .btn-confirm:hover { background: #fff; }
-
         /* Tooltip */
         #item-tooltip {
-            position: fixed; z-index: 10000; background: rgba(18, 18, 20, 0.95); 
+            position: fixed; z-index: 10000; background: rgba(18, 18, 20, 0.98); 
             border: 1px solid var(--border); padding: 12px; border-radius: 6px;
             pointer-events: none; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            min-width: 180px; backdrop-filter: blur(4px);
+            min-width: 180px;
         }
         .tt-name { color: #fff; font-weight: 700; font-size: 12px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
         .tt-stat { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--text-dim); display: flex; justify-content: space-between; }
@@ -235,7 +251,7 @@
             .panel { 
                 position: fixed; top: 0; bottom: 0; width: 300px; max-width: 85%; z-index: 1001; 
                 box-shadow: 0 0 50px rgba(0,0,0,0.8); 
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+                transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s;
                 visibility: hidden;
             }
             .left-panel { left: 0; transform: translateX(-100%); border-right: 1px solid var(--border); }
@@ -249,7 +265,7 @@
                 transform: none; box-shadow: none; display: flex; flex-direction: column;
             }
 
-            .mobile-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px); }
+            .mobile-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
             .mobile-backdrop.active { opacity: 1; pointer-events: all; }
 
             .drawer-header { 
@@ -276,24 +292,6 @@
         <div class="tt-name" id="tt-name">Item Name</div>
         <div class="tt-stat">Weight: <b id="tt-weight">0kg</b></div>
         <div class="tt-stat">Max Stack: <b id="tt-stack">0</b></div>
-    </div>
-
-    <!-- Qty Modal -->
-    <div id="qty-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div id="modal-title" class="modal-title">ADD ITEM</div>
-            <div class="range-container">
-                <input type="range" id="qty-range" class="modal-range" min="1" max="1" value="1">
-                <input type="number" id="qty-number" class="modal-number" min="1" max="1" value="1">
-            </div>
-            <div style="text-align: right; font-size: 9px; color: var(--text-dim); margin-bottom: 20px;">
-                REMAINING LIMIT: <span id="modal-max-label" style="color:#fff;">0</span>
-            </div>
-            <div class="modal-actions" style="display:flex;">
-                <button class="modal-btn btn-cancel" onclick="closeQtyModal()">CANCEL</button>
-                <button class="modal-btn btn-confirm" onclick="confirmQtyAdd()">ADD</button>
-            </div>
-        </div>
     </div>
 
     <!-- Mobile Nav -->
@@ -438,45 +436,21 @@
             return (path.startsWith('images/') || path.startsWith('http')) ? path : `images/${path}`;
         }
         
-        const stringToColor = (str) => {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-            return '#' + '00000'.substring(0, 6 - c.length) + c;
-        };
-
-        const getTownFolder = (townName) => {
-            const map = { "Pera Volcano": "pera", "Lake Calida": "calida", "Oasis": "oasis", "Karu Forest": "karu", "Scathach Beach": "scathach" };
-            return map[townName];
-        }
-        
         const applyIcon = (el, name) => {
-            // Reset state - NO DEFAULT STYLING
-            el.style.backgroundColor = 'transparent';
-            el.style.backgroundImage = 'none';
-            el.innerText = '';
-            el.style.boxShadow = 'none';
-            el.style.border = 'none';
-
             let imagePath = null;
-            
-            // 1. Check if it's a Town (using townIcons from logic)
-            if (townIcons[name]) {
-                 imagePath = `images/${townIcons[name]}`;
-            } 
-            // 2. Check if it's an Item
+            if (townIcons[name]) { imagePath = `images/${townIcons[name]}`; } 
             else {
                  const itemData = barterDb.find(i => i.item === name);
                  if (itemData && itemData.img) imagePath = `images/${itemData.img}`;
             }
             
             if (imagePath) {
-                const img = new Image();
-                img.src = getImagePath(imagePath);
-                img.onload = () => {
-                    el.style.backgroundImage = `url('${getImagePath(imagePath)}')`;
-                };
-                // onerror: DO NOTHING. Leave it transparent.
+                const url = `url('${getImagePath(imagePath)}')`;
+                if (el.style.backgroundImage !== url) {
+                    el.style.backgroundImage = url;
+                }
+            } else {
+                el.style.backgroundImage = 'none';
             }
         };
 
@@ -578,12 +552,11 @@
         let currentCargo = [], ownedInventory = {}, activeBuffs = { gm: false, william: false, alpaca: false }, selectedTown = "Karu Forest", debounceTimer = null;
         const DEBOUNCE_DELAY = 1000;
         let isFullCapacity = false;
-        let selectedItemForModal = null;
         let currentUser = null;
         let isSaving = false;
 
         // --- 3. FIREBASE INIT ---
-        const firebaseConfig = {
+        firebase.initializeApp({
             apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
             authDomain: "mabinogi-tracker.firebaseapp.com",
             databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
@@ -592,13 +565,11 @@
             messagingSenderId: "267690802644",
             appId: "1:267690802644:web:fccdd005d5c8990504ea41",
             measurementId: "G-VBDBKQ3M1B"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        });
         const auth = firebase.auth();
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        // --- 4. AUTH & LOGIC ---
+        // --- 4. AUTH & SYNC ---
         auth.onAuthStateChanged(user => {
             const disp = document.getElementById('user-display');
             if (user) {
@@ -617,30 +588,24 @@
             }
         });
 
-        // INITIAL LOAD: Load local data instantly
-        const localData = JSON.parse(localStorage.getItem('barter_save_data') || '{}');
-        loadFromData(localData);
-
         function startSync() {
             if (currentUser.isGuest) {
-                // Already loaded localData above
+                const localData = JSON.parse(localStorage.getItem('barter_save_data') || '{}');
+                loadFromData(localData);
                 document.getElementById('sync-status').textContent = 'LOCAL_MODE';
             } else {
-                const dbRef = firebase.database().ref(`users/${currentUser.uid}/barter_data`);
-                dbRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
+                firebase.database().ref(`users/${currentUser.uid}/barter_data`).on('value', (snap) => {
+                    const data = snap.val();
                     if (data && !isSaving && !debounceTimer) { 
                         loadFromData(data); 
                         document.getElementById('sync-status').textContent = 'SYNCED';
-                        document.getElementById('sync-status').className = 'sync-indicator active';
                     }
                 });
             }
         }
 
         function saveData() {
-            // 1. SAVE LOCAL INSTANTLY
-            const dataPayload = {
+            const payload = {
                 cargo: JSON.stringify(currentCargo), 
                 inventory: ownedInventory, 
                 buffs: activeBuffs, 
@@ -648,25 +613,18 @@
                 transport1: document.getElementById('transport-select-1').value,
                 transport2: document.getElementById('transport-select-2').value
             };
-            localStorage.setItem('barter_save_data', JSON.stringify(dataPayload));
-            document.getElementById('sync-status').textContent = 'SAVING...';
-
-            // 2. SAVE TO CLOUD DEBOUNCED
-            if (currentUser.isGuest) {
-                document.getElementById('sync-status').textContent = 'LOCAL_SAVED';
-                return;
-            }
+            localStorage.setItem('barter_save_data', JSON.stringify(payload));
+            if (currentUser.isGuest) return;
             
-            document.getElementById('sync-status').className = 'sync-indicator saving';
+            document.getElementById('sync-status').textContent = 'SAVING...';
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                isSaving = true; 
-                debounceTimer = null;
-                firebase.database().ref(`users/${currentUser.uid}/barter_data`).set(dataPayload).then(() => {
+                isSaving = true;
+                firebase.database().ref(`users/${currentUser.uid}/barter_data`).set(payload).then(() => {
                     document.getElementById('sync-status').textContent = 'SYNCED';
-                    document.getElementById('sync-status').className = 'sync-indicator active';
                     isSaving = false;
                 });
+                debounceTimer = null;
             }, DEBOUNCE_DELAY);
         }
 
@@ -674,7 +632,12 @@
             if (!data) return;
             if (data.cargo) currentCargo = typeof data.cargo === 'string' ? JSON.parse(data.cargo) : data.cargo;
             if (data.inventory) ownedInventory = data.inventory;
-            if (data.town) { selectedTown = data.town; document.getElementById('town-select').value = selectedTown; }
+            if (data.town) { 
+                selectedTown = data.town; 
+                if(document.getElementById('town-select').value !== selectedTown) {
+                    document.getElementById('town-select').value = selectedTown;
+                }
+            }
             if (data.buffs) {
                 activeBuffs = data.buffs;
                 document.getElementById('buff-gm').checked = !!activeBuffs.gm;
@@ -684,196 +647,177 @@
             if (data.transport1) document.getElementById('transport-select-1').value = data.transport1;
             if (data.transport2) document.getElementById('transport-select-2').value = data.transport2;
             
-            renderCatalog(); calculateLoadout();
+            requestAnimationFrame(() => calculateLoadout());
         }
 
         // --- 5. LOGISTICS ---
         function getStatsForTransport(name) {
-            const b = transportData[name];
-            if (!b) return { slots: 0, weight: 0, speed: 0 };
+            const b = transportData[name] || {slots:0, weight:0};
             let bW = 0, bS = 0;
             if (activeBuffs.gm) { bW += 100; bS += 1; }
             if (activeBuffs.william) { bW += 200; bS += 1; }
             if (name === "Wagon" && activeBuffs.alpaca) { bW += 200; bS += 2; }
-            return { slots: b.slots + bS, weight: b.weight + bW, speed: b.speed };
+            return { slots: b.slots + bS, weight: b.weight + bW };
         }
 
         function packCargo(cargoList) {
-            const itemCounts = {};
-            cargoList.forEach(i => itemCounts[i.item] = (itemCounts[i.item] || 0) + 1);
-
+            const counts = {}; cargoList.forEach(i => counts[i.item] = (counts[i.item] || 0) + 1);
             const slotStream = [];
-            barterDb.forEach(proto => {
-                if (itemCounts[proto.item]) {
-                    let remaining = itemCounts[proto.item];
-                    while (remaining > 0) {
-                        const take = Math.min(remaining, proto.stack);
-                        slotStream.push({ ...proto, qtyInSlot: take });
-                        remaining -= take;
-                    }
+            barterDb.forEach(p => {
+                if (counts[p.item]) {
+                    let rem = counts[p.item];
+                    while (rem > 0) { const take = Math.min(rem, p.stack); slotStream.push({ ...p, qtyInSlot: take }); rem -= take; }
                 }
             });
-
-            const t1 = document.getElementById('transport-select-1').value;
-            const t2 = document.getElementById('transport-select-2').value;
-            const s1 = getStatsForTransport(t1);
-            const s2 = getStatsForTransport(t2);
-
-            const slots1 = [];
-            const slots2 = [];
-            let w1 = 0, c1 = 0;
-            let w2 = 0, c2 = 0;
-            let overflow = false;
-
-            for (const slotObj of slotStream) {
-                const slotWeight = slotObj.qtyInSlot * slotObj.weight;
-                
-                if (c1 < s1.slots && (w1 + slotWeight) <= s1.weight) {
-                    slots1.push(slotObj);
-                    w1 += slotWeight;
-                    c1++;
-                } else if (c2 < s2.slots && (w2 + slotWeight) <= s2.weight) {
-                    slots2.push(slotObj);
-                    w2 += slotWeight;
-                    c2++;
-                } else {
-                    overflow = true;
-                }
+            const s1 = getStatsForTransport(document.getElementById('transport-select-1').value);
+            const s2 = getStatsForTransport(document.getElementById('transport-select-2').value);
+            const slots1 = [], slots2 = [];
+            let w1 = 0, c1 = 0, w2 = 0, c2 = 0, overflow = false;
+            for (const s of slotStream) {
+                const wt = s.qtyInSlot * s.weight;
+                if (c1 < s1.slots && (w1 + wt) <= s1.weight) { slots1.push(s); w1 += wt; c1++; }
+                else if (c2 < s2.slots && (w2 + wt) <= s2.weight) { slots2.push(s); w2 += wt; c2++; }
+                else overflow = true;
             }
-
             return { slots1, slots2, overflow, s1, s2 };
         }
 
         function calculateLoadout() {
-            const result = packCargo(currentCargo);
+            const res = packCargo(currentCargo);
+            isFullCapacity = res.overflow;
+            document.getElementById('transport-stats-1').innerText = `${res.s1.slots} SLOTS / ${res.s1.weight} KG`;
+            document.getElementById('transport-stats-2').innerText = `${res.s2.slots} SLOTS / ${res.s2.weight} KG`;
             
-            document.getElementById('transport-stats-1').textContent = `${result.s1.slots} SLOTS / ${result.s1.weight} KG`;
-            document.getElementById('transport-stats-2').textContent = `${result.s2.slots} SLOTS / ${result.s2.weight} KG`;
-
-            const grid1 = document.getElementById('grid-1');
-            grid1.innerHTML = '';
-            for (let i = 0; i < result.s1.slots; i++) { 
-                const slotEl = Object.assign(document.createElement('div'), { className: 'slot', id: `g1-slot-${i}` });
-                grid1.appendChild(slotEl); 
-            }
-            result.slots1.forEach((slotData, idx) => {
-                const slotEl = document.getElementById(`g1-slot-${idx}`);
-                if (slotEl) renderSlotContent(slotEl, slotData);
-            });
-
-            const grid2 = document.getElementById('grid-2');
-            grid2.innerHTML = '';
-            for (let i = 0; i < result.s2.slots; i++) { 
-                const slotEl = Object.assign(document.createElement('div'), { className: 'slot', id: `g2-slot-${i}` });
-                grid2.appendChild(slotEl); 
-            }
-            result.slots2.forEach((slotData, idx) => {
-                const slotEl = document.getElementById(`g2-slot-${idx}`);
-                if (slotEl) renderSlotContent(slotEl, slotData);
-            });
-
-            isFullCapacity = result.overflow;
-            
-            calculateMaterials();
-            renderCatalog();
-        }
-
-        function renderSlotContent(element, data) {
-            element.classList.add('filled');
-            const icon = Object.assign(document.createElement('div'), { className: 'item-icon' });
-            applyIcon(icon, data.item); // Use Hybrid Icon
-            
-            icon.innerHTML += `<span class="stack-label">${data.qtyInSlot}</span>`; // Add stack label
-            icon.onmouseenter = (e) => showTooltip(e, data);
-            icon.onmouseleave = hideTooltip;
-            icon.onclick = () => window.removeItemFromManifest(data.item);
-            element.appendChild(icon);
-        }
-
-        // --- 6. UI HELPERS & MODAL ---
-        window.openQtyModal = (itemName) => {
-            const item = barterDb.find(i => i.item === itemName);
-            if (!item) return;
-            selectedItemForModal = item;
-            
-            const currentCount = currentCargo.filter(c => c.item === item.item).length;
-            const remaining = Math.max(0, item.limit - currentCount);
-            
-            document.getElementById('modal-title').textContent = `ADD ${item.item}`;
-            document.getElementById('modal-max-label').textContent = `${remaining}`;
-            
-            const range = document.getElementById('qty-range');
-            const num = document.getElementById('qty-number');
-            range.max = remaining; range.value = 1;
-            num.max = remaining; num.value = 1;
-            
-            range.oninput = () => num.value = range.value;
-            num.oninput = () => range.value = num.value;
-            
-            document.getElementById('qty-modal').classList.add('active');
-        };
-
-        window.closeQtyModal = () => {
-            document.getElementById('qty-modal').classList.remove('active');
-            selectedItemForModal = null;
-        };
-
-        window.confirmQtyAdd = () => {
-            if (!selectedItemForModal) return;
-            const qty = parseInt(document.getElementById('qty-number').value);
-            if (qty > 0) {
-                const newItems = Array(qty).fill(selectedItemForModal);
-                const testCargo = [...currentCargo, ...newItems];
-                const result = packCargo(testCargo);
+            const grids = ['grid-1', 'grid-2'];
+            grids.forEach((id, i) => {
+                const g = document.getElementById(id); g.innerHTML = '';
+                const slots = i === 0 ? res.slots1 : res.slots2;
+                const max = i === 0 ? res.s1.slots : res.s2.slots;
                 
-                if (result.overflow) {
-                    alert("Not enough space in loadouts for this quantity!");
-                } else {
-                    currentCargo.push(...newItems);
-                    calculateLoadout();
-                    renderCatalog();
-                    saveData();
-                    closeQtyModal();
+                const frag = document.createDocumentFragment();
+                for (let k = 0; k < max; k++) {
+                    const slot = document.createElement('div'); slot.className = 'slot' + (slots[k] ? ' filled' : '');
+                    if (slots[k]) {
+                        const icon = document.createElement('div'); icon.className = 'item-icon'; applyIcon(icon, slots[k].item);
+                        icon.innerHTML = `<span class="stack-label">${slots[k].qtyInSlot}</span>`;
+                        icon.onclick = () => window.removeItemFromManifest(slots[k].item);
+                        icon.onmouseenter = (e) => showTooltip(e, slots[k]);
+                        icon.onmouseleave = hideTooltip;
+                        slot.appendChild(icon);
+                    }
+                    frag.appendChild(slot);
                 }
-            }
-        };
+                g.appendChild(frag);
+            });
+            calculateMaterials(); renderCatalog();
+        }
 
+        // --- 6. CATALOG UI ---
         function renderCatalog() {
             const town = document.getElementById('town-select').value;
             const container = document.getElementById('catalog-container');
-            const iconBox = document.getElementById('town-icon-box');
-            applyIcon(iconBox, town); 
-            
+            applyIcon(document.getElementById('town-icon-box'), town);
             container.innerHTML = '';
-            
-            barterDb.filter(b => b.town === town).forEach(b => {
-                const totalInManifest = currentCargo.filter(c => c.item === b.item).length;
-                const isLimitReached = totalInManifest >= b.limit;
-                
-                const blockAdd = isLimitReached || isFullCapacity;
-                
-                const div = document.createElement('div');
-                div.className = 'item-entry' + (blockAdd ? (isLimitReached ? ' at-limit' : ' full-capacity') : '');
-                
-                let btnText = '+ADD';
-                let btnColor = 'var(--accent)';
-                if (isLimitReached) { btnText = 'MAX'; btnColor = '#ff4444'; }
-                else if (isFullCapacity) { btnText = 'FULL'; btnColor = '#888'; }
 
-                const iconDiv = document.createElement('div');
-                iconDiv.className = 'item-icon-box';
-                applyIcon(iconDiv, b.item); 
-
-                div.appendChild(iconDiv);
-                div.insertAdjacentHTML('beforeend', `
-                    <div style="flex-grow:1;"><div class="item-name">${b.item}</div><div class="item-meta">LIMIT: ${totalInManifest}/${b.limit}</div></div>
-                    <span class="add-status" style="color: ${btnColor};">${btnText}</span>`);
+            const frag = document.createDocumentFragment();
+            barterDb.filter(b => b.town === town).forEach(item => {
+                const count = currentCargo.filter(c => c.item === item.item).length;
+                const atLimit = count >= item.limit;
                 
-                if (!blockAdd) div.onclick = () => window.openQtyModal(b.item);
-                container.appendChild(div);
+                const entry = document.createElement('div');
+                entry.className = `item-entry ${atLimit ? 'at-limit' : ''}`;
+                entry.id = `catalog-${item.item.replace(/\s+/g, '-')}`;
+                
+                const iconBox = document.createElement('div'); iconBox.className = 'item-icon-box'; applyIcon(iconBox, item.item);
+                
+                const info = document.createElement('div'); info.style.flexGrow = '1';
+                info.innerHTML = `<div class="item-name">${item.item}</div><div class="item-meta">${item.weight}kg | Limit: ${item.limit}</div>`;
+                
+                const control = document.createElement('div'); control.className = 'qty-control';
+                
+                // Minus Button
+                const btnMinus = document.createElement('button'); btnMinus.className = 'q-btn minus'; btnMinus.innerText = '−';
+                btnMinus.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    if(e.shiftKey) clearItem(item.item);
+                    else updateItemQty(item.item, -1); 
+                };
+                setupLongPress(btnMinus, () => clearItem(item.item));
+                
+                // Value Display
+                const val = document.createElement('div'); val.className = 'q-val'; val.innerText = count;
+                
+                // Plus Button
+                const btnPlus = document.createElement('button'); btnPlus.className = 'q-btn plus'; btnPlus.innerText = '+';
+                btnPlus.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    if(e.shiftKey) fillMax(item); 
+                    else updateItemQty(item.item, 1); 
+                };
+                setupLongPress(btnPlus, () => fillMax(item));
+
+                control.append(btnMinus, val, btnPlus);
+                entry.append(iconBox, info, control);
+                frag.appendChild(entry);
             });
+            container.appendChild(frag);
         }
 
+        // --- 7. CARGO ACTIONS ---
+        function updateItemQty(itemName, delta) {
+            const item = barterDb.find(i => i.item === itemName);
+            if (delta > 0) {
+                const currentCount = currentCargo.filter(c => c.item === itemName).length;
+                if (currentCount >= item.limit) return;
+                const test = [...currentCargo, item];
+                if (packCargo(test).overflow) return;
+                currentCargo.push(item);
+            } else {
+                const idx = currentCargo.findLastIndex(c => c.item === itemName);
+                if (idx !== -1) currentCargo.splice(idx, 1);
+            }
+            calculateLoadout(); saveData();
+        }
+
+        function fillMax(item) {
+            let added = 0;
+            while (true) {
+                const currentCount = currentCargo.filter(c => c.item === item.item).length;
+                if (currentCount >= item.limit) break;
+                const test = [...currentCargo, item];
+                if (packCargo(test).overflow) break;
+                currentCargo.push(item);
+                added++;
+            }
+            if (added > 0) {
+                const el = document.getElementById(`catalog-${item.item.replace(/\s+/g, '-')}`);
+                if(el) { el.classList.add('pulse'); setTimeout(() => el.classList.remove('pulse'), 400); }
+                calculateLoadout(); saveData();
+            }
+        }
+
+        function clearItem(itemName) {
+            const originalCount = currentCargo.length;
+            currentCargo = currentCargo.filter(c => c.item !== itemName);
+            if (currentCargo.length !== originalCount) {
+                const el = document.getElementById(`catalog-${itemName.replace(/\s+/g, '-')}`);
+                if(el) { el.classList.add('pulse'); setTimeout(() => el.classList.remove('pulse'), 400); }
+                calculateLoadout(); saveData();
+            }
+        }
+
+        function setupLongPress(btn, onHold) {
+            let timer;
+            const start = () => { timer = setTimeout(() => { if("vibrate" in navigator) navigator.vibrate(40); onHold(); timer = null; }, 500); };
+            const cancel = () => clearTimeout(timer);
+            btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', cancel); btn.addEventListener('mouseleave', cancel);
+            btn.addEventListener('touchstart', (e) => { start(); }, {passive: true});
+            btn.addEventListener('touchend', cancel);
+        }
+
+        window.removeItemFromManifest = (name) => updateItemQty(name, -1);
+
+        // --- 8. UTILS ---
         function showTooltip(e, data) {
             const tt = document.getElementById('item-tooltip');
             document.getElementById('tt-name').textContent = data.item;
@@ -883,167 +827,65 @@
             const rect = e.target.getBoundingClientRect();
             tt.style.left = (rect.left - 170) + 'px'; tt.style.top = rect.top + 'px';
         }
-
         function hideTooltip() { document.getElementById('item-tooltip').style.display = 'none'; }
 
-        window.removeItemFromManifest = (itemName) => {
-            const idx = currentCargo.findLastIndex(c => c.item === itemName);
-            if (idx !== -1) currentCargo.splice(idx, 1);
-            calculateLoadout(); 
-            renderCatalog(); 
-            saveData();
-        };
-
         function calculateMaterials() {
-            const bIngredients = {};
-            const tempOwned = JSON.parse(JSON.stringify(ownedInventory));
-            
-            currentCargo.forEach(c => { 
-                // SAFETY CHECK: Ensure mats exists (prevents crash on old data)
-                if (c.mats) {
-                    for (const [m, q] of Object.entries(c.mats)) { 
-                        bIngredients[m] = (bIngredients[m] || 0) + q; 
-                    } 
-                }
-            });
-
-            const rawRes = {};
-            function resolve(n, need) {
+            const needed = {};
+            currentCargo.forEach(c => { if(c.mats) Object.entries(c.mats).forEach(([m,q]) => needed[m] = (needed[m]||0)+q); });
+            const raw = {};
+            function resolve(n, qty) {
                 const r = recipeDb.find(x => x.item === n);
-                if (!r) { 
-                    rawRes[n] = (rawRes[n] || 0) + need; 
-                    return; 
-                }
-                for (const [m, a] of Object.entries(r.mats)) { 
-                    resolve(m, a * need); 
-                }
+                if (!r) { raw[n] = (raw[n]||0)+qty; return; }
+                Object.entries(r.mats).forEach(([m,a]) => resolve(m, a*qty));
             }
-
-            Object.entries(bIngredients).forEach(([n, c]) => {
-                const deficit = Math.max(0, c - (tempOwned[n] || 0));
-                if (deficit > 0) resolve(n, deficit);
-            });
-
-            renderTable('crafted-tbody', bIngredients, true);
-            renderTable('raw-tbody', rawRes, false);
+            Object.entries(needed).forEach(([n,c]) => { const def = Math.max(0, c-(ownedInventory[n]||0)); if(def>0) resolve(n, def); });
+            renderTable('crafted-tbody', needed, true); renderTable('raw-tbody', raw, false);
         }
 
-        function renderTable(tbodyId, dataMap, isComp) {
-            const tbody = document.getElementById(tbodyId);
-            tbody.innerHTML = ""; // Clear existing rows
-
-            const allPotentialItems = Array.from(new Set([...Object.keys(dataMap), ...Object.keys(ownedInventory)]));
-            
-            if (allPotentialItems.length === 0) {
-                 tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No materials needed</td></tr>`;
-                 return;
-            }
-
-            const sortedItems = allPotentialItems
-                .filter(item => {
-                    const isItemComp = recipeDb.some(r => r.item === item);
-                    return isComp === isItemComp;
-                })
-                .sort((a, b) => a.localeCompare(b));
-            
-            if (sortedItems.length === 0) {
-                 tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No materials needed</td></tr>`;
-                 return;
-            }
-
-            sortedItems.forEach(item => {
-                const needed = dataMap[item] || 0;
-                const owned = ownedInventory[item] || 0;
-                if (needed === 0 && owned === 0) return;
-
-                const deficit = Math.ceil(needed) - owned;
-                
+        function renderTable(id, data, isComp) {
+            const body = document.getElementById(id); body.innerHTML = '';
+            const items = Object.keys(data).sort();
+            if(!items.length) { body.innerHTML = '<tr><td colspan="4" class="empty-state">No materials needed</td></tr>'; return; }
+            const frag = document.createDocumentFragment();
+            items.forEach(item => {
+                const need = Math.ceil(data[item]); const have = ownedInventory[item]||0; const def = need-have;
                 const tr = document.createElement('tr');
-                
-                const nameTd = document.createElement('td');
-                // Use cell-flex class to align icon and text
-                nameTd.className = 'cell-flex';
-                
-                const icon = document.createElement('div');
-                icon.className = 'icon-small';
-                applyIcon(icon, item);
-                nameTd.appendChild(icon);
-                
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = item;
-                nameSpan.style.color = needed > 0 ? '#fff' : '#666';
-                nameTd.appendChild(nameSpan);
-
-                tr.appendChild(nameTd);
-
-                const ownedTd = document.createElement('td');
-                ownedTd.style.textAlign = 'center';
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.className = 'owned-input';
-                input.dataset.item = item;
-                input.value = ownedInventory[item] || 0;
+                tr.innerHTML = `<td class="cell-flex"></td><td style="text-align:center;"><input type="number" class="owned-input" value="${have}"></td><td style="text-align:center;">${need}</td><td class="status-cell ${def<=0?'ready':'deficit'}" style="text-align:right;">${def<=0?'READY':def}</td>`;
+                const icon = document.createElement('div'); icon.className = 'icon-small'; applyIcon(icon, item);
+                const input = tr.querySelector('input');
                 input.oninput = (e) => { 
-                    ownedInventory[e.target.dataset.item] = parseInt(e.target.value) || 0; 
+                    ownedInventory[item] = parseInt(e.target.value) || 0; 
                     calculateMaterials(); 
                     saveData(); 
                 };
-                ownedTd.appendChild(input);
-                tr.appendChild(ownedTd);
-
-                const needTd = document.createElement('td');
-                needTd.style.textAlign = 'center';
-                needTd.className = 'need-qty';
-                needTd.textContent = needed > 0 ? Math.ceil(needed).toLocaleString() : '-';
-                tr.appendChild(needTd);
-
-                const statusTd = document.createElement('td');
-                statusTd.style.textAlign = 'right';
-                if (needed === 0) { statusTd.textContent = ''; statusTd.className = 'status-cell'; } 
-                else { 
-                    statusTd.textContent = deficit <= 0 ? 'READY' : deficit.toLocaleString(); 
-                    statusTd.className = `status-cell ${deficit <= 0 ? 'ready' : 'deficit'}`; 
-                }
-                tr.appendChild(statusTd);
-                
-                tbody.appendChild(tr);
+                tr.cells[0].append(icon, item); frag.appendChild(tr);
             });
+            body.appendChild(frag);
         }
 
-        // --- 7. LISTENERS & MOBILE ---
-        document.getElementById('town-select').onchange = (e) => { selectedTown = e.target.value; renderCatalog(); saveData(); };
-        document.getElementById('transport-select-1').onchange = (e) => { calculateLoadout(); saveData(); };
-        document.getElementById('transport-select-2').onchange = (e) => { calculateLoadout(); saveData(); };
-        
+        document.getElementById('town-select').onchange = (e) => { 
+            selectedTown = e.target.value; 
+            requestAnimationFrame(() => {
+                renderCatalog(); 
+                saveData(); 
+            });
+        };
+        document.getElementById('transport-select-1').onchange = () => { calculateLoadout(); saveData(); };
+        document.getElementById('transport-select-2').onchange = () => { calculateLoadout(); saveData(); };
         document.querySelectorAll('.toggle-input').forEach(chk => {
             chk.onchange = (e) => {
                 const id = e.target.id.replace('buff-', '');
-                if (id === 'william' && e.target.checked) { document.getElementById('buff-alpaca').checked = false; activeBuffs.alpaca = false; }
-                if (id === 'alpaca' && e.target.checked) { document.getElementById('buff-william').checked = false; activeBuffs.william = false; }
+                if (id === 'william' && e.target.checked) document.getElementById('buff-alpaca').checked = activeBuffs.alpaca = false;
+                if (id === 'alpaca' && e.target.checked) document.getElementById('buff-william').checked = activeBuffs.william = false;
                 activeBuffs[id] = e.target.checked;
-                calculateLoadout(); 
-                saveData();
+                calculateLoadout(); saveData();
             };
         });
 
-        // Mobile Nav
-        window.toggleSidebar = (side) => {
-            const left = document.getElementById('left-panel');
-            const right = document.getElementById('right-panel');
-            const backdrop = document.getElementById('mobile-backdrop');
-            if (side === 'left') { closeSidebars(); left.classList.add('active'); backdrop.classList.add('active'); }
-            if (side === 'right') { closeSidebars(); right.classList.add('active'); backdrop.classList.add('active'); }
-        };
-        window.closeSidebars = () => {
-            document.getElementById('left-panel').classList.remove('active');
-            document.getElementById('right-panel').classList.remove('active');
-            document.getElementById('mobile-backdrop').classList.remove('active');
-        };
+        window.toggleSidebar = (side) => { document.getElementById(side+'-panel').classList.add('active'); document.getElementById('mobile-backdrop').classList.add('active'); };
+        window.closeSidebars = () => { document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.getElementById('mobile-backdrop').classList.remove('active'); };
 
-        window.onload = async () => { 
-            renderCatalog(); 
-            calculateLoadout(); 
-        };
+        window.onload = () => { calculateLoadout(); };
     </script>
 </body>
 </html>
