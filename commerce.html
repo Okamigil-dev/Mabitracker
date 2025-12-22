@@ -24,6 +24,7 @@
             --text-dim: #a1a1aa;
             --warning: #facc15;
             --danger: #ef4444;
+            --slot-size: 50px;
         }
 
         /* --- Global & Reset --- */
@@ -38,8 +39,7 @@
             line-height: 1.5;
         }
         
-        /* Scrollbars */
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
@@ -56,7 +56,7 @@
         }
 
         .content-grid {
-            display: grid; grid-template-columns: 300px 1fr 300px; 
+            display: grid; grid-template-columns: 340px 1fr 340px; 
             flex-grow: 1; overflow: hidden; position: relative;
         }
         
@@ -65,7 +65,6 @@
             border-right: 1px solid var(--border);
         }
         .panel:last-child { border-right: none; }
-        
         .center-panel { background: #0c0c0e; }
 
         /* --- Header Elements --- */
@@ -75,19 +74,15 @@
         .main-title {
             font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.5px;
         }
-        .sub-title { 
-            font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-left: 10px;
-        }
         .hub-btn {
             color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px;
             padding: 6px 12px; border-radius: 6px; transition: 0.2s; border: 1px solid transparent;
         }
         .hub-btn:hover { color: #fff; background: var(--border); }
 
-        /* --- Form Elements --- */
         .panel-label {
             font-size: 11px; font-weight: 600; color: var(--text-dim);
-            margin-bottom: 6px; display: block;
+            margin-bottom: 8px; display: block; text-transform: uppercase;
         }
         
         .input-dark {
@@ -97,11 +92,41 @@
         }
         .input-dark:focus { border-color: var(--accent); }
         
-        select.input-dark { cursor: pointer; }
+        /* --- Transparent Square UI --- */
+        .tab-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; margin-bottom: 15px; }
+        .picker-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.15s; }
+        .picker-btn.active { background: var(--accent-dim); border-color: var(--accent); }
+        .picker-icon { 
+            width: 40px; height: 40px; background-size: contain; background-repeat: no-repeat; 
+            background-position: center; border: 1px solid var(--border); border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        .picker-label { font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; text-align: center; }
+
+        /* --- Drawer UI --- */
+        .drawer-wrap { border-bottom: 1px solid var(--border); }
+        summary { 
+            list-style: none; cursor: pointer; padding: 12px 20px; 
+            font-size: 11px; font-weight: 700; color: var(--text-dim); 
+            text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+            user-select: none;
+        }
+        summary::before { content: '▶'; font-size: 8px; transition: 0.2s; }
+        details[open] summary::before { transform: rotate(90deg); color: var(--accent); }
+        
+        .horizontal-drawer {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 0 20px 15px 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .horizontal-drawer .picker-btn {
+            flex: 0 0 75px;
+            min-width: 75px;
+        }
 
         /* --- Left Panel Items --- */
-        .config-section { padding: 20px; border-bottom: 1px solid var(--border); }
-        
         .item-list { flex-grow: 1; overflow-y: auto; }
         
         .inventory-item {
@@ -113,12 +138,12 @@
         .selected-item { background: var(--accent-dim); border-left: 3px solid var(--accent); }
         
         .item-icon-box {
-            width: 40px; height: 40px; background: var(--card-bg); border: 1px solid var(--border);
+            width: 48px; height: 48px; background: var(--card-bg); border: 1px solid var(--border);
             border-radius: 4px; background-size: contain; background-repeat: no-repeat; 
-            background-position: center; flex-shrink: 0;
+            background-position: center; flex-shrink: 0; background-color: rgba(255, 255, 255, 0.03);
         }
         .item-name { font-weight: 600; font-size: 13px; color: #fff; }
-        .item-meta { font-size: 11px; color: var(--text-dim); }
+        .item-list-content { flex-grow: 1; }
         .stock-input-row { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
         
         /* --- Center Panel --- */
@@ -129,6 +154,7 @@
         .big-icon {
             width: 80px; height: 80px; background: var(--bg); border: 1px solid var(--border);
             border-radius: 8px; background-size: contain; background-repeat: no-repeat; background-position: center;
+            background-color: rgba(255, 255, 255, 0.03);
         }
         .item-title-large { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
         
@@ -143,10 +169,10 @@
         .profit-val.negative { color: var(--danger); }
         .score-val { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--text-dim); }
 
-        /* --- Right Panel & Toggles --- */
+        /* --- Right Panel Toggles --- */
         .toggle-row {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 0; cursor: pointer;
+            padding: 10px 0; cursor: pointer;
         }
         .toggle-label { font-size: 13px; color: var(--text-main); }
         
@@ -173,9 +199,9 @@
         }
         .manifest-slots { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
         .slot {
-            width: 36px; height: 36px; background: var(--bg); border: 1px solid var(--border);
+            width: 42px; height: 42px; background: var(--bg); border: 1px solid var(--border);
             border-radius: 4px; background-size: contain; background-repeat: no-repeat;
-            background-position: center; position: relative;
+            background-position: center; position: relative; background-color: rgba(255, 255, 255, 0.03);
         }
         .slot.filled { border-color: var(--accent); background-color: var(--accent-dim); }
         .slot-badge {
@@ -190,9 +216,8 @@
 
         @media (max-width: 1000px) {
             .content-grid { display: block; height: calc(100vh - 50px); }
-            .header-bar { display: none; } /* Hide desktop header */
+            .header-bar { display: none; }
             
-            /* Mobile Nav Bar */
             .mobile-nav {
                 display: flex; justify-content: space-between; align-items: center;
                 padding: 10px 15px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border);
@@ -203,10 +228,9 @@
                 padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer;
             }
             
-            /* Drawers */
             .left-panel, .right-panel {
-                position: fixed; top: 0; bottom: 0; width: 300px; max-width: 85%;
-                z-index: 1001; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+                position: fixed; top: 0; bottom: 0; width: 320px; max-width: 85%;
+                z-index: 2000 !important; box-shadow: 0 0 50px rgba(0,0,0,0.8);
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
             
@@ -216,33 +240,28 @@
             .right-panel { right: 0; transform: translateX(100%); border-left: 1px solid var(--border); }
             .right-panel.active { transform: translateX(0); }
             
-            /* Backdrop */
             .mobile-backdrop {
                 display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-                z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+                z-index: 1500; opacity: 0; pointer-events: none; transition: opacity 0.3s;
                 backdrop-filter: blur(4px);
             }
             .mobile-backdrop.active { opacity: 1; pointer-events: all; }
             
-            .center-panel { height: 100%; width: 100%; border: none; }
-            .item-header { padding: 20px; }
+            .center-panel { height: 100%; width: 100%; border: none; z-index: 1 !important; position: relative; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Mobile Nav -->
     <div class="mobile-nav">
-        <button class="nav-trigger" onclick="toggleSidebar('left')">☰ Items</button>
+        <button class="nav-trigger" onclick="toggleSidebar('left')">☰ Catalog</button>
         <span style="font-weight:700; color:#fff;">Commerce</span>
-        <button class="nav-trigger" onclick="toggleSidebar('right')">Settings</button>
+        <button class="nav-trigger" onclick="toggleSidebar('right')">Config</button>
     </div>
 
-    <!-- Backdrop -->
     <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeSidebars()"></div>
 
     <div class="interface-container">
-        <!-- Desktop Header -->
         <div class="header-bar">
             <div class="title-section">
                 <div style="display:flex; align-items:center;">
@@ -253,59 +272,40 @@
         </div>
 
         <div class="content-grid">
-            <!-- LEFT PANEL: Config & Items -->
             <div class="panel left-panel" id="left-panel">
-                <div class="config-section">
-                    <div style="margin-bottom: 15px;">
-                        <label class="panel-label">Commerce Mode</label>
-                        <select id="commerce-type-select" class="input-dark">
-                            <option value="Normal">Normal Commerce</option>
-                            <option value="Barter">Bartering</option>
-                            <option value="Group">Group Commerce</option>
-                        </select>
-                    </div>
+                <!-- COMMERCE MODE DRAWER -->
+                <details class="drawer-wrap">
+                    <summary>Commerce Mode</summary>
+                    <div id="commerce-type-tabs" class="horizontal-drawer"></div>
+                </details>
 
-                    <div style="display:flex; gap:10px; margin-bottom:15px;">
-                        <div style="flex:1;">
-                            <label class="panel-label">Transport</label>
-                            <select id="transport-dropdown" class="input-dark"></select>
+                <!-- TRANSPORT DRAWER -->
+                <details class="drawer-wrap">
+                    <summary>Transport Selection</summary>
+                    <div id="transport-tabs" class="horizontal-drawer"></div>
+                </details>
+
+                <!-- TRADING POST DRAWER (Combined Post Selection and Rating) -->
+                <details class="drawer-wrap" open>
+                    <summary>
+                        <span>Trading Post</span>
+                        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
+                            <span style="font-size:10px; color:var(--text-dim);">RATING</span>
+                            <input type="number" id="merchant-rating-input" class="input-dark" style="width:45px; padding:2px; height:24px; text-align:center;" min="1" max="9" value="1">
                         </div>
-                        <div style="width:80px;">
-                             <label class="panel-label">Rating</label>
-                             <select id="merchant-rating-select" class="input-dark">
-                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="position: relative;">
-                        <input type="text" id="global-search" class="input-dark" placeholder="Search items...">
-                        <div id="clear-search" style="position: absolute; right: 10px; top: 8px; cursor: pointer; display: none; color: #666;">✕</div>
-                    </div>
-                </div>
-
-                <!-- Player Avatar / Town Info -->
-                <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
-                    <div class="player-avatar" id="origin-town-icon"></div>
-                    <div style="flex-grow:1;">
-                        <label class="panel-label" style="margin:0;">Current Post</label>
-                        <select id="city-select" class="input-dark" style="margin-top:4px;"></select>
-                    </div>
-                </div>
+                    </summary>
+                    <div id="city-tabs" class="horizontal-drawer"></div>
+                </details>
                 
-                <!-- Items List -->
                 <div id="market-items-container" class="item-list"></div>
             </div>
 
-            <!-- CENTER PANEL: Data -->
             <div class="panel center-panel">
                 <div class="item-header">
                     <div class="big-icon" id="center-item-icon"></div>
                     <div class="item-title-box">
                         <div class="item-title-large" id="center-item-title">Select Item</div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1.5fr; align-items: center; width: 100%; margin-top: 8px;">
+                        <div style="display:grid; grid-template-columns: 1fr 4fr 2fr; align-items: center; width: 100%; margin-top: 8px;">
                             <div class="item-inventory" id="weight-display" style="text-align: left;">Weight: -</div>
                             <div class="item-inventory" id="stack-display" style="text-align: center;">Stack: -</div>
                             <div id="base-price-container" style="display:none; justify-content: flex-end; align-items: center; gap: 8px;">
@@ -318,7 +318,7 @@
                 
                 <div class="market-list-container">
                     <div class="market-row head">
-                        <div>Target</div>
+                        <div>Destination</div>
                         <div style="text-align:right;">Sell Price</div>
                         <div style="text-align:right;">Profit</div>
                         <div style="text-align:right;">Score</div>
@@ -327,12 +327,15 @@
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: Modifiers & Routes -->
             <div class="panel right-panel" id="right-panel">
-                <div class="config-section">
-                    <label class="panel-label" style="color:var(--accent);">PROFIT MODIFIERS</label>
-                    <div style="margin-bottom:10px;">
-                        <select id="mastery-rank" class="input-dark" style="margin-bottom:8px;"></select>
+                <!-- RIGHT SIDE DRAWER 1: PROFIT MODIFIERS -->
+                <details class="drawer-wrap" open>
+                    <summary>Profit Modifiers</summary>
+                    <div style="padding: 0 20px 15px 20px;">
+                        <label class="panel-label">Mastery Rank</label>
+                        <select id="mastery-rank" class="input-dark" style="margin-bottom:12px;"></select>
+                        
+                        <label class="panel-label">Guarantee Letters</label>
                         <div style="display:flex; gap:8px;">
                             <select id="letter-select" class="input-dark" style="flex:1;"></select>
                             <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
@@ -340,46 +343,50 @@
                             </label>
                         </div>
                     </div>
+                </details>
 
-                    <label class="panel-label" style="color:var(--accent); margin-top:20px;">GEAR & PARTNERS</label>
-                    
-                    <div class="toggle-row">
-                        <span class="toggle-label">Grandmaster Merchant</span>
-                        <label><input type="checkbox" id="gm-check" style="display:none;"><div class="toggle-switch"></div></label>
-                    </div>
+                <!-- RIGHT SIDE DRAWER 2: PARTNERS & GEAR -->
+                <details class="drawer-wrap" open>
+                    <summary>Support & Gear</summary>
+                    <div style="padding: 0 20px 15px 20px;">
+                        <div class="toggle-row">
+                            <span class="toggle-label">Grandmaster Merchant</span>
+                            <label><input type="checkbox" id="gm-check" style="display:none;"><div class="toggle-switch"></div></label>
+                        </div>
 
-                    <div class="toggle-row">
-                        <span class="toggle-label">Alpaca</span>
-                        <label><input type="checkbox" id="alpaca-check" style="display:none;"><div class="toggle-switch"></div></label>
-                    </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">Alpaca Support</span>
+                            <label><input type="checkbox" id="alpaca-check" style="display:none;"><div class="toggle-switch"></div></label>
+                        </div>
 
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">
-                        <div class="toggle-row" style="flex:1;">
-                            <span class="toggle-label">William</span>
-                            <label style="margin-left:10px;"><input type="checkbox" id="william-check" style="display:none;"><div class="toggle-switch"></div></label>
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">
+                            <div class="toggle-row" style="flex:1;">
+                                <span class="toggle-label">Partner: William</span>
+                                <label style="margin-left:10px;"><input type="checkbox" id="william-check" style="display:none;"><div class="toggle-switch"></div></label>
+                            </div>
+                            <div id="william-like-box" style="display:none; align-items:center; gap:5px;">
+                                <span style="font-size:10px; color:#666;">Like</span>
+                                <input type="number" id="william-likeability" class="input-dark" style="width:50px; padding:4px; text-align:center;" value="247">
+                            </div>
                         </div>
-                        <div id="william-like-box" style="display:none; align-items:center; gap:5px;">
-                            <span style="font-size:10px; color:#666;">Likeability</span>
-                            <input type="number" id="william-likeability" class="input-dark" style="width:50px; padding:4px; text-align:center;" value="247">
+                        
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span class="toggle-label">Trader Enchant Qty</span>
+                                <input type="number" id="trader-qty" class="input-dark" style="width:50px; text-align:center;" min="0" max="2" value="0">
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span class="toggle-label">Trustworthy Enchant Qty</span>
+                                <input type="number" id="trustworthy-qty" class="input-dark" style="width:50px; text-align:center;" min="0" max="2" value="0">
+                            </div>
                         </div>
                     </div>
-                    
-                    <div style="margin-top: 15px;">
-                        <label class="panel-label">Trader Gear</label>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                            <span class="toggle-label">Gear</span>
-                            <input type="number" id="trader-qty" class="input-dark" style="width:50px; text-align:center;" min="0" max="2" value="0">
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span class="toggle-label">Trustworthy</span>
-                            <input type="number" id="trustworthy-qty" class="input-dark" style="width:50px; text-align:center;" min="0" max="2" value="0">
-                        </div>
-                    </div>
-                </div>
+                </details>
 
-                <div class="config-section">
-                    <label class="panel-label">OWNED TRANSPORTS</label>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 0 15px;">
+                <!-- RIGHT SIDE DRAWER 3: VEHICLE FLEET -->
+                <details class="drawer-wrap">
+                    <summary>Vehicle Fleet</summary>
+                    <div style="padding: 0 20px 15px 20px; display:grid; grid-template-columns: 1fr 1fr; gap: 0 15px;">
                         <div class="toggle-row"><span class="toggle-label">Hand Cart</span><label><input type="checkbox" id="handcart-check" class="transport-toggle" data-mount="Hand Cart" style="display:none;"><div class="toggle-switch"></div></label></div>
                         <div class="toggle-row"><span class="toggle-label">Wagon</span><label><input type="checkbox" id="wagon-check" class="transport-toggle" data-mount="Wagon" style="display:none;"><div class="toggle-switch"></div></label></div>
                         <div class="toggle-row"><span class="toggle-label">Elephant</span><label><input type="checkbox" id="elephant-check" class="transport-toggle" data-mount="Elephant" style="display:none;"><div class="toggle-switch"></div></label></div>
@@ -388,31 +395,47 @@
                         <div class="toggle-row"><span class="toggle-label">Skiff</span><label><input type="checkbox" id="skiff-check" class="transport-toggle" data-mount="Skiff" style="display:none;"><div class="toggle-switch"></div></label></div>
                         <div class="toggle-row"><span class="toggle-label">Air Ship</span><label><input type="checkbox" id="airship-check" class="transport-toggle" data-mount="Air Ship" style="display:none;"><div class="toggle-switch"></div></label></div>
                     </div>
-                </div>
+                </details>
 
+                <!-- OPTIMAL ROUTE (Remaining focused) -->
                 <div class="manifest-container" id="manifest-box" style="display:none;">
                     <div class="manifest-header">
-                        <span>Local Best Route</span>
-                        <span id="manifest-dest" style="color:#fff;">Dest</span>
+                        <span>Optimal Route</span>
+                        <span id="manifest-dest" style="color:#fff;">-</span>
                     </div>
                     <div id="manifest-list" class="manifest-slots"></div>
-                    <div id="manifest-total" class="manifest-total"></div>
                 </div>
 
-                <div id="global-manifest-anchor"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURATION & DATA (HARDCODED) ---
-        function getImagePath(path) {
-            if (!path) return "";
-            return (path.startsWith('images/') || path.startsWith('http')) ? path : `images/${path}`;
-        }
-        
+        // --- 1. CONFIGURATION & DATA ---
         const townIcons={"Tir Chonaill":"tradeposts/Commerce_Tir_Chonaill_Icon.png","Dunbarton":"tradeposts/Commerce_Dunbarton_Icon.png","Bangor":"tradeposts/Commerce_Bangor_Icon.png","Emain Macha":"tradeposts/Commerce_Emain_Macha_Icon.png","Taillteann":"tradeposts/Commerce_Taillteann_Icon.png","Tara":"tradeposts/Commerce_Tara_Icon.png","Cobh":"tradeposts/Commerce_Port_Cobh_Icon.png","Belvast":"tradeposts/Commerce_Commonwealth_of_Belvast_Icon.png","Qilla":"tradeposts/Commerce_Qilla_Icon.png","Cor":"tradeposts/Commerce_Cor_Icon.png","Vales":"tradeposts/Commerce_Vales_Icon.png","Filia":"tradeposts/Commerce_Filia_Icon.png","Karu Forest":"tradeposts/Commerce_Karu_Forest_Icon.png","Oasis":"tradeposts/Commerce_Oasis_Icon.png","Lake Calida":"tradeposts/Commerce_Calida_Icon.png","Pera Volcano":"tradeposts/Commerce_Pera_Icon.png","Scathach Beach":"tradeposts/Commerce_Beach_of_Scathach_Icon.png"};
-        const transportData={"Back Pack":{slots:4,weight:400},"Hand Cart":{slots:6,weight:800},"Wagon":{slots:8,weight:900},"Elephant":{slots:7,weight:1700},"Husky":{slots:11,weight:700},"Camel":{slots:7,weight:1400},"Skiff":{slots:8,weight:1200},"Air Ship":{slots:18,weight:2500}};
+        
+        const transportIcons={
+            "Back Pack":"images/transports/Backpack_Icon.png",
+            "Hand Cart":"images/transports/Handcart_Icon.png",
+            "Wagon":"images/transports/Wagon_Icon.png",
+            "Elephant":"images/transports/Elephant_Icon.png",
+            "Husky":"images/transports/Dog_Sled_Icon.png",
+            "Camel":"images/transports/Camel_Icon.png",
+            "Skiff":"images/transports/Traders_Skiff_Icon.png",
+            "Air Ship":"images/transports/Airship_Icon.png"
+        };
+        
+        const transportData={
+            "Back Pack":{slots:4,weight:400},
+            "Hand Cart":{slots:6,weight:800},
+            "Wagon":{slots:8,weight:900},
+            "Elephant":{slots:7,weight:1700},
+            "Husky":{slots:11,weight:700},
+            "Camel":{slots:7,weight:1400},
+            "Skiff":{slots:8,weight:1200},
+            "Air Ship":{slots:18,weight:2500}
+        };
+
         const citiesByType={"Normal":["Tir Chonaill","Dunbarton","Bangor","Emain Macha","Taillteann","Tara","Cobh","Belvast","Qilla","Cor","Vales","Filia"],"Barter":["Karu Forest","Oasis","Lake Calida","Pera Volcano","Scathach Beach"],"Group":["Qilla","Filia","Cor","Vales"]};
         const masteryRanks={"1":0.15,"2":0.14,"3":0.13,"4":0.12,"5":0.11,"6":0.10,"7":0.09,"8":0.08,"9":0.07,"A":0.06,"B":0.05,"C":0.04,"D":0.03,"E":0.02,"F":0.01};
         const guaranteeLetters={"None":{normal:0,barter:0,fine_normal:0,fine_barter:0},"Ogre":{normal:0.30,barter:0.15,fine_normal:0.90,fine_barter:0.45},"Goblin":{normal:0.40,barter:0.20,fine_normal:1.20,fine_barter:0.60},"Imp":{normal:0.50,barter:0.25,fine_normal:1.50,fine_barter:0.75},"Irusan's (Special)":{normal:3.00,barter:0.75,fine_normal:3.00,fine_barter:0.75}};
@@ -441,7 +464,7 @@
             "Group":{
                 "Qilla":[{"name":"Building Lumber","buy":571,"weight":15,"max":8,"limit":144,"img":"tradeposts/group/qilla/Building_Lumber_Icon.png"},{"name":"Ancient Fossil Specimen","buy":550,"weight":8,"max":10,"limit":180,"img":"tradeposts/group/qilla/Ancient_Fossil_Specimen_Icon.png"},{"name":"Personal Camping Tent","buy":951,"weight":20,"max":7,"limit":125,"img":"tradeposts/group/qilla/Personal_Camping_Tent_Icon.png"},{"name":"Lutra Freshwater Eel","buy":657,"weight":7,"max":11,"limit":198,"img":"tradeposts/group/qilla/Lutra_Freshwater_Eel_Icon.png"},{"name":"Kaypi Red Clay","buy":919,"weight":6,"max":8,"limit":144,"img":"tradeposts/group/qilla/Kaypi_Red_Clay_Icon.png"}],
                 "Filia":[{"name":"Sun Hourglass","buy":2003,"weight":70,"max":12,"limit":35,"img":"tradeposts/group/filia/Sun_Hourglass_Icon.png"},{"name":"Shyllien Icebox","buy":3724,"weight":120,"max":5,"limit":20,"img":"tradeposts/group/filia/Shyllien_Icebox_Icon.png"},{"name":"Desert-Terrain Wheel","buy":3078,"weight":90,"max":7,"limit":25,"img":"tradeposts/group/filia/Desert-Terrain_Wheel_Icon.png"},{"name":"Filia Traditional Carpet","buy":1486,"weight":35,"max":20,"limit":71,"img":"tradeposts/group/filia/Filia_Traditional_Carpet_Icon.png"},{"name":"Gem Parasol","buy":905,"weight":20,"max":25,"limit":125,"img":"tradeposts/group/filia/Gem_Parasol_Icon.png"}],
-                "Cor":[{"name":"Lipai Pattern Textile","buy":342,"weight":6,"max":15,"limit":270,"img":"tradeposts/group/cor/Lipai_Pattern_Textile_Icon.png"},{"name":"Cor Honeycomb","buy":474,"weight":12,"max":13,"limit":208,"img":"tradeposts/group/cor/Cor_Honeycomb_Icon.png"},{"name":"Swamp Ash","buy":717,"weight":18,"max":9,"limit":138,"img":"tradeposts/group/cor/Swamp_Ash_Icon.png"},{"name":"Rosewood","buy":1084,"weight":25,"max":10,"limit":100,"img":"tradeposts/group/cor/Rosewood_Icon.png"},{"name":"Ebony","buy":1358,"weight":28,"max":8,"limit":89,"img":"tradeposts/group/cor/Ebony_Icon.png"}],
+                "Cor":[{"name":"Lipai Pattern Textile","buy":342,"weight":6,"max":15,"limit":270,"img":"tradeposts/group/cor/Lipai_Pattern_Textile_Icon.png"},{"name":"Cor Honeycomb","buy":474,"weight":12,"max":13,"limit":208,"img":"tradeposts/group/cor/Cor_Honeycomb_Icon.png"},{"name":"Swamp Ash","buy":18,"weight":18,"max":9,"limit":138,"img":"tradeposts/group/cor/Swamp_Ash_Icon.png"},{"name":"Rosewood","buy":1084,"weight":25,"max":10,"limit":100,"img":"tradeposts/group/cor/Rosewood_Icon.png"},{"name":"Ebony","buy":1358,"weight":28,"max":8,"limit":89,"img":"tradeposts/group/cor/Ebony_Icon.png"}],
                 "Vales":[{"name":"Calida Flint","buy":503,"weight":5,"max":10,"limit":180,"img":"tradeposts/group/vales/Calida_Flint_Icon.png"},{"name":"Physis Sled","buy":1238,"weight":10,"max":5,"limit":90,"img":"tradeposts/group/vales/Physis_Sled_Icon.png"},{"name":"Portable Hand Warmer","buy":723,"weight":2,"max":10,"limit":180,"img":"tradeposts/group/vales/Portable_Hand_Warmer_Icon.png"},{"name":"Ice Statue","buy":982,"weight":8,"max":8,"limit":144,"img":"tradeposts/group/vales/Ice_Statue_Icon.png"},{"name":"Hillwen Commemorative Coin","buy":604,"weight":4,"max":15,"limit":270,"img":"tradeposts/group/vales/Hillwen_Commemorative_Coin_Icon.png"}]
             }
         };
@@ -451,25 +474,53 @@
         let publicPrices = {};
         let publicStocks = {};
         let publicBasePrices = {};
-        let townRanks = {}; 
-        let transportOwnership = { "Hand Cart": false, "Wagon": false, "Elephant": false, "Husky": false, "Camel": false, "Skiff": false, "Air Ship": false };
+        let transportOwnership = { "Hand Cart": true, "Wagon": true, "Elephant": true, "Husky": true, "Camel": true, "Skiff": true, "Air Ship": false };
+        let activeTransport = "Elephant";
+        let activeCommerceType = "Normal";
+        let selectedCity = "Tir Chonaill";
 
         let currentUser = null;
         let saveTimeout = null;
         let rtdb = null;
         let auth = null;
         let skipRender = false;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // --- 3. LOGIC ---
+        // --- 3. HELPERS ---
+        function getImagePath(path) {
+            if (!path) return "";
+            return (path.startsWith('images/') || path.startsWith('http')) ? path : `images/${path}`;
+        }
+        
+        const applyIcon = (el, name) => {
+            let p = null; 
+            if(townIcons[name]) { p = getImagePath(townIcons[name]); } 
+            else if(name === "Wagon") { p = document.getElementById('alpaca-check').checked ? 'images/transports/Alpaca_Wagon_Icon.png' : 'images/transports/Wagon_Icon.png'; } 
+            else if(transportIcons[name]) { p = transportIcons[name]; } 
+            else { const i = commerceDbFind(name); if(i) p = getImagePath(i.img); }
+            if(p) el.style.backgroundImage = `url('${p}')`; 
+            else el.style.backgroundImage = 'none';
+        };
+
+        function commerceDbFind(name) {
+            for (let type in marketData) {
+                for (let town in marketData[type]) {
+                    const found = marketData[type][town].find(i => i.name === name);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        // --- 4. LOGIC ---
         function getStock(itemName) { return publicStocks[itemName] || 0; }
         function getPrice(itemName, city) { return publicPrices[`${itemName}_${city}`.replace(/[.#$[\]]/g, "_")] || 0; }
 
         function getUIState() {
             return {
-                commerceType: document.getElementById('commerce-type-select').value,
-                transport: document.getElementById('transport-dropdown').value,
-                merchantRating: parseInt(document.getElementById('merchant-rating-select').value, 10) || 1,
+                commerceType: activeCommerceType,
+                transport: activeTransport,
+                city: selectedCity,
+                merchantRating: parseInt(document.getElementById('merchant-rating-input').value, 10) || 1,
                 trader: parseInt(document.getElementById('trader-qty').value, 10) || 0,
                 trust: parseInt(document.getElementById('trustworthy-qty').value, 10) || 0,
                 mastery: document.getElementById('mastery-rank').value,
@@ -519,7 +570,7 @@
             const dBuy = getDiscountedBuyPrice(basePrice, uiState);
             const stats = getModifiedStats(uiState.transport, uiState);
             const load = Math.min(Math.floor(stats.weight / item.weight), stats.slots * item.max, item.limit);
-            const baseProfit = (sellVal !== "") ? (sellVal - dBuy) * load : 0;
+            const baseProfit = (sellVal !== "" && sellVal > 0) ? (sellVal - dBuy) * load : 0;
             const mods = getActiveModifiers(uiState);
             let finalProfit = baseProfit > 0 ? Math.floor(baseProfit * mods.totalMultiplier) : baseProfit;
             const divisor = (uiState.commerceType === "Barter") ? 34 : 17;
@@ -527,78 +578,117 @@
             return { profit: finalProfit, score: score, load: load };
         }
 
-        function getAvailableMounts(uiState) {
-            const mounts = ['Back Pack'];
-            Object.keys(transportOwnership).forEach(key => {
-                if (transportOwnership[key]) {
-                    if (key === 'Air Ship' && uiState.commerceType !== 'Group') return;
-                    mounts.push(key);
-                }
+        function renderCommerceTabs() {
+            const container = document.getElementById('commerce-type-tabs');
+            if (!container) return;
+            container.innerHTML = '';
+            ["Normal", "Barter", "Group"].forEach(type => {
+                const btn = document.createElement('div');
+                btn.className = `picker-btn ${activeCommerceType === type ? 'active' : ''}`;
+                btn.onclick = () => { 
+                    activeCommerceType = type; 
+                    const valid = citiesByType[type];
+                    if(valid.length > 0) selectedCity = valid[0];
+                    renderCommerceTabs(); renderCityTabs(); renderTransportTabs(); refreshUI(); savePrefs(); 
+                };
+                const label = document.createElement('div');
+                label.className = 'picker-label';
+                label.innerText = type;
+                btn.append(label);
+                container.appendChild(btn);
             });
-            return mounts;
         }
 
-        function calculateBestRouteForVector(originCity, targetCities, originItems, uiState, forcedMount = null) {
+        function renderTransportTabs() {
+            const container = document.getElementById('transport-tabs');
+            if (!container) return;
+            container.innerHTML = '';
+            const uiState = getUIState();
+            const mounts = ['Back Pack', 'Hand Cart', 'Wagon', 'Elephant', 'Husky', 'Camel', 'Skiff'];
+            if (activeCommerceType === 'Group') mounts.push('Air Ship');
+
+            mounts.forEach(t => {
+                if (!transportOwnership[t] && t !== 'Back Pack') return;
+                const btn = document.createElement('div');
+                btn.className = `picker-btn ${activeTransport === t ? 'active' : ''}`;
+                btn.onclick = () => { activeTransport = t; renderTransportTabs(); refreshUI(); savePrefs(); };
+                const icon = document.createElement('div');
+                icon.className = 'picker-icon';
+                applyIcon(icon, t);
+                const label = document.createElement('div');
+                label.className = 'picker-label';
+                label.innerText = (t === "Wagon" && uiState.alpaca) ? "Alpaca Wagon" : t;
+                btn.append(icon, label);
+                container.appendChild(btn);
+            });
+        }
+
+        function renderCityTabs() {
+            const container = document.getElementById('city-tabs');
+            if (!container) return;
+            container.innerHTML = '';
+            const valid = citiesByType[activeCommerceType];
+            valid.forEach(city => {
+                const btn = document.createElement('div');
+                btn.className = `picker-btn ${selectedCity === city ? 'active' : ''}`;
+                btn.onclick = () => { selectedCity = city; renderCityTabs(); refreshUI(); savePrefs(); };
+                const icon = document.createElement('div');
+                icon.className = 'picker-icon';
+                applyIcon(icon, city);
+                const label = document.createElement('div');
+                label.className = 'picker-label';
+                label.innerText = city;
+                btn.append(icon, label);
+                container.appendChild(btn);
+            });
+        }
+
+        function runManifests(uiState) {
+            const origin = selectedCity;
+            if(!origin) return;
+            const targetPool = (activeCommerceType === "Barter" ? citiesByType["Normal"] : citiesByType[activeCommerceType]);
+            const targets = targetPool.filter(c => c !== origin);
+            const originItems = (marketData[activeCommerceType] && marketData[activeCommerceType][origin]) || [];
+            const localResult = calculateBestRouteForVector(origin, targets, originItems, uiState, activeTransport);
+            renderManifest(localResult.best, 'manifest-box', 'manifest-list', 'manifest-total');
+        }
+
+        function calculateBestRouteForVector(originCity, targetCities, originItems, uiState, mount) {
             let best = null, maxP = -1;
             const mods = getActiveModifiers(uiState);
-            const mountsToCheck = forcedMount ? [forcedMount] : getAvailableMounts(uiState);
-
+            const stats = getModifiedStats(mount, uiState);
             targetCities.forEach(targetCity => {
-                mountsToCheck.forEach(mKey => {
-                    const stats = getModifiedStats(mKey, uiState);
-                    let remWeight = stats.weight, remSlots = stats.slots, totalP = 0, itemsToBuy = [];
-                    const potential = originItems.map(item => {
-                        const basePrice = publicBasePrices[item.name] || item.buy;
-                        const dBuy = getDiscountedBuyPrice(basePrice, uiState);
-                        const unitP = (getPrice(item.name, targetCity) - dBuy) * (1 + (getPrice(item.name, targetCity) > dBuy ? (mods.totalMultiplier - 1) : 0));
-                        return { ...item, unitP, eff: unitP / Math.max(1, item.weight) };
-                    }).filter(i => i.unitP > 0).sort((a, b) => b.eff - a.eff);
-
-                    potential.forEach(item => {
-                        const stock = getStock(item.name);
-                        let qty = Math.min(Math.floor(remWeight / item.weight), remSlots * item.max, item.limit, stock);
-                        if (qty <= 0) return;
-                        let slotsNeeded = Math.ceil(qty / item.max);
-                        const stackProfit = Math.floor(qty * item.unitP);
-                        itemsToBuy.push({ n: item.name, q: qty, p: stackProfit, img: item.img, s: slotsNeeded, maxPerSlot: item.max });
-                        remWeight -= (qty * item.weight); remSlots -= slotsNeeded; totalP += stackProfit;
-                    });
-                    if (totalP > maxP) { maxP = totalP; best = { origin: originCity, dest: targetCity, mount: mKey, items: itemsToBuy, profit: totalP, maxSlots: stats.slots }; }
+                let remWeight = stats.weight, remSlots = stats.slots, totalP = 0, itemsToBuy = [];
+                const potential = originItems.map(item => {
+                    const basePrice = publicBasePrices[item.name] || item.buy;
+                    const dBuy = getDiscountedBuyPrice(basePrice, uiState);
+                    const sellVal = getPrice(item.name, targetCity);
+                    const unitP = (sellVal - dBuy) * (1 + (sellVal > dBuy ? (mods.totalMultiplier - 1) : 0));
+                    return { ...item, unitP, eff: unitP / Math.max(1, item.weight) };
+                }).filter(i => i.unitP > 0).sort((a, b) => b.eff - a.eff);
+                potential.forEach(item => {
+                    const stock = getStock(item.name);
+                    let qty = Math.min(Math.floor(remWeight / item.weight), remSlots * item.max, item.limit, stock);
+                    if (qty <= 0) return;
+                    let slotsNeeded = Math.ceil(qty / item.max);
+                    const stackProfit = Math.floor(qty * item.unitP);
+                    itemsToBuy.push({ n: item.name, q: qty, p: stackProfit, img: item.img, s: slotsNeeded, maxPerSlot: item.max });
+                    remWeight -= (qty * item.weight); remSlots -= slotsNeeded; totalP += stackProfit;
                 });
+                if (totalP > maxP) { maxP = totalP; best = { origin: originCity, dest: targetCity, mount: mount, items: itemsToBuy, profit: totalP, maxSlots: stats.slots }; }
             });
             return { best, maxP };
         }
 
-        function runManifests(uiState) {
-            const origin = document.getElementById('city-select').value;
-            const targetPool = (uiState.commerceType === "Barter" ? citiesByType["Normal"] : citiesByType[uiState.commerceType]);
-            const targets = targetPool.filter(c => c !== origin);
-            const originItems = (marketData[uiState.commerceType] && marketData[uiState.commerceType][origin]) || [];
-            
-            const localResult = calculateBestRouteForVector(origin, targets, originItems, uiState, null);
-            renderManifest(localResult.best, 'manifest-box', 'manifest-list', 'manifest-total');
-
-            let globalBest = null, globalMax = -1;
-            (citiesByType[uiState.commerceType] || []).forEach(org => {
-                const orgItems = (marketData[uiState.commerceType] && marketData[uiState.commerceType][org]) || [];
-                const res = calculateBestRouteForVector(org, targetPool.filter(c => c !== org), orgItems, uiState, null);
-                if (res.maxP > globalMax) { globalMax = res.maxP; globalBest = res.best; }
-            });
-            const anchor = document.getElementById('global-manifest-anchor');
-            if (!globalBest || globalMax <= 0) anchor.innerHTML = ''; else renderGlobalManifest(globalBest, anchor);
-        }
-
         function renderManifest(trip, boxId, listId, totalId) {
-            const box = document.getElementById(boxId), list = document.getElementById(listId), total = document.getElementById(totalId);
+            const box = document.getElementById(boxId), list = document.getElementById(listId);
             if (!trip || trip.profit <= 0) {
                 box.style.display = 'block';
-                list.innerHTML = `<div style="color:var(--text-dim); font-size:10px; padding:10px; text-align:center;">NO ROUTES FOUND</div>`;
-                total.textContent = `PROFIT: 0`;
+                list.innerHTML = `<div style="color:var(--text-dim); font-size:10px; padding:10px; text-align:center;">NO PROFITABLE ROUTES</div>`;
                 return;
             }
             box.style.display = 'block';
             document.getElementById('manifest-dest').innerText = trip.dest;
-            
             let slotHtml = '';
             let filled = 0;
             trip.items.forEach(item => {
@@ -609,49 +699,18 @@
                     filled++;
                 }
             });
-            for (let i = filled; i < trip.maxSlots; i++) slotHtml += `<div class="slot empty"></div>`;
+            for (let i = filled; i < trip.maxSlots; i++) slotHtml += `<div class="slot"></div>`;
             list.innerHTML = slotHtml;
-            total.textContent = `+${trip.profit.toLocaleString()}`;
-        }
-
-        function renderGlobalManifest(trip, container) {
-            let slotHtml = '<div class="manifest-slots">';
-            trip.items.forEach(item => {
-                let rem = item.q;
-                for (let i = 0; i < item.s; i++) {
-                    const sqty = Math.min(item.maxPerSlot, rem); rem -= sqty;
-                    slotHtml += `<div class="slot filled" style="background-image: url('${getImagePath(item.img)}');"><span class="slot-badge">${sqty}</span></div>`;
-                }
-            });
-            slotHtml += '</div>';
-
-            container.innerHTML = `
-                <div class="manifest-container" style="border-color:var(--warning);">
-                    <div class="manifest-header" style="color:var(--warning);">
-                        <span>Global Best</span>
-                        <span style="color:#fff;">${trip.origin} → ${trip.dest}</span>
-                    </div>
-                    ${slotHtml}
-                    <div class="manifest-total">+${trip.profit.toLocaleString()}</div>
-                </div>`;
         }
 
         function refreshUI() {
-            if (document.activeElement && (
-                document.activeElement.classList.contains('price-input') || 
-                document.activeElement.classList.contains('qty-input') ||
-                document.activeElement.id === 'base-price-input'
-            )) return;
-            
+            if (document.activeElement && (document.activeElement.classList.contains('input-dark'))) return;
             const uiState = getUIState(); 
             updateMarketItems(uiState); 
             showPrices(uiState); 
             updatePreview(uiState); 
-            updateRecommendationAndStats(); 
             updateTownIcon(); 
             runManifests(uiState);
-            updateTransportDropdown(); 
-
             const wCheck = document.getElementById('william-check');
             const wBox = document.getElementById('william-like-box');
             if(wCheck && wBox) wBox.style.display = wCheck.checked ? 'flex' : 'none';
@@ -661,54 +720,34 @@
             if (!currentItem) return;
             document.getElementById('center-item-icon').style.backgroundImage = `url('${getImagePath(currentItem.img)}')`;
             document.getElementById('center-item-title').textContent = currentItem.name;
-            
             const currentBase = publicBasePrices[currentItem.name] || currentItem.buy;
             document.getElementById('base-price-input').value = currentBase;
             document.getElementById('base-price-container').style.display = 'flex';
-
             document.getElementById('weight-display').textContent = `Weight: ${currentItem.weight}`;
             document.getElementById('stack-display').textContent = `Stack: ${currentItem.max}`;
         }
 
         function updateTownIcon() {
             const avatar = document.getElementById('origin-town-icon');
-            const city = document.getElementById('city-select').value;
-            if (avatar && townIcons[city]) avatar.style.backgroundImage = `url('${getImagePath(townIcons[city])}')`;
+            if (avatar) applyIcon(avatar, selectedCity);
         }
 
         function updateMarketItems(uiState) {
             const container = document.getElementById('market-items-container');
             container.innerHTML = '';
-            const type = uiState.commerceType;
-            const city = document.getElementById('city-select').value;
+            const type = activeCommerceType;
+            const city = selectedCity;
             if(!city) return; 
-
-            const searchTerm = document.getElementById('global-search').value.toLowerCase().trim();
-            document.getElementById('clear-search').style.display = searchTerm ? 'block' : 'none';
-
-            let items = [];
-            if (searchTerm) {
-                (citiesByType[type] || []).forEach(town => {
-                    ((marketData[type] && marketData[type][town]) || []).forEach(item => {
-                        if (item.name.toLowerCase().includes(searchTerm)) items.push({ ...item, _townName: town });
-                    });
-                });
-            } else { items = (marketData[type] && marketData[type][city]) || []; }
-
+            let items = (marketData[type] && marketData[type][city]) || [];
             if (items.length > 0 && (!currentItem || !items.find(i => i.name === currentItem.name))) { currentItem = items[0]; updatePreview(uiState); }
-
             const fragment = document.createDocumentFragment();
             items.forEach(item => {
                 const isSelected = currentItem && currentItem.name === item.name;
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item' + (isSelected ? ' selected-item' : '');
                 const cStock = getStock(item.name);
-                itemDiv.innerHTML = `<div class="item-list-icon-box" style="background-image: url('${getImagePath(item.img)}')"></div><div class="item-list-content"><div><span class="item-name">${item.name}</span>${item._townName ? `<span class="item-town-badge">📍 ${item._townName}</span>` : ''}</div><div class="stock-input-row"><span style="font-size:9px; color:#aaa;">STOCK</span><input type="number" class="qty-input input-dark" value="${cStock || ''}" placeholder="0" onfocus="this.select()" onclick="event.stopPropagation()" onchange="updateStock('${item.name.replace(/'/g, "\\'")}', this.value)"></div></div>`;
-                itemDiv.addEventListener('click', () => { 
-                    currentItem = item; 
-                    refreshUI(); 
-                    if (window.innerWidth <= 1000) closeSidebars(); // Auto-close drawer on mobile
-                });
+                itemDiv.innerHTML = `<div class="item-icon-box" style="background-image: url('${getImagePath(item.img)}')"></div><div class="item-list-content"><div><span class="item-name">${item.name}</span></div><div class="stock-input-row"><span style="font-size:9px; color:var(--text-dim);">STOCK</span><input type="number" class="qty-input input-dark" value="${cStock || ''}" placeholder="0" onfocus="this.select()" onclick="event.stopPropagation()" onchange="updateStock('${item.name.replace(/'/g, "\\'")}', this.value)" style="width: 70px; text-align: right; padding: 2px 6px; height: 22px;"></div></div>`;
+                itemDiv.addEventListener('click', () => { currentItem = item; refreshUI(); if (window.innerWidth <= 1000) closeSidebars(); });
                 fragment.appendChild(itemDiv);
             });
             container.appendChild(fragment);
@@ -716,61 +755,29 @@
 
         function showPrices(uiState) {
             const list = document.getElementById('profit-list');
-            if (document.activeElement && document.activeElement.classList.contains('price-input')) return;
             list.innerHTML = '';
             if (!currentItem) return;
-            const type = uiState.commerceType;
-            const origin = currentItem._townName || document.getElementById('city-select').value;
-            
+            const type = activeCommerceType;
+            const origin = selectedCity;
             const fragment = document.createDocumentFragment();
             (type === "Barter" ? citiesByType["Normal"] : citiesByType[type]).filter(c => c !== origin).forEach(city => {
                 const sellVal = getPrice(currentItem.name, city);
                 const res = calculateItemProfit(currentItem, city, uiState, sellVal);
                 const row = document.createElement('div');
                 row.className = 'market-row';
-                row.innerHTML = `<div class="market-left"><b>${city}</b></div><div class="col-price"><input type="number" class="price-input input-dark" value="${sellVal || ''}" onfocus="this.select()" oninput="updatePrice('${city}', this.value)"></div><div class="market-profit-col"><span class="profit-val ${res.profit < 0 ? 'negative' : ''}">${res.profit.toLocaleString()}</span></div><div class="market-score-col"><span class="score-val ${res.score < 0 ? 'negative' : ''}">${res.score.toLocaleString()}</span></div>`;
+                row.innerHTML = `<div><b>${city}</b></div><div><input type="number" class="price-input input-dark" value="${sellVal || ''}" onfocus="this.select()" oninput="updatePrice('${city}', this.value)" style="text-align: right;"></div><div class="profit-val ${res.profit < 0 ? 'negative' : ''}">${res.profit.toLocaleString()}</div><div class="score-val">${res.score.toLocaleString()}</div>`;
                 fragment.appendChild(row);
             });
             list.appendChild(fragment);
         }
 
-        function updateTransportDropdown() {
-            const dropdown = document.getElementById('transport-dropdown');
-            const current = dropdown.value || "Back Pack";
-            const tempState = { commerceType: document.getElementById('commerce-type-select').value };
-            const mounts = ['Back Pack'];
-            Object.keys(transportOwnership).forEach(key => {
-                if (transportOwnership[key]) {
-                    if (key === 'Air Ship' && tempState.commerceType !== 'Group') return;
-                    mounts.push(key);
-                }
-            });
-            dropdown.innerHTML = mounts.map(m => `<option value="${m}">${m}</option>`).join('');
-            if (mounts.includes(current)) dropdown.value = current; else dropdown.value = "Back Pack";
-        }
-
-        function updateRecommendationAndStats() { /* handled in refreshUI */ }
-
-        // --- FIREBASE WRAPPERS ---
         function updatePrice(city, val) {
             if (!currentItem) return;
             const sellVal = parseInt(val, 10) || 0;
             const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
             publicPrices[priceKey] = sellVal;
             skipRender = true;
-            if(rtdb) { try { rtdb.ref(`public_commerce/prices/${priceKey}`).set(sellVal); } catch(e){} }
-            const activeInput = document.activeElement;
-            if (activeInput && activeInput.classList.contains('price-input')) {
-                const row = activeInput.closest('.market-row');
-                if (row) {
-                    const uiState = getUIState();
-                    const result = calculateItemProfit(currentItem, city, uiState, sellVal);
-                    const profitEl = row.querySelector('.market-profit-col span');
-                    const scoreEl = row.querySelector('.market-score-col span');
-                    if (profitEl) { profitEl.textContent = result.profit.toLocaleString(); profitEl.className = `profit-val ${result.profit < 0 ? 'negative' : ''}`; }
-                    if (scoreEl) { scoreEl.textContent = result.score.toLocaleString(); }
-                }
-            }
+            if(rtdb) rtdb.ref(`public_commerce/prices/${priceKey}`).set(sellVal);
             runManifests(getUIState());
         }
 
@@ -778,7 +785,7 @@
             const qty = parseInt(quantity) || 0;
             publicStocks[itemName] = qty;
             skipRender = true;
-            if(rtdb) { try { rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty); } catch(e){} }
+            if(rtdb) rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty);
             runManifests(getUIState());
         }
 
@@ -787,54 +794,25 @@
             const price = parseInt(val) || 0;
             publicBasePrices[currentItem.name] = price;
             skipRender = true;
-            if(rtdb) { try { rtdb.ref(`public_commerce/base_prices/${currentItem.name}`).set(price); } catch(e){} }
-            const uiState = getUIState();
-            showPrices(uiState);
-            runManifests(uiState);
+            if(rtdb) rtdb.ref(`public_commerce/base_prices/${currentItem.name}`).set(price);
+            refreshUI();
         }
 
         function savePrefs() {
             const prefs = getUIState();
             prefs.transports = transportOwnership;
-            prefs.type = prefs.commerceType; delete prefs.commerceType;
-            prefs.city = document.getElementById('city-select').value;
-            prefs.mount = prefs.transport; delete prefs.transport;
-
+            prefs.activeTransport = activeTransport;
             localStorage.setItem('mabi_prefs', JSON.stringify(prefs));
-            localStorage.setItem('mabi_transports', JSON.stringify(transportOwnership));
             if (currentUser && rtdb) {
                 clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(() => { try { rtdb.ref(`users/${currentUser.uid}/settings`).update(prefs); } catch(e){} }, 1000);
+                saveTimeout = setTimeout(() => { rtdb.ref(`users/${currentUser.uid}/settings`).update(prefs); }, 1000);
             }
         }
 
-        function saveTownRanks() {
-            localStorage.setItem('mabi_ranks', JSON.stringify(townRanks));
-            if (currentUser && rtdb) { try { rtdb.ref(`users/${currentUser.uid}/town_ranks`).set(townRanks); } catch(e){} }
-        }
-
-        function updateCityContext() {
-            const city = document.getElementById('city-select').value;
-            if(!city) return;
-            document.getElementById('merchant-rating-select').value = townRanks[city] || "1";
-            refreshUI();
-        }
-
-        // --- MOBILE NAV LOGIC ---
         function toggleSidebar(side) {
-            const left = document.getElementById('left-panel');
-            const right = document.getElementById('right-panel');
-            const backdrop = document.getElementById('mobile-backdrop');
-            
-            if (side === 'left') {
-                const isActive = left.classList.contains('active');
-                closeSidebars();
-                if (!isActive) { left.classList.add('active'); backdrop.classList.add('active'); }
-            } else if (side === 'right') {
-                const isActive = right.classList.contains('active');
-                closeSidebars();
-                if (!isActive) { right.classList.add('active'); backdrop.classList.add('active'); }
-            }
+            const left = document.getElementById('left-panel'), right = document.getElementById('right-panel'), backdrop = document.getElementById('mobile-backdrop');
+            if (side === 'left') { left.classList.toggle('active'); backdrop.classList.toggle('active', left.classList.contains('active')); right.classList.remove('active'); }
+            else { right.classList.toggle('active'); backdrop.classList.toggle('active', right.classList.contains('active')); left.classList.remove('active'); }
         }
 
         function closeSidebars() {
@@ -843,130 +821,47 @@
             document.getElementById('mobile-backdrop').classList.remove('active');
         }
 
-        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             const saved = JSON.parse(localStorage.getItem('mabi_prefs')) || {};
-            try { townRanks = JSON.parse(localStorage.getItem('mabi_ranks')) || {}; } catch(e){ townRanks = {}; }
-            
-            // 1. Setup Dropdowns
-            const mSelect = document.getElementById('mastery-rank');
-            mSelect.innerHTML = Object.keys(masteryRanks).map(r => `<option value="${r}">Rank ${r} (+${Math.round(masteryRanks[r]*100)}%)</option>`).join('');
-            mSelect.value = "F";
-            const lSelect = document.getElementById('letter-select');
-            lSelect.innerHTML = ["None", "Ogre", "Goblin", "Imp", "Irusan's (Special)"].map(n => `<option value="${n}">${n}</option>`).join('');
-            lSelect.value = "None";
-
-            // 2. Setup Toggles
+            document.getElementById('mastery-rank').innerHTML = Object.keys(masteryRanks).map(r => `<option value="${r}">Rank ${r} (+${Math.round(masteryRanks[r]*100)}%)</option>`).join('');
+            document.getElementById('letter-select').innerHTML = ["None", "Ogre", "Goblin", "Imp", "Irusan's (Special)"].map(n => `<option value="${n}">${n}</option>`).join('');
             document.querySelectorAll('.transport-toggle').forEach(toggle => {
-                toggle.onchange = (e) => { transportOwnership[toggle.dataset.mount] = e.target.checked; savePrefs(); updateTransportDropdown(); refreshUI(); };
+                toggle.onchange = (e) => { transportOwnership[toggle.dataset.mount] = e.target.checked; savePrefs(); renderTransportTabs(); refreshUI(); };
             });
-
-            // 3. UI Logic Listeners
-            const typeSelect = document.getElementById('commerce-type-select');
-            const citySelect = document.getElementById('city-select');
-            typeSelect.onchange = (e) => {
-                const valid = citiesByType[e.target.value];
-                citySelect.innerHTML = valid.map(c => `<option value="${c}">${c}</option>`).join('');
-                if(valid.length > 0) citySelect.value = valid[0];
-                updateCityContext(); updateTransportDropdown();
-            };
-            citySelect.onchange = () => { updateCityContext(); savePrefs(); };
-            document.getElementById('merchant-rating-select').onchange = function() { townRanks[citySelect.value] = this.value; saveTownRanks(); refreshUI(); };
-            
-            ['transport-dropdown', 'trader-qty', 'trustworthy-qty', 'mastery-rank', 'letter-select', 'fine-letter-check', 'gm-check', 'william-likeability'].forEach(id => {
-                const el = document.getElementById(id);
-                el.onchange = () => { refreshUI(); savePrefs(); };
-                if (el.tagName === 'INPUT') el.oninput = () => { refreshUI(); savePrefs(); };
+            document.getElementById('merchant-rating-input').onchange = () => { refreshUI(); savePrefs(); };
+            ['trader-qty', 'trustworthy-qty', 'mastery-rank', 'letter-select', 'fine-letter-check', 'gm-check', 'william-likeability'].forEach(id => {
+                document.getElementById(id).onchange = () => { refreshUI(); savePrefs(); };
             });
             document.getElementById('william-check').onchange = function() { if (this.checked) document.getElementById('alpaca-check').checked = false; refreshUI(); savePrefs(); };
-            document.getElementById('alpaca-check').onchange = function() { if (this.checked) document.getElementById('william-check').checked = false; refreshUI(); savePrefs(); };
-            document.getElementById('global-search').oninput = refreshUI;
-            document.getElementById('clear-search').onclick = () => { document.getElementById('global-search').value = ''; refreshUI(); };
-
-            // 4. RESTORE PREFS & INITIAL RENDER
-            if (saved.type && citiesByType[saved.type]) typeSelect.value = saved.type; else typeSelect.value = "Normal";
-            const validCities = citiesByType[typeSelect.value];
-            citySelect.innerHTML = validCities.map(c => `<option value="${c}">${c}</option>`).join('');
-            if (saved.city && validCities.includes(saved.city)) citySelect.value = saved.city; else if (validCities.length > 0) citySelect.value = validCities[0];
-
-            if (saved.mount) document.getElementById('transport-dropdown').value = saved.mount;
-            if (saved.trader) document.getElementById('trader-qty').value = saved.trader;
-            if (saved.trust) document.getElementById('trustworthy-qty').value = saved.trust;
-            if (saved.mastery) document.getElementById('mastery-rank').value = saved.mastery;
-            if (saved.letter) document.getElementById('letter-select').value = saved.letter;
-            document.getElementById('fine-letter-check').checked = !!saved.fineLetter;
-            document.getElementById('gm-check').checked = !!saved.gm;
-            document.getElementById('william-check').checked = !!saved.william;
-            if(saved.williamLike) document.getElementById('william-likeability').value = saved.williamLike;
-            document.getElementById('alpaca-check').checked = !!saved.alpaca;
-            if(saved.transports) {
-                transportOwnership = saved.transports;
-                Object.keys(transportOwnership).forEach(key => {
-                    const toggle = document.querySelector(`.transport-toggle[data-mount="${key}"]`);
-                    if(toggle) toggle.checked = transportOwnership[key];
-                });
-            }
+            document.getElementById('alpaca-check').onchange = function() { if (this.checked) document.getElementById('william-check').checked = false; renderTransportTabs(); refreshUI(); savePrefs(); };
             
-            updateCityContext();
-            updateTransportDropdown();
-            refreshUI();
+            if (saved.commerceType) activeCommerceType = saved.commerceType;
+            if (saved.city) selectedCity = saved.city;
+            if (saved.merchantRating) document.getElementById('merchant-rating-input').value = saved.merchantRating;
+            if (saved.activeTransport) activeTransport = saved.activeTransport;
+            if (saved.transports) transportOwnership = saved.transports;
+            Object.keys(transportOwnership).forEach(key => {
+                const toggle = document.querySelector(`.transport-toggle[data-mount="${key}"]`);
+                if(toggle) toggle.checked = transportOwnership[key];
+            });
+            
+            renderCommerceTabs(); renderTransportTabs(); renderCityTabs(); refreshUI();
 
-            // 5. Firebase Init
-            function initApp() {
-                try {
-                    const firebaseConfig = {
-                        apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
-                        authDomain: "mabinogi-tracker.firebaseapp.com",
-                        databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
-                        projectId: "mabinogi-tracker",
-                        storageBucket: "mabinogi-tracker.firebasestorage.app",
-                        messagingSenderId: "267690802644",
-                        appId: "1:267690802644:web:fccdd005d5c8990504ea41",
-                        measurementId: "G-VBDBKQ3M1B"
-                    };
-                    firebase.initializeApp(firebaseConfig);
-                    rtdb = firebase.database();
-                    auth = firebase.auth();
-                    
-                    rtdb.ref('public_commerce/prices').on('value', (s) => { 
-                        if (skipRender) { skipRender = false; return; }
-                        publicPrices = s.val() || {}; refreshUI(); 
-                    });
-                    rtdb.ref('public_commerce/stocks').on('value', (s) => { 
-                        if (skipRender) { skipRender = false; return; }
-                        publicStocks = s.val() || {}; refreshUI(); 
-                    });
-                    rtdb.ref('public_commerce/base_prices').on('value', (s) => { 
-                        if (skipRender) { skipRender = false; return; }
-                        publicBasePrices = s.val() || {}; refreshUI(); 
-                    });
-
-                    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                    if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) auth.signInWithCustomToken(__initial_auth_token);
-
-                    auth.onAuthStateChanged((user) => {
-                        currentUser = user;
-                        if (user) {
-                            rtdb.ref(`users/${user.uid}/settings`).on('value', (s) => { 
-                                if(s.val()) { 
-                                    const d=s.val(); 
-                                    if(d.transports) {
-                                        transportOwnership=d.transports; 
-                                        Object.keys(transportOwnership).forEach(key => {
-                                            const toggle = document.querySelector(`.transport-toggle[data-mount="${key}"]`);
-                                            if(toggle) toggle.checked = transportOwnership[key];
-                                        });
-                                    }
-                                    refreshUI(); 
-                                } 
-                            });
-                            rtdb.ref(`users/${user.uid}/town_ranks`).on('value', (s) => { if(s.val()) { townRanks = s.val(); updateCityContext(); } });
-                        }
-                    });
-                } catch(e) { console.log("Running in offline mode"); }
-            }
-
-            initApp();
+            const firebaseConfig = {
+                apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
+                authDomain: "mabinogi-tracker.firebaseapp.com",
+                databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
+                projectId: "mabinogi-tracker",
+                storageBucket: "mabinogi-tracker.firebasestorage.app",
+                appId: "1:267690802644:web:fccdd005d5c8990504ea41"
+            };
+            firebase.initializeApp(firebaseConfig);
+            rtdb = firebase.database();
+            auth = firebase.auth();
+            rtdb.ref('public_commerce/prices').on('value', (s) => { if (!skipRender) { publicPrices = s.val() || {}; refreshUI(); } skipRender = false; });
+            rtdb.ref('public_commerce/stocks').on('value', (s) => { if (!skipRender) { publicStocks = s.val() || {}; refreshUI(); } skipRender = false; });
+            rtdb.ref('public_commerce/base_prices').on('value', (s) => { if (!skipRender) { publicBasePrices = s.val() || {}; refreshUI(); } skipRender = false; });
+            auth.onAuthStateChanged((user) => { currentUser = user; if(user) document.getElementById('user-display').textContent=user.email.split('@')[0].toUpperCase(); });
         });
     </script>
 </body>
