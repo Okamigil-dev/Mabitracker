@@ -314,8 +314,20 @@
 
             if (user) {
                 currentUser = user;
-                uInfo.innerText = user.email;
-                guestLabel.style.display = 'none'; // Hide "Local Mode"
+                
+                // --- PRELOAD FROM CACHE TO PREVENT FLASH ---
+                try {
+                    const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
+                    uInfo.innerText = cached.username || user.email;
+                    if (cached.avatar) {
+                        uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+                    }
+                } catch(e) {
+                    uInfo.innerText = user.email;
+                }
+                // -------------------------------------------
+
+                guestLabel.style.display = 'none'; 
                 
                 loginBtn.style.display = 'none';
                 loggedInControls.style.display = 'flex';
@@ -352,14 +364,24 @@
                 const profile = data.profile || {};
                 const uInfo = document.getElementById('user-info');
                 const uAvatar = document.getElementById('user-avatar');
-
-                if (profile.username) {
-                    uInfo.innerText = profile.username;
-                }
                 
+                // 1. Update Display Name
+                const displayName = profile.username || currentUser.email;
+                uInfo.innerText = displayName;
+
+                // 2. Update Avatar
                 if (profile.avatar) {
                     uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
+                } else {
+                    // Revert to placeholder if removed
+                    uAvatar.style.backgroundImage = "url('https://placehold.co/36x36/111/444?text=?')";
                 }
+
+                // 3. Save to Local Cache for next reload
+                localStorage.setItem('mabi_user_cache_' + currentUser.uid, JSON.stringify({
+                    username: displayName,
+                    avatar: profile.avatar || ''
+                }));
 
                 renderSidebar();
             });
