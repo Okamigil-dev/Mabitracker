@@ -81,6 +81,7 @@
         .sidebar {
             width: 240px; background: var(--sidebar-bg);
             display: flex; flex-direction: column; padding: 20px; gap: 16px; flex-shrink: 0; height: 100%;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #sidebar-left { border-right: 1px solid var(--border); }
@@ -102,8 +103,8 @@
             border-bottom: 1px solid var(--border);
         }
         .user-avatar {
-            width: 100px;   /* Increased from 36px */
-            height: 100px;  /* Increased from 36px */
+            width: 80px;   /* Increased from 36px */
+            height: 80px;  /* Increased from 36px */
             border-radius: 50%;
             background-color: var(--bg);
             border: 2px solid var(--border);
@@ -189,14 +190,64 @@
 
         .footer { margin-top: 60px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444; }
 
+        /* --- MOBILE STYLES --- */
+        .mobile-nav { display: none; }
+        .mobile-backdrop { display: none; }
+
         @media (max-width: 900px) { 
-            #sidebar-left, #sidebar-right { display: none; } 
-            .hub-container { padding: 20px; }
-            .hub-header { font-size: 20px; margin-bottom: 30px; }
+            /* Layout Adjustments */
+            body { flex-direction: column; }
+            
+            /* Mobile Navigation Bar */
+            .mobile-nav {
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 15px 20px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border);
+                flex-shrink: 0; z-index: 50;
+            }
+            .mobile-nav-title { font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+            .nav-trigger {
+                background: none; border: 1px solid var(--border); color: var(--text-dim);
+                padding: 8px 12px; border-radius: 6px; font-size: 18px; cursor: pointer;
+            }
+            
+            /* Convert Sidebars to Drawers */
+            .sidebar {
+                position: fixed; top: 0; bottom: 0; width: 280px; max-width: 85%;
+                z-index: 1001;
+                box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            }
+            
+            #sidebar-left { left: 0; transform: translateX(-100%); }
+            #sidebar-left.active { transform: translateX(0); }
+            
+            #sidebar-right { right: 0; transform: translateX(100%); }
+            #sidebar-right.active { transform: translateX(0); }
+            
+            /* Backdrop */
+            .mobile-backdrop {
+                display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+                z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+                backdrop-filter: blur(4px);
+            }
+            .mobile-backdrop.active { opacity: 1; pointer-events: all; }
+
+            /* Content Adjustments */
+            .hub-container { padding: 20px; width: 100%; box-sizing: border-box; }
+            .hub-header { font-size: 20px; margin-bottom: 20px; display: none; /* Hide duplicate header */ }
         }
     </style>
 </head>
 <body>
+
+    <!-- Mobile Navigation Bar -->
+    <div class="mobile-nav">
+        <button class="nav-trigger" onclick="toggleSidebar('left')">☰</button>
+        <span class="mobile-nav-title">Mabi-Apps</span>
+        <button class="nav-trigger" onclick="toggleSidebar('right')">✓</button>
+    </div>
+
+    <!-- Mobile Backdrop -->
+    <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeSidebars()"></div>
 
     <div id="auth-overlay">
         <div class="auth-card">
@@ -267,6 +318,10 @@
                     <span class="link-desc">Material & Stock Management</span>
                 </div>
             </a>
+        </div>
+
+        <div class="footer">
+            System v2.7 // Ready
         </div>
     </div>
 
@@ -437,6 +492,34 @@
             err.innerText = "Connecting...";
             const action = mode === 'login' ? auth.signInWithEmailAndPassword(email, pass) : auth.createUserWithEmailAndPassword(email, pass);
             action.catch(e => err.innerText = e.message);
+        }
+
+        function toggleSidebar(side) {
+            const left = document.getElementById('sidebar-left');
+            const right = document.getElementById('sidebar-right');
+            const backdrop = document.getElementById('mobile-backdrop');
+            
+            if (side === 'left') {
+                const isActive = left.classList.contains('active');
+                closeSidebars();
+                if (!isActive) {
+                    left.classList.add('active');
+                    backdrop.classList.add('active');
+                }
+            } else if (side === 'right') {
+                const isActive = right.classList.contains('active');
+                closeSidebars();
+                if (!isActive) {
+                    right.classList.add('active');
+                    backdrop.classList.add('active');
+                }
+            }
+        }
+
+        function closeSidebars() {
+            document.getElementById('sidebar-left').classList.remove('active');
+            document.getElementById('sidebar-right').classList.remove('active');
+            document.getElementById('mobile-backdrop').classList.remove('active');
         }
 
         function updateEngine() {
