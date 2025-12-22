@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barter Tracker - v2.7</title>
+    <title>Barter Tracker - v2.8</title>
     
     <!-- Firebase SDKs (Compat for shared auth) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -73,6 +73,14 @@
         .panel-label { font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; display: block; text-transform: uppercase; }
         .config-section { padding: 20px; border-bottom: 1px solid var(--border); }
 
+        /* Left Panel Specifics */
+        .town-visual-box {
+            width: 48px; height: 48px; 
+            background-color: transparent; border: none;
+            display: flex; align-items: center; justify-content: center;
+            background-size: contain; background-position: center; background-repeat: no-repeat;
+            flex-shrink: 0;
+        }
 
         .item-list { flex-grow: 1; overflow-y: auto; }
         
@@ -85,10 +93,10 @@
         .item-entry.full-capacity { opacity: 0.5; border-left-color: var(--text-dim); }
 
         .item-icon-box {
-            width: 48px; height: 48px; background: var(--card-bg); border: 1px solid var(--border);
+            width: 40px; height: 40px; 
+            background-color: transparent; border: none;
             border-radius: 4px; background-size: contain; background-repeat: no-repeat; 
             background-position: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 700; color: #555;
         }
         
         .item-name { font-weight: 600; font-size: 13px; color: #fff; }
@@ -118,7 +126,6 @@
         }
         .data-table td { padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); color: #ccc; }
         
-        /* Flex wrapper for icon + text in cell */
         .cell-flex { display: flex; align-items: center; }
 
         .owned-input { 
@@ -136,8 +143,7 @@
         .icon-small {
             width: 24px; height: 24px; margin-right: 10px; border-radius: 3px; flex-shrink: 0;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.7);
-            background: #27272a; border: 1px solid #3f3f46;
+            background-color: transparent; border: none;
             background-size: cover; background-position: center;
         }
         
@@ -226,8 +232,7 @@
             }
             .nav-trigger { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; }
 
-            /* Only Left and Right panels act as drawers */
-            .left-panel, .right-panel {
+            .panel { 
                 position: fixed; top: 0; bottom: 0; width: 300px; max-width: 85%; z-index: 1001; 
                 box-shadow: 0 0 50px rgba(0,0,0,0.8); 
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
@@ -238,8 +243,11 @@
             .right-panel { right: 0; transform: translateX(100%); border-left: 1px solid var(--border); }
             .right-panel.active { transform: translateX(0); visibility: visible; }
             
-            /* Center panel VISIBLE by default */
-            .center-panel { height: 100%; width: 100%; border: none; visibility: visible; }
+            .center-panel { 
+                height: 100%; width: 100%; border: none; 
+                visibility: visible; position: relative; z-index: 1; 
+                transform: none; box-shadow: none; display: flex; flex-direction: column;
+            }
 
             .mobile-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px); }
             .mobile-backdrop.active { opacity: 1; pointer-events: all; }
@@ -251,11 +259,9 @@
             .drawer-title { font-weight: 700; color: #fff; }
             .drawer-close { background: none; border: none; color: var(--text-dim); font-size: 20px; padding: 0 5px; cursor: pointer; }
             
-            /* FORCE SIDE BY SIDE on Mobile */
             .materials-dual-layout { grid-template-columns: 1fr 1fr; gap: 8px; }
             .table-container { padding: 10px 5px; }
             
-            /* COMPACT TABLES for Mobile */
             .data-table th, .data-table td { padding: 6px 2px; font-size: 9px; }
             .owned-input { width: 30px; font-size: 9px; padding: 2px; }
             .icon-small { width: 16px; height: 16px; margin-right: 4px; }
@@ -303,7 +309,7 @@
             <div class="title-section">
                 <div style="display:flex; align-items:center;">
                     <span class="main-title">BARTER TRACKER</span>
-                    <span class="sub-title">SYNC_V2.7</span>
+                    <span class="sub-title">SYNC_V2.8</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:15px;">
                     <span id="user-display" style="font-size:11px; color:var(--accent);">GUEST</span>
@@ -322,16 +328,17 @@
                 
                 <div class="config-section">
                     <label class="panel-label">Trading Post</label>
-                    <select id="town-select" class="input-dark">
-                        <option value="Karu Forest">Karu Forest</option>
-                        <option value="Oasis">Oasis</option>
-                        <option value="Lake Calida">Lake Calida</option>
-                        <option value="Pera Volcano">Pera Volcano</option>
-                        <option value="Scathach Beach">Scathach Beach</option>
-                    </select>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div id="town-icon-box" class="town-visual-box"></div>
+                        <select id="town-select" class="input-dark" style="flex-grow: 1;">
+                            <option value="Karu Forest">Karu Forest</option>
+                            <option value="Oasis">Oasis</option>
+                            <option value="Lake Calida">Lake Calida</option>
+                            <option value="Pera Volcano">Pera Volcano</option>
+                            <option value="Scathach Beach">Scathach Beach</option>
+                        </select>
+                    </div>
                 </div>
-
-                <div id="town-icon-box" class="town-visual-box" style="margin: 0 20px 20px 20px; width:auto;"></div>
 
                 <div class="panel-label" style="padding:0 20px;">Available Items</div>
                 <div id="catalog-container" class="item-list"></div>
@@ -444,11 +451,12 @@
         }
         
         const applyIcon = (el, name) => {
-            // Clear previous styles first
+            // Reset state - NO DEFAULT STYLING
             el.style.backgroundColor = 'transparent';
             el.style.backgroundImage = 'none';
             el.innerText = '';
             el.style.boxShadow = 'none';
+            el.style.border = 'none';
 
             let imagePath = null;
             
@@ -464,17 +472,11 @@
             
             if (imagePath) {
                 const img = new Image();
-                img.src = imagePath;
+                img.src = getImagePath(imagePath);
                 img.onload = () => {
-                    el.style.backgroundImage = `url('${imagePath}')`;
+                    el.style.backgroundImage = `url('${getImagePath(imagePath)}')`;
                 };
-                img.onerror = () => {
-                    // Fail silently, keep transparent/dark
-                    el.style.backgroundColor = '#1a1a1a';
-                }
-            } else {
-                 // No image path found -> Dark placeholder
-                 el.style.backgroundColor = '#1a1a1a';
+                // onerror: DO NOTHING. Leave it transparent.
             }
         };
 
