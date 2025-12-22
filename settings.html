@@ -16,6 +16,8 @@
             --border: #27272a;
             --text-main: #e4e4e7;
             --text-dim: #a1a1aa;
+            --warning: #facc15;
+            --danger: #ef4444;
         }
 
         body {
@@ -36,10 +38,16 @@
             padding: 40px;
             border-radius: 12px;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
+
+        /* Scrollbar for card */
+        .settings-card::-webkit-scrollbar { width: 4px; }
+        .settings-card::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
         .header {
             font-size: 16px;
@@ -99,14 +107,62 @@
             width: 100px;
             height: 100px;
             background-color: var(--bg);
-            border: 2px solid var(--border);
+            border: 2px solid var(--accent);
             border-radius: 50%;
             margin-bottom: 15px;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            transition: background-image 0.2s;
         }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+            gap: 10px;
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .gallery-item {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid transparent;
+            cursor: pointer;
+            position: relative;
+            transition: 0.2s;
+            background-color: #000;
+        }
+        .gallery-item:hover { border-color: var(--text-dim); transform: translateY(-2px); }
+        .gallery-item.active { border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+
+        .delete-btn {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 16px;
+            height: 16px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+        .gallery-item:hover .delete-btn { display: flex; }
 
         .file-upload-label {
             font-size: 11px;
@@ -123,18 +179,25 @@
 <body>
 
     <div class="settings-card">
-        <div class="header">Profile Settings</div>
+        <div class="header">Profile Config</div>
 
         <div class="avatar-section">
-            <!-- Avatar Preview -->
+            <!-- Main Preview -->
             <div class="avatar-preview" id="preview-img"></div>
+            
+            <div style="font-size:10px; color:var(--text-dim); margin-bottom:5px; text-transform:uppercase; font-weight:700;">Saved Avatars</div>
+            
+            <!-- Gallery Grid -->
+            <div class="gallery-grid" id="avatar-gallery">
+                <!-- Items populated by JS -->
+            </div>
             
             <!-- Hidden File Input -->
             <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
             
-            <!-- Trigger -->
+            <!-- Triggers -->
             <div style="display:flex; gap: 15px; align-items:center;">
-                <span class="file-upload-label" onclick="document.getElementById('file-input').click()">Upload Image</span>
+                <span class="file-upload-label" onclick="document.getElementById('file-input').click()">+ Upload New</span>
                 <span style="color: #444;">|</span>
                 <span class="file-upload-label" onclick="resetAvatar()" style="color: var(--text-dim);">Reset to Default</span>
             </div>
@@ -145,10 +208,9 @@
             <input type="text" id="username" placeholder="Enter username...">
         </div>
 
-        <div class="input-group">
-            <label>Image URL (Optional)</label>
-            <input type="text" id="avatar-url" placeholder="https://..." oninput="updatePreview(this.value)">
-            <div style="font-size:10px; color:#555; margin-top:4px;">Auto-filled when you upload an image above.</div>
+        <div class="input-group" style="opacity:0.5;">
+            <label>Image Data (Read Only)</label>
+            <input type="text" id="avatar-url" placeholder="Select or upload an image..." readonly style="cursor:default; color:#666;">
         </div>
 
         <button class="btn primary" onclick="saveProfile()">Save Changes</button>
@@ -174,17 +236,16 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
         let currentUser = null;
+        let avatarGallery = []; // Stores list of base64 strings
         
         // This is your backup/guest image
-        const DEFAULT_AVATAR = "https://placehold.co/100x100/18181b/a1a1aa?text=Guest";
+        const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1a1aa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
 
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
                 loadProfile();
             } else {
-                // Allow guest editing (saves to local storage only) or redirect
-                // For now, redirect to ensure they are logged in to save
                 window.location.href = 'index.html'; 
             }
         });
@@ -194,26 +255,76 @@
                 const data = snapshot.val() || {};
                 document.getElementById('username').value = data.username || "";
                 
-                const avatarSrc = data.avatar || DEFAULT_AVATAR;
-                document.getElementById('avatar-url').value = data.avatar || "";
+                const avatarSrc = data.avatar || "";
+                document.getElementById('avatar-url').value = avatarSrc ? "(Image Data Selected)" : "";
+                
+                // Load Gallery or init empty
+                avatarGallery = data.gallery || [];
                 
                 updatePreview(avatarSrc);
+                renderGallery(avatarSrc);
             });
         }
 
         function updatePreview(url) {
             const img = document.getElementById('preview-img');
-            // If url is empty, use default
             const finalUrl = url && url.trim() !== "" ? url : DEFAULT_AVATAR;
             img.style.backgroundImage = `url('${finalUrl}')`;
+            
+            // Highlight in gallery if exists
+            renderGallery(url);
+        }
+
+        function renderGallery(currentUrl) {
+            const container = document.getElementById('avatar-gallery');
+            container.innerHTML = '';
+
+            if (avatarGallery.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#444; font-size:10px; padding:10px;">No saved avatars</div>';
+                return;
+            }
+
+            avatarGallery.forEach((base64, index) => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item' + (base64 === currentUrl ? ' active' : '');
+                div.style.backgroundImage = `url('${base64}')`;
+                div.onclick = () => selectGalleryImage(base64);
+                
+                const del = document.createElement('div');
+                del.className = 'delete-btn';
+                del.innerText = '×';
+                del.onclick = (e) => { e.stopPropagation(); deleteGalleryImage(index); };
+                
+                div.appendChild(del);
+                container.appendChild(div);
+            });
+        }
+
+        function selectGalleryImage(base64) {
+            document.getElementById('avatar-url').value = "(Image Data Selected)";
+            // Store the actual data in a custom property on the input to retrieve later
+            document.getElementById('avatar-url').dataset.raw = base64; 
+            updatePreview(base64);
+        }
+        
+        function deleteGalleryImage(index) {
+            avatarGallery.splice(index, 1);
+            // If we deleted the currently selected one, reset to default
+            const currentRaw = document.getElementById('avatar-url').dataset.raw;
+            if(!avatarGallery.includes(currentRaw)) {
+                 resetAvatar();
+            } else {
+                 renderGallery(currentRaw);
+            }
         }
 
         function resetAvatar() {
             document.getElementById('avatar-url').value = "";
+            document.getElementById('avatar-url').dataset.raw = "";
             updatePreview("");
         }
 
-        // Logic to handle file upload -> resize -> base64 string
+        // Logic to handle file upload -> resize -> base64 string -> add to gallery
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -225,34 +336,33 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // Resize to 150x150 to keep DB size low
+                    // Resize to 150x150
                     const maxSize = 150;
                     let width = img.width;
                     let height = img.height;
 
-                    // Calculate aspect ratio
                     if (width > height) {
-                        if (width > maxSize) {
-                            height *= maxSize / width;
-                            width = maxSize;
-                        }
+                        if (width > maxSize) { height *= maxSize / width; width = maxSize; }
                     } else {
-                        if (height > maxSize) {
-                            width *= maxSize / height;
-                            height = maxSize;
-                        }
+                        if (height > maxSize) { width *= maxSize / height; height = maxSize; }
                     }
 
                     canvas.width = width;
                     canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Convert to Base64 String
-                    const base64 = canvas.toDataURL('image/jpeg', 0.8); // 80% quality JPG
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
                     
-                    // Set to input and preview
-                    document.getElementById('avatar-url').value = base64;
-                    updatePreview(base64);
+                    // Add to gallery if new
+                    if (!avatarGallery.includes(base64)) {
+                        avatarGallery.unshift(base64); // Add to front
+                    }
+                    
+                    selectGalleryImage(base64);
+                    
+                    const status = document.getElementById('status');
+                    status.innerText = "Image uploaded & added to gallery. Save to commit.";
+                    status.style.color = "var(--warning)";
                 }
                 img.src = e.target.result;
             }
@@ -261,22 +371,39 @@
 
         function saveProfile() {
             const username = document.getElementById('username').value.trim();
-            const avatar = document.getElementById('avatar-url').value.trim();
-            const status = document.getElementById('status');
+            // Get current selected avatar from dataset or fallback (if it was just loaded)
+            let currentRaw = document.getElementById('avatar-url').dataset.raw;
+            
+            // If dataset is empty but we haven't changed anything, we might need to fetch from DB again? 
+            // No, loadProfile sets the UI. 
+            // Actually, we need to ensure we don't lose the avatar if we didn't change it.
+            // Let's rely on the fact that if we didn't touch it, we want to keep what we loaded.
+            // Simplified: We always save the CURRENT state of the UI.
+            
+            // Check if we are currently displaying a specific image
+            const previewStyle = document.getElementById('preview-img').style.backgroundImage;
+            let avatarToSave = "";
+            
+            if (previewStyle && previewStyle.includes('data:image')) {
+                // Extract url('...') content
+                avatarToSave = previewStyle.slice(5, -2);
+            }
 
+            const status = document.getElementById('status');
             status.innerText = "Saving...";
             status.style.color = "var(--accent)";
             
             db.ref(`users/${currentUser.uid}/profile`).update({
                 username: username,
-                avatar: avatar
+                avatar: avatarToSave,
+                gallery: avatarGallery
             }).then(() => {
-                status.innerText = "Profile Updated Successfully!";
+                status.innerText = "Profile Saved!";
                 
-                // Update Local Cache immediately for the Hub to see next time
+                // Update Local Cache
                 localStorage.setItem('mabi_user_cache_' + currentUser.uid, JSON.stringify({
                     username: username,
-                    avatar: avatar
+                    avatar: avatarToSave
                 }));
 
                 setTimeout(() => status.innerText = "", 2000);
