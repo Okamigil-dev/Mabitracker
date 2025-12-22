@@ -183,7 +183,7 @@
     <div class="mobile-nav">
         <button class="nav-trigger" onclick="toggleSidebar('left')">☰ Catalog</button>
         <span style="font-weight:700; color:#fff;">Barter</span>
-        <button class="nav-trigger" onclick="toggleSidebar('right')">Loadout</button>
+        <button class="nav-trigger" onclick="toggleSidebar('right')">Cargo</button>
     </div>
     <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeSidebars()"></div>
 
@@ -194,7 +194,8 @@
                     <span class="main-title">Barter Material Tracker</span>
                 </div>
                 <div style="display:flex; gap:15px; align-items:center;">
-                    <span id="user-display" style="font-size:11px; color:var(--accent); text-transform:uppercase;">GUEST</span>
+                    <!-- Removed text-transform:uppercase from user-display style -->
+                    <span id="user-display" style="font-size:11px; color:var(--accent);">GUEST</span>
                     <a href="index.html" class="hub-btn">Back to Hub</a>
                 </div>
             </div>
@@ -203,7 +204,7 @@
         <div class="content-grid">
             <div class="panel left-panel" id="left-panel">
                 <div style="padding:20px; border-bottom:1px solid var(--border);">
-                    <label style="font-size:11px; font-weight:600; color:var(--text-dim); display:block; text-transform:uppercase; margin-bottom:10px;">Post</label>
+                    <label style="font-size:11px; font-weight:600; color:var(--text-dim); display:block; text-transform:none; margin-bottom:10px;">Trade Post</label>
                     <div id="town-tabs" class="tab-picker"></div>
                 </div>
                 <div id="catalog-container" class="item-list"></div>
@@ -271,7 +272,7 @@
 
     <script>
         const townIcons={"Karu Forest":"tradeposts/Commerce_Karu_Forest_Icon.png","Oasis":"tradeposts/Commerce_Oasis_Icon.png","Lake Calida":"tradeposts/Commerce_Calida_Icon.png","Pera Volcano":"tradeposts/Commerce_Pera_Icon.png","Scathach Beach":"tradeposts/Commerce_Beach_of_Scathach_Icon.png"};
-        const transportIcons={"Elephant":"images/transports/Elephant_Icon.png","Wagon":"images/transports/Wagon_Icon.png","Camel":"images/transports/Camel_Icon.png","Skiff":"images/transports/Traders_Skiff_Icon.png","Husky":"images/transports/Dog_Sled_Icon.png","Hand Cart":"images/transports/Handcart_Icon.png","Back Pack":"images/transports/Backpack_Icon.png","Airship":"images/transports/Airship_Icon.png"};
+        const transportIcons={"Elephant":"images/transports/Elephant_Icon.png","Wagon":"images/transports/Wagon_Icon.png","Camel":"images/transports/Camel_Icon.png","Skiff":"images/transports/Trader's_Skiff_Icon.png","Husky":"images/transports/Dog_Sled_Icon.png","Hand Cart":"images/transports/Handcart_Icon.png","Back Pack":"images/transports/Backpack_Icon.png","Airship":"images/transports/Airship_Icon.png"};
         
         const transportData={
             "Back Pack":{slots:4,weight:400},
@@ -320,26 +321,26 @@
         firebase.initializeApp({apiKey:"AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",authDomain: "mabinogi-tracker.firebaseapp.com",databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",projectId: "mabinogi-tracker",storageBucket: "mabinogi-tracker.firebasestorage.app",appId: "1:267690802644:web:fccdd005d5c8990504ea41"});
         const auth=firebase.auth();
         
-        // --- AUTHENTICATION LISTENER ---
+        // --- AUTHENTICATION LISTENER: UPDATED TO REMOVE TRANSFORMATION ---
         auth.onAuthStateChanged(user => {
             const displayElem = document.getElementById('user-display');
             if (user) {
                 currentUser = user;
                 
-                // 1. Initial fallback using email
-                displayElem.textContent = user.email.split('@')[0].toUpperCase();
+                // 1. Initial fallback using email prefix (no transform)
+                displayElem.textContent = user.email.split('@')[0];
 
-                // 2. Try instant load from local settings cache
+                // 2. Try instant load from local settings cache (no transform)
                 const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
                 if (cached.username) {
-                    displayElem.textContent = cached.username.toUpperCase();
+                    displayElem.textContent = cached.username;
                 }
 
-                // 3. Real-time sync with database profile
+                // 3. Real-time sync with database profile (no transform)
                 firebase.database().ref(`users/${user.uid}/profile`).on('value', (snap) => {
                     const profile = snap.val();
                     if (profile && profile.username) {
-                        displayElem.textContent = profile.username.toUpperCase();
+                        displayElem.textContent = profile.username;
                         // Update local cache
                         localStorage.setItem('mabi_user_cache_' + user.uid, JSON.stringify(profile));
                     }
