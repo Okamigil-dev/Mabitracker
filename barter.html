@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barter Material Tracker</title>
+    <title>Barter Tracker - v2.8</title>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -191,10 +191,10 @@
         <div class="header-bar">
             <div class="title-section">
                 <div style="display:flex; align-items:center;">
-                    <span class="main-title">Barter Material Tracker</span>
+                    <span class="main-title">BARTER TRACKER</span>
                 </div>
                 <div style="display:flex; gap:15px; align-items:center;">
-                    <span id="user-display" style="font-size:11px; color:var(--accent);">GUEST</span>
+                    <span id="user-display" style="font-size:11px; color:var(--accent); text-transform:uppercase;">GUEST</span>
                     <a href="index.html" class="hub-btn">Back to Hub</a>
                 </div>
             </div>
@@ -319,7 +319,39 @@
 
         firebase.initializeApp({apiKey:"AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",authDomain: "mabinogi-tracker.firebaseapp.com",databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",projectId: "mabinogi-tracker",storageBucket: "mabinogi-tracker.firebasestorage.app",appId: "1:267690802644:web:fccdd005d5c8990504ea41"});
         const auth=firebase.auth();
-        auth.onAuthStateChanged(user=>{ if(user){ currentUser=user; document.getElementById('user-display').textContent=user.email.split('@')[0]; startSync(); } else { currentUser={uid:'local_guest',isGuest:true}; startSync(); }});
+        
+        // --- AUTHENTICATION LISTENER ---
+        auth.onAuthStateChanged(user => {
+            const displayElem = document.getElementById('user-display');
+            if (user) {
+                currentUser = user;
+                
+                // 1. Initial fallback using email
+                displayElem.textContent = user.email.split('@')[0].toUpperCase();
+
+                // 2. Try instant load from local settings cache
+                const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
+                if (cached.username) {
+                    displayElem.textContent = cached.username.toUpperCase();
+                }
+
+                // 3. Real-time sync with database profile
+                firebase.database().ref(`users/${user.uid}/profile`).on('value', (snap) => {
+                    const profile = snap.val();
+                    if (profile && profile.username) {
+                        displayElem.textContent = profile.username.toUpperCase();
+                        // Update local cache
+                        localStorage.setItem('mabi_user_cache_' + user.uid, JSON.stringify(profile));
+                    }
+                });
+
+                startSync();
+            } else {
+                currentUser = { uid: 'local_guest', isGuest: true };
+                displayElem.textContent = "GUEST";
+                startSync();
+            }
+        });
 
         function startSync(){
             if(currentUser.isGuest) loadFromData(JSON.parse(localStorage.getItem('barter_save_data')||'{}'));
