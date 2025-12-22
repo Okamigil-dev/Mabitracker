@@ -7,15 +7,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
-            --card-bg: #111;
+            --bg: #09090b;
+            --card-bg: #18181b;
             --accent: #00ff88;
-            --border: rgba(255,255,255,0.05);
-            --text-main: #d0d0d0;
-            --text-dim: #666;
+            --border: #27272a;
+            --text-main: #e4e4e7;
+            --text-dim: #a1a1aa;
         }
 
         body {
@@ -34,75 +34,111 @@
             background: var(--card-bg);
             border: 1px solid var(--border);
             padding: 40px;
-            border-radius: 8px;
+            border-radius: 12px;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
         }
 
         .header {
-            font-size: 14px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            color: var(--accent);
-            text-transform: uppercase;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
             margin-bottom: 30px;
             text-align: center;
-            border-bottom: 1px solid var(--border);
             padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .input-group { margin-bottom: 20px; }
-        label { display: block; color: var(--text-dim); font-size: 10px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group { margin-bottom: 24px; }
+        label { display: block; color: var(--text-dim); font-size: 11px; font-weight: 600; margin-bottom: 8px; }
         
-        input {
+        input[type="text"] {
             width: 100%;
-            background: #080808;
+            background: var(--bg);
             border: 1px solid #333;
             color: #fff;
             padding: 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-family: 'Inter', sans-serif;
             font-size: 14px;
             box-sizing: border-box;
+            transition: border-color 0.2s;
         }
-        input:focus { outline: none; border-color: var(--accent); }
+        input[type="text"]:focus { outline: none; border-color: var(--accent); }
 
         .btn {
             width: 100%;
             padding: 12px;
-            background: #1a1a1a;
-            border: 1px solid var(--border);
+            background: #27272a;
+            border: 1px solid transparent;
             color: #fff;
-            font-weight: 900;
+            font-weight: 600;
             cursor: pointer;
-            text-transform: uppercase;
+            border-radius: 6px;
             transition: 0.2s;
-            margin-top: 10px;
+            margin-top: 12px;
+            font-size: 13px;
         }
-        .btn:hover { background: var(--accent); color: #000; }
-        .btn.secondary { background: transparent; border: 1px solid #333; color: #666; }
-        .btn.secondary:hover { border-color: #666; color: #fff; background: transparent; }
+        .btn:hover { background: #3f3f46; }
+        .btn.primary { background: var(--accent); color: #000; font-weight: 700; }
+        .btn.primary:hover { background: #00cc6a; }
+        
+        .btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+        .btn.secondary:hover { border-color: var(--text-main); color: var(--text-main); }
+
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
 
         .avatar-preview {
-            width: 80px;
-            height: 80px;
-            background-color: #000;
-            border: 1px solid #333;
+            width: 100px;
+            height: 100px;
+            background-color: var(--bg);
+            border: 2px solid var(--border);
             border-radius: 50%;
-            margin: 0 auto 20px;
+            margin-bottom: 15px;
             background-size: cover;
             background-position: center;
-            background-image: url('https://placehold.co/80x80/000/333?text=?');
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .file-upload-label {
+            font-size: 11px;
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        #status {
+            text-align: center; margin-top: 20px; font-size: 12px; color: var(--accent); min-height: 18px;
         }
     </style>
 </head>
 <body>
 
     <div class="settings-card">
-        <div class="header">User Profile Config</div>
+        <div class="header">Profile Settings</div>
 
-        <div class="avatar-preview" id="preview-img"></div>
+        <div class="avatar-section">
+            <!-- Avatar Preview -->
+            <div class="avatar-preview" id="preview-img"></div>
+            
+            <!-- Hidden File Input -->
+            <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+            
+            <!-- Trigger -->
+            <div style="display:flex; gap: 15px; align-items:center;">
+                <span class="file-upload-label" onclick="document.getElementById('file-input').click()">Upload Image</span>
+                <span style="color: #444;">|</span>
+                <span class="file-upload-label" onclick="resetAvatar()" style="color: var(--text-dim);">Reset to Default</span>
+            </div>
+        </div>
 
         <div class="input-group">
             <label>Display Name</label>
@@ -110,14 +146,15 @@
         </div>
 
         <div class="input-group">
-            <label>Avatar URL (Image Link)</label>
-            <input type="text" id="avatar-url" placeholder="https://example.com/image.png" oninput="updatePreview(this.value)">
+            <label>Image URL (Optional)</label>
+            <input type="text" id="avatar-url" placeholder="https://..." oninput="updatePreview(this.value)">
+            <div style="font-size:10px; color:#555; margin-top:4px;">Auto-filled when you upload an image above.</div>
         </div>
 
-        <button class="btn" onclick="saveProfile()">Save Changes</button>
+        <button class="btn primary" onclick="saveProfile()">Save Changes</button>
         <button class="btn secondary" onclick="window.location.href='index.html'">Back to Hub</button>
         
-        <div id="status" style="text-align: center; margin-top: 15px; font-size: 10px; color: var(--accent); min-height: 14px;"></div>
+        <div id="status"></div>
     </div>
 
     <script>
@@ -137,13 +174,18 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
         let currentUser = null;
+        
+        // This is your backup/guest image
+        const DEFAULT_AVATAR = "https://placehold.co/100x100/18181b/a1a1aa?text=Guest";
 
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
                 loadProfile();
             } else {
-                window.location.href = 'index.html'; // Redirect if not logged in
+                // Allow guest editing (saves to local storage only) or redirect
+                // For now, redirect to ensure they are logged in to save
+                window.location.href = 'index.html'; 
             }
         });
 
@@ -151,18 +193,70 @@
             db.ref(`users/${currentUser.uid}/profile`).once('value', (snapshot) => {
                 const data = snapshot.val() || {};
                 document.getElementById('username').value = data.username || "";
+                
+                const avatarSrc = data.avatar || DEFAULT_AVATAR;
                 document.getElementById('avatar-url').value = data.avatar || "";
-                updatePreview(data.avatar || "");
+                
+                updatePreview(avatarSrc);
             });
         }
 
         function updatePreview(url) {
             const img = document.getElementById('preview-img');
-            if (url) {
-                img.style.backgroundImage = `url('${url}')`;
-            } else {
-                img.style.backgroundImage = `url('https://placehold.co/80x80/000/333?text=?')`;
+            // If url is empty, use default
+            const finalUrl = url && url.trim() !== "" ? url : DEFAULT_AVATAR;
+            img.style.backgroundImage = `url('${finalUrl}')`;
+        }
+
+        function resetAvatar() {
+            document.getElementById('avatar-url').value = "";
+            updatePreview("");
+        }
+
+        // Logic to handle file upload -> resize -> base64 string
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Resize to 150x150 to keep DB size low
+                    const maxSize = 150;
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Calculate aspect ratio
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height *= maxSize / width;
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width *= maxSize / height;
+                            height = maxSize;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert to Base64 String
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8); // 80% quality JPG
+                    
+                    // Set to input and preview
+                    document.getElementById('avatar-url').value = base64;
+                    updatePreview(base64);
+                }
+                img.src = e.target.result;
             }
+            reader.readAsDataURL(file);
         }
 
         function saveProfile() {
@@ -171,12 +265,20 @@
             const status = document.getElementById('status');
 
             status.innerText = "Saving...";
+            status.style.color = "var(--accent)";
             
             db.ref(`users/${currentUser.uid}/profile`).update({
                 username: username,
                 avatar: avatar
             }).then(() => {
                 status.innerText = "Profile Updated Successfully!";
+                
+                // Update Local Cache immediately for the Hub to see next time
+                localStorage.setItem('mabi_user_cache_' + currentUser.uid, JSON.stringify({
+                    username: username,
+                    avatar: avatar
+                }));
+
                 setTimeout(() => status.innerText = "", 2000);
             }).catch((error) => {
                 status.style.color = "#ff4444";
@@ -185,4 +287,4 @@
         }
     </script>
 </body>
-</html>
+</html>s
