@@ -273,7 +273,13 @@
                     </div>
                     <div class="item-title-box">
                         <div class="item-title" id="center-item-title">Initializing...</div>
-                        <div class="item-inventory" id="max-inventory-display">Select an item to begin.</div>
+                        <div style="display:flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div class="item-inventory" id="max-inventory-display">Select an item to begin.</div>
+                            <div id="base-price-container" style="display:none; flex-direction: column; align-items: flex-end;">
+                                <span style="font-size: 9px; color: #666; font-weight: bold; margin-bottom: 2px;">BASE COST</span>
+                                <input type="number" id="base-price-input" class="qty-input" style="width: 80px; text-align: right;" onchange="updateBasePrice(this.value)">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="market-list-container">
@@ -372,8 +378,6 @@
                         <span>Air Ship</span>
                     </label>
                 </div>
-
-                <!-- Removed empty partner-info section since dropdown moved to left -->
 
                 <div class="recommendation-box" id="manifest-box" style="display:none;">
                     <div class="rec-title">Local Best Loadout</div>
@@ -591,6 +595,7 @@
         let currentItem = null;
         let publicPrices = {};
         let publicStocks = {};
+        let publicBasePrices = {};
         let townRanks = {}; 
         let transportOwnership = {
             "Hand Cart": false,
@@ -661,7 +666,8 @@
 
         function calculateItemProfit(item, targetCity, sellPriceOverride = null) {
             const sellVal = sellPriceOverride !== null ? sellPriceOverride : getPrice(item.name, targetCity);
-            const dBuy = getDiscountedBuyPrice(item.buy);
+            const basePrice = publicBasePrices[item.name] || item.buy;
+            const dBuy = getDiscountedBuyPrice(basePrice);
             const stats = getModifiedStats(document.getElementById('transport-dropdown').value);
             const load = Math.min(Math.floor(stats.weight / item.weight), stats.slots * item.max, item.limit);
             
@@ -696,7 +702,8 @@
                     const stats = getModifiedStats(mKey);
                     let remWeight = stats.weight, remSlots = stats.slots, totalP = 0, itemsToBuy = [];
                     const potential = originItems.map(item => {
-                        const unitP = (getPrice(item.name, targetCity) - getDiscountedBuyPrice(item.buy)) * (1 + (getPrice(item.name, targetCity) > getDiscountedBuyPrice(item.buy) ? (mods.totalMultiplier - 1) : 0));
+                        const basePrice = publicBasePrices[item.name] || item.buy;
+                        const unitP = (getPrice(item.name, targetCity) - getDiscountedBuyPrice(basePrice)) * (1 + (getPrice(item.name, targetCity) > getDiscountedBuyPrice(basePrice) ? (mods.totalMultiplier - 1) : 0));
                         return { ...item, unitP, eff: unitP / Math.max(1, item.weight) };
                     }).filter(i => i.unitP > 0).sort((a, b) => b.eff - a.eff);
 
@@ -782,7 +789,12 @@
             if (!currentItem) return;
             document.getElementById('center-item-icon').style.backgroundImage = `url('${getImagePath(currentItem.img)}')`;
             document.getElementById('center-item-title').textContent = currentItem.name;
-            document.getElementById('max-inventory-display').textContent = ` Weight: ${currentItem.weight} • Stack: ${currentItem.max} • Buy: ${currentItem.buy}`;
+            
+            const currentBase = publicBasePrices[currentItem.name] || currentItem.buy;
+            document.getElementById('base-price-input').value = currentBase;
+            document.getElementById('base-price-container').style.display = 'flex';
+
+            document.getElementById('max-inventory-display').textContent = ` Weight: ${currentItem.weight} • Stack: ${currentItem.max}`;
         }
 
         function updateTownIcon() {
@@ -883,6 +895,17 @@
             skipRender = true; // Fix focus loss
             
             if(rtdb) { try { rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty); } catch(e){} }
+            refreshUI();
+        }
+
+        function updateBasePrice(val) {
+            if (!currentItem) return;
+            const price = parseInt(val) || 0;
+            publicBasePrices[currentItem.name] = price;
+            
+            skipRender = true; // Fix focus loss
+            
+            if(rtdb) { try { rtdb.ref(`public_commerce/base_prices/${currentItem.name}`).set(price); } catch(e){} }
             refreshUI();
         }
 
@@ -1018,6 +1041,10 @@
                     rtdb.ref('public_commerce/stocks').on('value', (s) => { 
                         if (skipRender) { skipRender = false; return; }
                         publicStocks = s.val() || {}; refreshUI(); 
+                    });
+                    rtdb.ref('public_commerce/base_prices').on('value', (s) => { 
+                        if (skipRender) { skipRender = false; return; }
+                        publicBasePrices = s.val() || {}; refreshUI(); 
                     });
 
                     // User Data
