@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trading Post Interface</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -13,377 +13,390 @@
 
     <style>
         :root {
-            --bg: #050505;
-            --sidebar-bg: #0a0a0a;
-            --card-bg: #111;
-            --accent: #ffd700; /* Neon Yellow */
-            --border: rgba(255,255,255,0.05);
-            --text-main: #d0d0d0;
-            --text-dim: #444;
+            /* V2.7 Theme from Hub */
+            --bg: #09090b;
+            --sidebar-bg: #121214;
+            --card-bg: #18181b;
+            --accent: #00ff88;
+            --accent-dim: rgba(0, 255, 136, 0.1);
+            --border: #27272a;
+            --text-main: #e4e4e7;
+            --text-dim: #a1a1aa;
+            --warning: #facc15;
+            --danger: #ef4444;
         }
 
         /* --- Global & Reset --- */
-        * { box-sizing: border-box; outline: none; }
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body {
             background-color: var(--bg);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             margin: 0;
-            font-size: 12px;
+            font-size: 13px;
             overflow-x: hidden;
+            line-height: 1.5;
         }
+        
+        /* Scrollbars */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
         /* --- Layout Containers --- */
         .interface-container {
-            width: 100%; max-width: 1500px; margin: 0 auto;
-            background: var(--bg); border: 1px solid var(--border);
+            width: 100%; height: 100vh; display: flex; flex-direction: column;
+            overflow: hidden;
         }
-        .header-bar { background: var(--sidebar-bg); }
+        
+        .header-bar { 
+            background: var(--sidebar-bg); border-bottom: 1px solid var(--border); 
+            padding: 10px 20px; flex-shrink: 0;
+        }
+
         .content-grid {
-            display: grid; grid-template-columns: 320px 1fr 320px; gap: 1px;
-            background: var(--border);
+            display: grid; grid-template-columns: 300px 1fr 300px; 
+            flex-grow: 1; overflow: hidden; position: relative;
         }
-        .left-panel, .center-panel, .right-panel {
-            background: var(--card-bg); min-height: 90vh;
-            display: flex; flex-direction: column;
+        
+        .panel {
+            background: var(--bg); overflow-y: auto; display: flex; flex-direction: column;
+            border-right: 1px solid var(--border);
         }
+        .panel:last-child { border-right: none; }
+        
+        .center-panel { background: #0c0c0e; }
 
         /* --- Header Elements --- */
-        .decorative-border { height: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
         .title-section {
-            display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;
+            display: flex; justify-content: space-between; align-items: center; max-width: 1500px; margin: 0 auto; width: 100%;
         }
         .main-title {
-            font-size: 20px; font-weight: 900; color: var(--accent);
-            letter-spacing: 2px; text-transform: uppercase;
+            font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.5px;
         }
-        .sub-title { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+        .sub-title { 
+            font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-left: 10px;
+        }
         .hub-btn {
-            color: #fff; text-decoration: none; font-weight: 900; font-size: 10px;
-            background: #1a1a1a; border: 1px solid var(--border); padding: 5px 10px;
-            transition: 0.2s;
+            color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px;
+            padding: 6px 12px; border-radius: 6px; transition: 0.2s; border: 1px solid transparent;
         }
-        .hub-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 8px var(--accent); }
+        .hub-btn:hover { color: #fff; background: var(--border); }
 
-        /* --- Common Components --- */
-        .panel-small-label {
-            font-size: 9px; font-weight: 900; color: var(--text-dim);
-            text-transform: uppercase; display: block; margin-bottom: 4px;
+        /* --- Form Elements --- */
+        .panel-label {
+            font-size: 11px; font-weight: 600; color: var(--text-dim);
+            margin-bottom: 6px; display: block;
         }
-        .section-header-label {
-            width: 100%; margin-bottom: 8px; color: #666; font-size: 9px;
-            font-weight: bold; letter-spacing: 0.5px;
+        
+        .input-dark {
+            background: var(--card-bg); border: 1px solid var(--border); color: #fff;
+            font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px; border-radius: 6px;
+            width: 100%; transition: border-color 0.2s;
         }
-        .city-dropdown, .custom-dropdown, .qty-input-compact, .price-input, .qty-input, .search-input {
-            background: #000; border: 1px solid #333; color: var(--accent);
-            font-family: 'JetBrains Mono';
-        }
-        .city-dropdown, .custom-dropdown, .qty-input-compact, .search-input {
-            font-size: 11px; padding: 4px;
-        }
-        .search-input { width: 100%; padding-right: 25px; }
-        .qty-input-compact { width: 40px; text-align: center; }
+        .input-dark:focus { border-color: var(--accent); }
+        
+        select.input-dark { cursor: pointer; }
 
-        /* --- Panels --- */
-        .commerce-type-section { padding: 15px; border-bottom: 1px solid var(--border); }
-        .player-info {
-            display: flex; gap: 10px; padding: 10px;
-            border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
-        }
-        .player-avatar {
-            width: 48px; height: 48px; background-color: #000;
-            border: 1px solid #333; background-size: contain;
-            background-repeat: no-repeat; background-position: center;
-        }
-        .buff-row-inline {
-            display: flex; gap: 10px; padding: 10px;
-            background: rgba(0,0,0,0.4); justify-content: center;
-        }
-        .buff-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-dim); }
-        #market-items-container { flex-grow: 1; overflow-y: auto; background: #080808; }
+        /* --- Left Panel Items --- */
+        .config-section { padding: 20px; border-bottom: 1px solid var(--border); }
+        
+        .item-list { flex-grow: 1; overflow-y: auto; }
         
         .inventory-item {
-            display: flex; gap: 10px; padding: 8px;
+            display: flex; gap: 12px; padding: 10px 15px;
             border-bottom: 1px solid var(--border); cursor: pointer;
-            align-items: center; transition: 0.1s;
+            align-items: center; transition: 0.15s;
         }
-        .inventory-item:hover { background: rgba(255,255,255,0.03); }
-        .selected-item { border-left: 3px solid var(--accent); background: rgba(255,255,255,0.05); }
+        .inventory-item:hover { background: var(--card-bg); }
+        .selected-item { background: var(--accent-dim); border-left: 3px solid var(--accent); }
         
-        .item-list-icon-box {
-            width: 44px; height: 44px; background: #000; border: 1px solid #333;
-            background-size: contain; background-repeat: no-repeat; background-position: center; flex-shrink: 0;
+        .item-icon-box {
+            width: 40px; height: 40px; background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 4px; background-size: contain; background-repeat: no-repeat; 
+            background-position: center; flex-shrink: 0;
         }
-        .item-list-content { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; }
-        .item-name { font-weight: 700; font-size: 11px; color: #eee; }
-        .item-town-badge { font-size: 9px; color: var(--accent); opacity: 0.7; display: block; }
-        .stock-input-row { display: flex; flex-direction: column; align-items: center; width: 70px; }
-        .qty-input { width: 70px; font-size: 11px; padding: 4px; text-align: center; }
-
+        .item-name { font-weight: 600; font-size: 13px; color: #fff; }
+        .item-meta { font-size: 11px; color: var(--text-dim); }
+        .stock-input-row { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        
+        /* --- Center Panel --- */
         .item-header {
-            padding: 20px; border-bottom: 1px solid var(--border); display: flex;
-            gap: 20px; align-items: center; background: rgba(0,0,0,0.4);
+            padding: 30px; border-bottom: 1px solid var(--border); display: flex;
+            gap: 20px; align-items: center; background: var(--card-bg); flex-shrink: 0;
         }
-        .item-icon-container {
-            width: 84px; height: 84px; border: 1px solid var(--border); background: #000;
-            display: flex; align-items: center; justify-content: center;
+        .big-icon {
+            width: 80px; height: 80px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; background-size: contain; background-repeat: no-repeat; background-position: center;
         }
-        .item-icon { width: 80px; height: 80px; background-size: contain; background-repeat: no-repeat; background-position: center; }
-        .item-title-box { flex-grow: 1; }
-        .item-title { font-size: 18px; font-weight: 900; color: var(--accent); text-transform: uppercase; }
-        .item-inventory { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--text-dim); }
-        .market-list-container { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        #profit-list { overflow-y: auto; flex-grow: 1; }
+        .item-title-large { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
         
         .market-row {
-            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
-            padding: 10px 15px; border-bottom: 1px solid var(--border);
-            align-items: center; gap: 10px;
+            display: grid; grid-template-columns: 1.5fr 1fr 1fr 0.8fr;
+            padding: 12px 20px; border-bottom: 1px solid var(--border);
+            align-items: center; gap: 15px; font-size: 13px;
         }
-        .market-row.header { background: rgba(255,255,255,0.02); font-weight: 900; color: var(--text-dim); font-size: 10px; }
-        .market-left { display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
-        .price-input { font-size: 12px; width: 100%; text-align: right; height: fit-content; }
-        .profit-val { font-family: 'JetBrains Mono'; font-weight: bold; text-align: right; color: var(--accent); font-size: 13px; }
-        .profit-val.negative { color: #ff4444; }
-        .season-val { font-family: 'JetBrains Mono'; text-align: right; color: var(--text-dim); font-size: 11px; }
-        .season-val.negative { color: #ff4444; }
-
-        .buff-row-side { padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px; }
-        .toggle-container {
-            display: flex; align-items: center; gap: 8px; cursor: pointer;
-            font-size: 10px; color: var(--text-dim); user-select: none; width: 45%;
-        }
-        .toggle-container:hover { color: #fff; }
-        .toggle-input { display: none; }
-        .toggle-slider {
-            width: 28px; height: 16px; background: #222; border: 1px solid #333; border-radius: 99px;
-            position: relative; transition: all 0.2s; flex-shrink: 0;
-        }
-        .toggle-slider::after {
-            content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px;
-            background: #666; border-radius: 50%; transition: all 0.2s;
-        }
-        .toggle-input:checked + .toggle-slider { background: rgba(255, 215, 0, 0.15); border-color: var(--accent); }
-        .toggle-input:checked + .toggle-slider::after { transform: translateX(12px); background: var(--accent); }
-
-        .recommendation-box {
-            margin: 15px; padding: 15px; background: rgba(0,0,0,0.3);
-            border: 1px solid var(--accent); border-radius: 4px; box-shadow: 0 0 15px rgba(255,255,255,0.05);
-        }
-        .rec-title { color: var(--accent); font-weight: 900; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; }
-        .manifest-slot {
-            width: 44px; height: 44px; border: 1px solid #333; display: inline-block; margin: 2px;
-            background-color: #000; background-size: contain; background-repeat: no-repeat;
-            background-position: center; position: relative; cursor: pointer;
-        }
-        .manifest-slot.filled { border-color: var(--accent); }
-        .manifest-slot.filled:hover { transform: translateY(-2px); box-shadow: 0 0 10px rgba(255,255,255,0.2); z-index: 10; }
-        .manifest-slot.empty { opacity: 0.1; border-style: dashed; }
-        .slot-badge {
-            position: absolute; bottom: -4px; right: -4px; background: var(--accent); color: #000;
-            font-size: 9px; font-weight: 900; padding: 1px 4px; border-radius: 3px; line-height: 1;
-        }
-        .manifest-footer { margin-top: 10px; border-top: 1px solid #333; padding-top: 5px; font-weight: 900; color: #fff; font-family: 'JetBrains Mono'; }
+        .market-row.head { background: var(--card-bg); font-weight: 600; color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; }
         
+        .profit-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; text-align: right; color: var(--accent); }
+        .profit-val.negative { color: var(--danger); }
+        .score-val { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--text-dim); }
+
+        /* --- Right Panel & Toggles --- */
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 0; cursor: pointer;
+        }
+        .toggle-label { font-size: 13px; color: var(--text-main); }
+        
+        .toggle-switch {
+            width: 36px; height: 20px; background: var(--border); border-radius: 99px;
+            position: relative; transition: 0.2s;
+        }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+            background: #fff; border-radius: 50%; transition: 0.2s;
+        }
+        input:checked + .toggle-switch { background: var(--accent); }
+        input:checked + .toggle-switch::after { transform: translateX(16px); }
+        
+        /* --- Manifest Box --- */
+        .manifest-container {
+            margin: 20px; background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 15px;
+        }
+        .manifest-header {
+            font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase;
+            margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between;
+        }
+        .manifest-slots { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+        .slot {
+            width: 36px; height: 36px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 4px; background-size: contain; background-repeat: no-repeat;
+            background-position: center; position: relative;
+        }
+        .slot.filled { border-color: var(--accent); background-color: var(--accent-dim); }
+        .slot-badge {
+            position: absolute; bottom: -2px; right: -2px; background: var(--accent); color: #000;
+            font-size: 9px; font-weight: 700; padding: 0 3px; border-radius: 2px;
+        }
+        .manifest-total { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #fff; text-align: right; }
+
+        /* --- MOBILE STYLES --- */
+        .mobile-nav { display: none; }
+        .mobile-backdrop { display: none; }
+
         @media (max-width: 1000px) {
-            .content-grid { grid-template-columns: 1fr; }
-            .interface-container { border: none; }
-            .left-panel, .right-panel { min-height: auto; }
+            .content-grid { display: block; height: calc(100vh - 50px); }
+            .header-bar { display: none; } /* Hide desktop header */
+            
+            /* Mobile Nav Bar */
+            .mobile-nav {
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 10px 15px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border);
+                height: 50px; z-index: 50; flex-shrink: 0;
+            }
+            .nav-trigger {
+                background: transparent; border: 1px solid var(--border); color: var(--text-main);
+                padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer;
+            }
+            
+            /* Drawers */
+            .left-panel, .right-panel {
+                position: fixed; top: 0; bottom: 0; width: 300px; max-width: 85%;
+                z-index: 1001; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .left-panel { left: 0; transform: translateX(-100%); border-right: 1px solid var(--border); }
+            .left-panel.active { transform: translateX(0); }
+            
+            .right-panel { right: 0; transform: translateX(100%); border-left: 1px solid var(--border); }
+            .right-panel.active { transform: translateX(0); }
+            
+            /* Backdrop */
+            .mobile-backdrop {
+                display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+                z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+                backdrop-filter: blur(4px);
+            }
+            .mobile-backdrop.active { opacity: 1; pointer-events: all; }
+            
+            .center-panel { height: 100%; width: 100%; border: none; }
+            .item-header { padding: 20px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Mobile Nav -->
+    <div class="mobile-nav">
+        <button class="nav-trigger" onclick="toggleSidebar('left')">☰ Items</button>
+        <span style="font-weight:700; color:#fff;">Commerce</span>
+        <button class="nav-trigger" onclick="toggleSidebar('right')">Settings</button>
+    </div>
+
+    <!-- Backdrop -->
+    <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeSidebars()"></div>
+
     <div class="interface-container">
+        <!-- Desktop Header -->
         <div class="header-bar">
-            <div class="decorative-border"></div>
             <div class="title-section">
-                <a href="index.html" class="hub-btn">HUB</a>
-                <div style="text-align:center;">
-                    <span class="main-title">Trading Post</span>
-                    <span class="sub-title">COMMERCE_NETWORK_SYNC</span>
+                <div style="display:flex; align-items:center;">
+                    <span class="main-title">TRADING POST</span>
+                    <span class="sub-title">SYNC_V2.7</span>
                 </div>
-                <div style="width:80px;"></div>
+                <a href="index.html" class="hub-btn">Back to Hub</a>
             </div>
-            <div class="decorative-border"></div>
         </div>
 
         <div class="content-grid">
-            <div class="left-panel">
-                <div class="commerce-type-section">
-                    <!-- Updated Layout: Mode and Transport side-by-side -->
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <div style="flex: 1;">
-                            <label class="panel-small-label">Commerce Mode</label>
-                            <select id="commerce-type-select" class="city-dropdown" style="width:100%;">
-                                <option value="Normal">Normal Commerce</option>
-                                <option value="Barter">Bartering</option>
-                                <option value="Group">Group Commerce</option>
-                            </select>
-                        </div>
-                        <div style="flex: 1;">
-                            <label class="panel-small-label">Transport</label>
-                            <select id="transport-dropdown" class="city-dropdown" style="width:100%;"></select>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 10px;">
-                        <label class="panel-small-label">Global Search</label>
-                        <div style="position: relative;">
-                            <input type="text" id="global-search" class="search-input" placeholder="Search item...">
-                            <div id="clear-search" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer; display: none; color: #666; font-size: 10px;">✕</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="player-info">
-                    <div class="player-avatar" id="origin-town-icon"></div>
-                    <div style="display: flex; flex-direction: column; flex-grow: 1;">
-                        <label class="panel-small-label">Trade Post</label>
-                        <select class="city-dropdown" id="city-select"></select>
-                    </div>
-                    <div style="display: flex; flex-direction: column; width: 50px;">
-                        <label class="panel-small-label">Merchant Rating</label>
-                        <select id="merchant-rating-select" class="city-dropdown">
-                            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <!-- LEFT PANEL: Config & Items -->
+            <div class="panel left-panel" id="left-panel">
+                <div class="config-section">
+                    <div style="margin-bottom: 15px;">
+                        <label class="panel-label">Commerce Mode</label>
+                        <select id="commerce-type-select" class="input-dark">
+                            <option value="Normal">Normal Commerce</option>
+                            <option value="Barter">Bartering</option>
+                            <option value="Group">Group Commerce</option>
                         </select>
                     </div>
+
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <div style="flex:1;">
+                            <label class="panel-label">Transport</label>
+                            <select id="transport-dropdown" class="input-dark"></select>
+                        </div>
+                        <div style="width:80px;">
+                             <label class="panel-label">Rating</label>
+                             <select id="merchant-rating-select" class="input-dark">
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="position: relative;">
+                        <input type="text" id="global-search" class="input-dark" placeholder="Search items...">
+                        <div id="clear-search" style="position: absolute; right: 10px; top: 8px; cursor: pointer; display: none; color: #666;">✕</div>
+                    </div>
                 </div>
 
-                <div class="buff-row-inline">
-                    <div class="buff-item">
-                        <label>Trader</label>
-                        <input type="number" id="trader-qty" min="0" max="2" value="0" class="qty-input-compact">
-                    </div>
-                    <div class="buff-item">
-                        <label>Trustworthy</label>
-                        <input type="number" id="trustworthy-qty" min="0" max="2" value="0" class="qty-input-compact">
+                <!-- Player Avatar / Town Info -->
+                <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+                    <div class="player-avatar" id="origin-town-icon"></div>
+                    <div style="flex-grow:1;">
+                        <label class="panel-label" style="margin:0;">Current Post</label>
+                        <select id="city-select" class="input-dark" style="margin-top:4px;"></select>
                     </div>
                 </div>
-                <div id="market-items-container"></div>
+                
+                <!-- Items List -->
+                <div id="market-items-container" class="item-list"></div>
             </div>
 
-            <div class="center-panel">
+            <!-- CENTER PANEL: Data -->
+            <div class="panel center-panel">
                 <div class="item-header">
-                    <div class="item-icon-container">
-                        <div class="item-icon" id="center-item-icon"></div>
-                    </div>
+                    <div class="big-icon" id="center-item-icon"></div>
                     <div class="item-title-box">
-                        <div class="item-title" id="center-item-title">Initializing...</div>
-                        <div style="display:flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <div class="item-inventory" id="max-inventory-display">Select an item to begin.</div>
+                        <div class="item-title-large" id="center-item-title">Select Item</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="item-meta" id="max-inventory-display">...</div>
                             <div id="base-price-container" style="display:none; align-items: center; gap: 8px;">
-                                <span style="font-size: 10px; color: #666; font-weight: 900; letter-spacing: 0.5px;">BASE COST</span>
-                                <input type="number" id="base-price-input" class="qty-input" style="width: 70px; text-align: right; background: #000; border: 1px solid #333; color: var(--accent);" onchange="updateBasePrice(this.value)" onfocus="this.select()">
+                                <span style="font-size: 10px; color: var(--text-dim); font-weight: 600;">BASE</span>
+                                <input type="number" id="base-price-input" class="input-dark" style="width: 70px; text-align: right; padding: 4px;" onchange="updateBasePrice(this.value)" onfocus="this.select()">
                             </div>
                         </div>
                     </div>
                 </div>
+                
                 <div class="market-list-container">
-                    <div class="market-row header">
-                        <div class="market-left">TARGET</div>
-                        <div class="col-price">INPUT PRICE</div>
-                        <div class="market-profit-col">PROFIT</div>
-                        <div class="market-score-col">SCORE</div>
+                    <div class="market-row head">
+                        <div>Target</div>
+                        <div style="text-align:right;">Sell Price</div>
+                        <div style="text-align:right;">Profit</div>
+                        <div style="text-align:right;">Score</div>
                     </div>
                     <div id="profit-list"></div>
                 </div>
             </div>
 
-            <div class="right-panel">
-                 <div class="buff-row-side">
-                    <div class="section-header-label">PROFIT MODIFIERS</div>
-                    <div style="width: 100%; margin-bottom: 5px;">
-                        <label class="panel-small-label">Commerce Mastery</label>
-                        <select id="mastery-rank" class="city-dropdown" style="width:100%"></select>
-                    </div>
-                    <div style="width: 100%; display: flex; align-items: flex-end; gap: 5px;">
-                        <div style="flex-grow: 1;">
-                            <label class="panel-small-label">Letter of Guarantee</label>
-                            <select id="letter-select" class="city-dropdown" style="width:100%"></select>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <label class="panel-small-label" style="font-size: 8px; margin-bottom:5px;">FINE</label>
-                            <label class="toggle-container" style="width: auto; margin:0;">
-                                <input type="checkbox" id="fine-letter-check" class="toggle-input">
-                                <div class="toggle-slider"></div>
+            <!-- RIGHT PANEL: Modifiers & Routes -->
+            <div class="panel right-panel" id="right-panel">
+                <div class="config-section">
+                    <label class="panel-label" style="color:var(--accent);">PROFIT MODIFIERS</label>
+                    <div style="margin-bottom:10px;">
+                        <select id="mastery-rank" class="input-dark" style="margin-bottom:8px;"></select>
+                        <div style="display:flex; gap:8px;">
+                            <select id="letter-select" class="input-dark" style="flex:1;"></select>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                <input type="checkbox" id="fine-letter-check"> <span style="font-size:11px; color:#aaa;">Fine</span>
                             </label>
                         </div>
                     </div>
-                </div>
 
-                <div class="buff-row-side">
-                    <div class="section-header-label">ACTIVE BUFFS</div>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="gm-check" class="toggle-input">
-                        <div class="toggle-slider"></div>
-                        <span>Grandmaster</span>
-                    </label>
-                    <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
-                        <label class="toggle-container" style="width: auto;">
-                            <input type="checkbox" id="william-check" class="toggle-input">
-                            <div class="toggle-slider"></div>
-                            <span>William</span>
-                        </label>
-                        <div id="william-like-box" style="display:none; align-items: center; gap: 5px;">
-                             <span style="font-size: 9px; color: #666;">Likeability</span>
-                             <input type="number" id="william-likeability" class="qty-input-compact" style="width: 60px;" min="0" max="247" value="247">
+                    <label class="panel-label" style="color:var(--accent); margin-top:20px;">GEAR & PARTNERS</label>
+                    
+                    <div class="toggle-row">
+                        <span class="toggle-label">Grandmaster Merchant</span>
+                        <label><input type="checkbox" id="gm-check" style="display:none;"><div class="toggle-switch"></div></label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <span class="toggle-label">Alpaca</span>
+                        <label><input type="checkbox" id="alpaca-check" style="display:none;"><div class="toggle-switch"></div></label>
+                    </div>
+
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">
+                        <div class="toggle-row" style="flex:1;">
+                            <span class="toggle-label">William</span>
+                            <label style="margin-left:10px;"><input type="checkbox" id="william-check" style="display:none;"><div class="toggle-switch"></div></label>
+                        </div>
+                        <div id="william-like-box" style="display:none; align-items:center; gap:5px;">
+                            <span style="font-size:10px; color:#666;">Likeability</span>
+                            <input type="number" id="william-likeability" class="input-dark" style="width:50px; padding:4px; text-align:center;" value="247">
                         </div>
                     </div>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="alpaca-check" class="toggle-input">
-                        <div class="toggle-slider"></div>
-                        <span>Alpaca</span>
-                    </label>
+                    
+                    <div style="margin-top: 15px;">
+                        <label class="panel-label">Trader Gear</label>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span class="toggle-label">Gear</span>
+                            <input type="number" id="trader-qty" class="input-dark" style="width:50px; text-align:center;" min="0" max="2" value="0">
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="toggle-label">Trustworthy</span>
+                            <input type="number" id="trustworthy-qty" class="input-dark" style="width:50px; text-align:center;" min="0" max="2" value="0">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="buff-row-side" style="padding-top: 10px;">
-                    <div class="section-header-label">OWNED TRANSPORTS</div>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="handcart-check" class="toggle-input transport-toggle" data-mount="Hand Cart">
-                        <div class="toggle-slider"></div>
-                        <span>Hand Cart</span>
-                    </label>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="wagon-check" class="toggle-input transport-toggle" data-mount="Wagon">
-                        <div class="toggle-slider"></div>
-                        <span>Wagon</span>
-                    </label>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="elephant-check" class="toggle-input transport-toggle" data-mount="Elephant">
-                        <div class="toggle-slider"></div>
-                        <span>Elephant</span>
-                    </label>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="husky-check" class="toggle-input transport-toggle" data-mount="Husky">
-                        <div class="toggle-slider"></div>
-                        <span>Husky</span>
-                    </label>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="camel-check" class="toggle-input transport-toggle" data-mount="Camel">
-                        <div class="toggle-slider"></div>
-                        <span>Camel</span>
-                    </label>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="skiff-check" class="toggle-input transport-toggle" data-mount="Skiff">
-                        <div class="toggle-slider"></div>
-                        <span>Skiff</span>
-                    </label>
-                    <label class="toggle-container">
-                        <input type="checkbox" id="airship-check" class="toggle-input transport-toggle" data-mount="Air Ship">
-                        <div class="toggle-slider"></div>
-                        <span>Air Ship</span>
-                    </label>
+                <div class="config-section">
+                    <label class="panel-label">OWNED TRANSPORTS</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 0 15px;">
+                        <div class="toggle-row"><span class="toggle-label">Hand Cart</span><label><input type="checkbox" id="handcart-check" class="transport-toggle" data-mount="Hand Cart" style="display:none;"><div class="toggle-switch"></div></label></div>
+                        <div class="toggle-row"><span class="toggle-label">Wagon</span><label><input type="checkbox" id="wagon-check" class="transport-toggle" data-mount="Wagon" style="display:none;"><div class="toggle-switch"></div></label></div>
+                        <div class="toggle-row"><span class="toggle-label">Elephant</span><label><input type="checkbox" id="elephant-check" class="transport-toggle" data-mount="Elephant" style="display:none;"><div class="toggle-switch"></div></label></div>
+                        <div class="toggle-row"><span class="toggle-label">Husky</span><label><input type="checkbox" id="husky-check" class="transport-toggle" data-mount="Husky" style="display:none;"><div class="toggle-switch"></div></label></div>
+                        <div class="toggle-row"><span class="toggle-label">Camel</span><label><input type="checkbox" id="camel-check" class="transport-toggle" data-mount="Camel" style="display:none;"><div class="toggle-switch"></div></label></div>
+                        <div class="toggle-row"><span class="toggle-label">Skiff</span><label><input type="checkbox" id="skiff-check" class="transport-toggle" data-mount="Skiff" style="display:none;"><div class="toggle-switch"></div></label></div>
+                        <div class="toggle-row"><span class="toggle-label">Air Ship</span><label><input type="checkbox" id="airship-check" class="transport-toggle" data-mount="Air Ship" style="display:none;"><div class="toggle-switch"></div></label></div>
+                    </div>
                 </div>
 
-                <div class="recommendation-box" id="manifest-box" style="display:none;">
-                    <div class="rec-title">Local Best Loadout</div>
-                    <div id="manifest-list"></div>
-                    <div id="manifest-total" class="manifest-footer"></div>
+                <div class="manifest-container" id="manifest-box" style="display:none;">
+                    <div class="manifest-header">
+                        <span>Local Best Route</span>
+                        <span id="manifest-dest" style="color:#fff;">Dest</span>
+                    </div>
+                    <div id="manifest-list" class="manifest-slots"></div>
+                    <div id="manifest-total" class="manifest-total"></div>
                 </div>
 
                 <div id="global-manifest-anchor"></div>
@@ -397,198 +410,39 @@
             if (!path) return "";
             return (path.startsWith('images/') || path.startsWith('http')) ? path : `images/${path}`;
         }
-
-        const townIcons = {
-            "Tir Chonaill": "tradeposts/Commerce_Tir_Chonaill_Icon.png", "Dunbarton": "tradeposts/Commerce_Dunbarton_Icon.png",
-            "Bangor": "tradeposts/Commerce_Bangor_Icon.png", "Emain Macha": "tradeposts/Commerce_Emain_Macha_Icon.png",
-            "Taillteann": "tradeposts/Commerce_Taillteann_Icon.png", "Tara": "tradeposts/Commerce_Tara_Icon.png",
-            "Cobh": "tradeposts/Commerce_Port_Cobh_Icon.png", "Belvast": "tradeposts/Commerce_Commonwealth_of_Belvast_Icon.png",
-            "Qilla": "tradeposts/Commerce_Qilla_Icon.png", "Cor": "tradeposts/Commerce_Cor_Icon.png",
-            "Vales": "tradeposts/Commerce_Vales_Icon.png", "Filia": "tradeposts/Commerce_Filia_Icon.png",
-            "Karu Forest": "tradeposts/Commerce_Karu_Forest_Icon.png", "Oasis": "tradeposts/Commerce_Oasis_Icon.png",
-            "Lake Calida": "tradeposts/Commerce_Calida_Icon.png", "Pera Volcano": "tradeposts/Commerce_Pera_Icon.png",
-            "Scathach Beach": "tradeposts/Commerce_Beach_of_Scathach_Icon.png"
-        };
-
-        const transportData = {
-            "Back Pack": { slots: 4, weight: 400 }, "Hand Cart": { slots: 6, weight: 800 },
-            "Wagon": { slots: 8, weight: 900 }, "Elephant": { slots: 7, weight: 1700 },
-            "Husky": { slots: 11, weight: 700 }, "Camel": { slots: 7, weight: 1400 },
-            "Skiff": { slots: 8, weight: 1200 }, "Air Ship": { slots: 18, weight: 2500 }
-        };
-
-        const citiesByType = {
-            "Normal": ["Tir Chonaill", "Dunbarton", "Bangor", "Emain Macha", "Taillteann", "Tara", "Cobh", "Belvast", "Qilla", "Cor", "Vales", "Filia"],
-            "Barter": ["Karu Forest", "Oasis", "Lake Calida", "Pera Volcano", "Scathach Beach"],
-            "Group": ["Qilla", "Filia", "Cor", "Vales"]
-        };
-
-        const masteryRanks = { "1": 0.15, "2": 0.14, "3": 0.13, "4": 0.12, "5": 0.11, "6": 0.10, "7": 0.09, "8": 0.08, "9": 0.07, "A": 0.06, "B": 0.05, "C": 0.04, "D": 0.03, "E": 0.02, "F": 0.01 };
-
-        const guaranteeLetters = {
-            "None": { normal: 0, barter: 0, fine_normal: 0, fine_barter: 0 },
-            "Ogre": { normal: 0.30, barter: 0.15, fine_normal: 0.90, fine_barter: 0.45 },
-            "Goblin": { normal: 0.40, barter: 0.20, fine_normal: 1.20, fine_barter: 0.60 },
-            "Imp": { normal: 0.50, barter: 0.25, fine_normal: 1.50, fine_barter: 0.75 },
-            "Irusan's (Special)": { normal: 3.00, barter: 0.75, fine_normal: 3.00, fine_barter: 0.75 }
-        };
-
-        const marketData = {
-            "Normal": {
-                "Tir Chonaill": [
-                    { name: "Baby Potion", buy: 11, weight: 1, max: 35, limit: Infinity, img: "tradeposts/normal/tir/Baby_Potion_Icon.png" },
-                    { name: "Diet Potion", buy: 26, weight: 1, max: 30, limit: Infinity, img: "tradeposts/normal/tir/Diet_Potion_Icon.png" },
-                    { name: "Snore Potion", buy: 62, weight: 2, max: 26, limit: Infinity, img: "tradeposts/normal/tir/Snore_Prevention_Potion_Icon.png" },
-                    { name: "Ginseng", buy: 134, weight: 3, max: 22, limit: Infinity, img: "tradeposts/normal/tir/Wild_Ginseng_Potion_Icon.png" },
-                    { name: "Lovely Potion", buy: 158, weight: 3, max: 25, limit: Infinity, img: "tradeposts/normal/tir/Lovely_Potion_Icon.png" }
-                ],
-                "Dunbarton": [
-                    { name: "Spider Gloves", buy: 44, weight: 4, max: 14, limit: Infinity, img: "tradeposts/normal/dunbarton/Spider_Gloves_Icon.png" },
-                    { name: "Wool Boots", buy: 160, weight: 8, max: 10, limit: Infinity, img: "tradeposts/normal/dunbarton/Wool_Boots_Icon.png" },
-                    { name: "Ogre Mask", buy: 91, weight: 4, max: 26, limit: Infinity, img: "tradeposts/normal/dunbarton/Ogre_Executioner_Mask_Icon.png" },
-                    { name: "Incubus Suit", buy: 536, weight: 25, max: 5, limit: Infinity, img: "tradeposts/normal/dunbarton/Incubus_Suit_Icon.png" },
-                    { name: "Succubus Swimsuit", buy: 718, weight: 6, max: 5, limit: Infinity, img: "tradeposts/normal/dunbarton/Succubus_Swimsuit_Icon.png" }
-                ],
-                "Bangor": [
-                    { name: "Bangor Coal", buy: 45, weight: 8, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Bangor_Coal_Icon.png" },
-                    { name: "Marble", buy: 301, weight: 20, max: 10, limit: Infinity, img: "tradeposts/normal/bangor/Marble_Icon.png" },
-                    { name: "Topaz", buy: 376, weight: 18, max: 12, limit: Infinity, img: "tradeposts/normal/bangor/Topaz_Icon.png" },
-                    { name: "Highlander Ore", buy: 788, weight: 25, max: 8, limit: Infinity, img: "tradeposts/normal/bangor/Highlander_Ore_Icon.png" },
-                    { name: "Lead", buy: 856, weight: 18, max: 16, limit: Infinity, img: "tradeposts/normal/bangor/Lead_Icon.png" }
-                ],
-                "Emain Macha": [
-                    { name: "Berry Granola", buy: 10, weight: 3, max: 25, limit: Infinity, img: "tradeposts/normal/emain/Berry_Granola_Icon.png" },
-                    { name: "Butter Beer", buy: 49, weight: 4, max: 30, limit: Infinity, img: "tradeposts/normal/emain/Butter_Beer_Icon.png" },
-                    { name: "Smoked Animal", buy: 190, weight: 10, max: 40, limit: Infinity, img: "tradeposts/normal/emain/Smoked_Wild_Animal_Icon.png" },
-                    { name: "Triple Pasta", buy: 94, weight: 4, max: 32, limit: Infinity, img: "tradeposts/normal/emain/Triple_Pasta_Icon.png" },
-                    { name: "Whole BBQ", buy: 630, weight: 14, max: 12, limit: Infinity, img: "tradeposts/normal/emain/Whole_BBQ_Bear_Icon.png" }
-                ],
-                "Taillteann": [
-                    { name: "Heat Crystal", buy: 11, weight: 2, max: 33, limit: Infinity, img: "tradeposts/normal/taillteann/Heat_Crystal_Icon.png" },
-                    { name: "Music Box Stone", buy: 37, weight: 3, max: 24, limit: Infinity, img: "tradeposts/normal/taillteann/Music_Box_Preservation_Stone_Icon.png" },
-                    { name: "Palala Crystal", buy: 130, weight: 6, max: 38, limit: Infinity, img: "tradeposts/normal/taillteann/Palala_Crystal_Icon.png" },
-                    { name: "Circle Barrier Spikes", buy: 126, weight: 3, max: 30, limit: Infinity, img: "tradeposts/normal/taillteann/Circle_Barrier_Spike_Crystal_Icon.png" },
-                    { name: "Alchemy Crystal", buy: 720, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/taillteann/Alchemy_Crystal_Icon.png" }
-                ],
-                "Tara": [
-                    { name: "Mini Dressing Table", buy: 205, weight: 15, max: 10, limit: Infinity, img: "tradeposts/normal/tara/Mini_Dressing_Table_Icon.png" },
-                    { name: "Tea Table", buy: 896, weight: 38, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Tea_Table_Icon.png" },
-                    { name: "Rocking Chair", buy: 918, weight: 25, max: 5, limit: Infinity, img: "tradeposts/normal/tara/Rocking_Chair_Icon.png" },
-                    { name: "Bunk Bed", buy: 3690, weight: 60, max: 3, limit: Infinity, img: "tradeposts/normal/tara/Bunk_Bed_Icon.png" },
-                    { name: "Giant Wine Rack", buy: 8640, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/tara/Giant_Wine_Rack_Icon.png" }
-                ],
-                "Cobh": [
-                    { name: "Cobh Seaweed", buy: 11, weight: 2, max: 32, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Seaweed_Icon.png" },
-                    { name: "Cobh Oyster", buy: 46, weight: 3, max: 26, limit: Infinity, img: "tradeposts/normal/cobh/Cobh_Oyster_Icon.png" },
-                    { name: "Shark Fin", buy: 264, weight: 10, max: 25, limit: Infinity, img: "tradeposts/normal/cobh/Shark_Fin_Icon.png" },
-                    { name: "Jellyfish", buy: 201, weight: 6, max: 30, limit: Infinity, img: "tradeposts/normal/cobh/Jelly_Fish_Icon.png" },
-                    { name: "Neid Scale", buy: 187, weight: 2, max: 28, limit: Infinity, img: "tradeposts/normal/cobh/Neid_Scales_Icon.png" }
-                ],
-                "Belvast": [
-                    { name: "Iron Whip", buy: 103, weight: 8, max: 15, limit: Infinity, img: "tradeposts/normal/belvast/Iron_Whip_Icon.png" },
-                    { name: "Dark Sword", buy: 477, weight: 12, max: 10, limit: Infinity, img: "tradeposts/normal/belvast/Dark_Sword_Icon.png" },
-                    { name: "Safe", buy: 9757, weight: 90, max: 2, limit: Infinity, img: "tradeposts/normal/belvast/Safe_Icon.png" },
-                    { name: "Skeleton Armour", buy: 15546, weight: 115, max: 1, limit: Infinity, img: "tradeposts/normal/belvast/Skeleton_Ogre_Armor_Icon.png" },
-                    { name: "Fake Helmet", buy: 4740, weight: 30, max: 6, limit: Infinity, img: "tradeposts/normal/belvast/Fake_Morgant_Helmet_Icon.png" }
-                ],
-                "Qilla": [
-                    { name: "Mint Chocolate Powder", buy: 35, weight: 1, max: 60, limit: Infinity, img: "tradeposts/normal/qilla/Mint_Chocolate_Powder_Icon.png" },
-                    { name: "Pomegranate", buy: 58, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/qilla/Fresh_Pomegranate_Icon.png" },
-                    { name: "Mana Tunnel Figure", buy: 102, weight: 2, max: 65, limit: Infinity, img: "tradeposts/normal/qilla/Mana_Tunnel_Figure_Icon.png" },
-                    { name: "Exploration Rescue Kit", buy: 247, weight: 3, max: 38, limit: Infinity, img: "tradeposts/normal/qilla/Exploration_Rescue_Kit_Icon.png" },
-                    { name: "Kaypi Cactus Essence", buy: 566, weight: 2, max: 26, limit: Infinity, img: "tradeposts/normal/qilla/Kaypi_Cactus_Essence_Icon.png" }
-                ],
-                "Filia": [
-                    { name: "Small Glass Chunk", buy: 72, weight: 10, max: 60, limit: Infinity, img: "tradeposts/normal/filia/Small_Glass_Chunk_Icon.png" },
-                    { name: "Cinnamon Perfume", buy: 564, weight: 22, max: 15, limit: Infinity, img: "tradeposts/normal/filia/Cinnamon_Perfume_Icon.png" },
-                    { name: "Dried Saffron", buy: 906, weight: 25, max: 10, limit: Infinity, img: "tradeposts/normal/filia/Dried_Saffron_Icon.png" },
-                    { name: "Longa Rock Salt", buy: 2342, weight: 40, max: 5, limit: Infinity, img: "tradeposts/normal/filia/Longa_Natural_Rock_Salt_Icon.png" },
-                    { name: "Filia Jerky", buy: 1567, weight: 20, max: 12, limit: Infinity, img: "tradeposts/normal/filia/Filia_Jerky_Icon.png" }
-                ],
-                "Cor": [
-                    { name: "Courcle Ruins Souvenir", buy: 8, weight: 2, max: 50, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Ruins_Souvenir_Icon.png" },
-                    { name: "Large Ritual Mask", buy: 61, weight: 3, max: 40, limit: Infinity, img: "tradeposts/normal/cor/Large_Ritual_Mask_Icon.png" },
-                    { name: "La Terra Raspberry", buy: 56, weight: 2, max: 60, limit: Infinity, img: "tradeposts/normal/cor/La_Terra_Raspberry_Icon.png" },
-                    { name: "Artifact Rest. Tool", buy: 81, weight: 2, max: 70, limit: Infinity, img: "tradeposts/normal/cor/Artifact_Restoration_Tool_Set_Icon.png" },
-                    { name: "Courcle Natural Rubber", buy: 935, weight: 5, max: 8, limit: Infinity, img: "tradeposts/normal/cor/Courcle_Natural_Rubber_Icon.png" }
-                ],
-                "Vales": [
-                    { name: "Vales Coat", buy: 30, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Vales_Padded_Coat_Icon.png" },
-                    { name: "Glacial Water", buy: 118, weight: 2, max: 35, limit: Infinity, img: "tradeposts/normal/vales/Natural_Glacial_Water_Icon.png" },
-                    { name: "Ice Skates", buy: 216, weight: 1, max: 50, limit: Infinity, img: "tradeposts/normal/vales/Ice_Skates_Icon.png" },
-                    { name: "Snowboard", buy: 1079, weight: 3, max: 20, limit: Infinity, img: "tradeposts/normal/vales/Snowboard_Icon.png" },
-                    { name: "Vales Vodka", buy: 1204, weight: 2, max: 16, limit: Infinity, img: "tradeposts/normal/vales/Vales_Vodka_Icon.png" }
-                ]
+        
+        const townIcons={"Tir Chonaill":"tradeposts/Commerce_Tir_Chonaill_Icon.png","Dunbarton":"tradeposts/Commerce_Dunbarton_Icon.png","Bangor":"tradeposts/Commerce_Bangor_Icon.png","Emain Macha":"tradeposts/Commerce_Emain_Macha_Icon.png","Taillteann":"tradeposts/Commerce_Taillteann_Icon.png","Tara":"tradeposts/Commerce_Tara_Icon.png","Cobh":"tradeposts/Commerce_Port_Cobh_Icon.png","Belvast":"tradeposts/Commerce_Commonwealth_of_Belvast_Icon.png","Qilla":"tradeposts/Commerce_Qilla_Icon.png","Cor":"tradeposts/Commerce_Cor_Icon.png","Vales":"tradeposts/Commerce_Vales_Icon.png","Filia":"tradeposts/Commerce_Filia_Icon.png","Karu Forest":"tradeposts/Commerce_Karu_Forest_Icon.png","Oasis":"tradeposts/Commerce_Oasis_Icon.png","Lake Calida":"tradeposts/Commerce_Calida_Icon.png","Pera Volcano":"tradeposts/Commerce_Pera_Icon.png","Scathach Beach":"tradeposts/Commerce_Beach_of_Scathach_Icon.png"};
+        const transportData={"Back Pack":{slots:4,weight:400},"Hand Cart":{slots:6,weight:800},"Wagon":{slots:8,weight:900},"Elephant":{slots:7,weight:1700},"Husky":{slots:11,weight:700},"Camel":{slots:7,weight:1400},"Skiff":{slots:8,weight:1200},"Air Ship":{slots:18,weight:2500}};
+        const citiesByType={"Normal":["Tir Chonaill","Dunbarton","Bangor","Emain Macha","Taillteann","Tara","Cobh","Belvast","Qilla","Cor","Vales","Filia"],"Barter":["Karu Forest","Oasis","Lake Calida","Pera Volcano","Scathach Beach"],"Group":["Qilla","Filia","Cor","Vales"]};
+        const masteryRanks={"1":0.15,"2":0.14,"3":0.13,"4":0.12,"5":0.11,"6":0.10,"7":0.09,"8":0.08,"9":0.07,"A":0.06,"B":0.05,"C":0.04,"D":0.03,"E":0.02,"F":0.01};
+        const guaranteeLetters={"None":{normal:0,barter:0,fine_normal:0,fine_barter:0},"Ogre":{normal:0.30,barter:0.15,fine_normal:0.90,fine_barter:0.45},"Goblin":{normal:0.40,barter:0.20,fine_normal:1.20,fine_barter:0.60},"Imp":{normal:0.50,barter:0.25,fine_normal:1.50,fine_barter:0.75},"Irusan's (Special)":{normal:3.00,barter:0.75,fine_normal:3.00,fine_barter:0.75}};
+        const marketData={
+            "Normal":{
+                "Tir Chonaill":[{"name":"Baby Potion","buy":11,"weight":1,"max":35,"limit":Infinity,"img":"tradeposts/normal/tir/Baby_Potion_Icon.png"},{"name":"Diet Potion","buy":26,"weight":1,"max":30,"limit":Infinity,"img":"tradeposts/normal/tir/Diet_Potion_Icon.png"},{"name":"Snore Potion","buy":62,"weight":2,"max":26,"limit":Infinity,"img":"tradeposts/normal/tir/Snore_Prevention_Potion_Icon.png"},{"name":"Ginseng","buy":134,"weight":3,"max":22,"limit":Infinity,"img":"tradeposts/normal/tir/Wild_Ginseng_Potion_Icon.png"},{"name":"Lovely Potion","buy":158,"weight":3,"max":25,"limit":Infinity,"img":"tradeposts/normal/tir/Lovely_Potion_Icon.png"}],
+                "Dunbarton":[{"name":"Spider Gloves","buy":44,"weight":4,"max":14,"limit":Infinity,"img":"tradeposts/normal/dunbarton/Spider_Gloves_Icon.png"},{"name":"Wool Boots","buy":160,"weight":8,"max":10,"limit":Infinity,"img":"tradeposts/normal/dunbarton/Wool_Boots_Icon.png"},{"name":"Ogre Mask","buy":91,"weight":4,"max":26,"limit":Infinity,"img":"tradeposts/normal/dunbarton/Ogre_Executioner_Mask_Icon.png"},{"name":"Incubus Suit","buy":536,"weight":25,"max":5,"limit":Infinity,"img":"tradeposts/normal/dunbarton/Incubus_Suit_Icon.png"},{"name":"Succubus Swimsuit","buy":718,"weight":6,"max":5,"limit":Infinity,"img":"tradeposts/normal/dunbarton/Succubus_Swimsuit_Icon.png"}],
+                "Bangor":[{"name":"Bangor Coal","buy":45,"weight":8,"max":10,"limit":Infinity,"img":"tradeposts/normal/bangor/Bangor_Coal_Icon.png"},{"name":"Marble","buy":301,"weight":20,"max":10,"limit":Infinity,"img":"tradeposts/normal/bangor/Marble_Icon.png"},{"name":"Topaz","buy":376,"weight":18,"max":12,"limit":Infinity,"img":"tradeposts/normal/bangor/Topaz_Icon.png"},{"name":"Highlander Ore","buy":788,"weight":25,"max":8,"limit":Infinity,"img":"tradeposts/normal/bangor/Highlander_Ore_Icon.png"},{"name":"Lead","buy":856,"weight":18,"max":16,"limit":Infinity,"img":"tradeposts/normal/bangor/Lead_Icon.png"}],
+                "Emain Macha":[{"name":"Berry Granola","buy":10,"weight":3,"max":25,"limit":Infinity,"img":"tradeposts/normal/emain/Berry_Granola_Icon.png"},{"name":"Butter Beer","buy":49,"weight":4,"max":30,"limit":Infinity,"img":"tradeposts/normal/emain/Butter_Beer_Icon.png"},{"name":"Smoked Animal","buy":190,"weight":10,"max":40,"limit":Infinity,"img":"tradeposts/normal/emain/Smoked_Wild_Animal_Icon.png"},{"name":"Triple Pasta","buy":94,"weight":4,"max":32,"limit":Infinity,"img":"tradeposts/normal/emain/Triple_Pasta_Icon.png"},{"name":"Whole BBQ","buy":630,"weight":14,"max":12,"limit":Infinity,"img":"tradeposts/normal/emain/Whole_BBQ_Bear_Icon.png"}],
+                "Taillteann":[{"name":"Heat Crystal","buy":11,"weight":2,"max":33,"limit":Infinity,"img":"tradeposts/normal/taillteann/Heat_Crystal_Icon.png"},{"name":"Music Box Stone","buy":37,"weight":3,"max":24,"limit":Infinity,"img":"tradeposts/normal/taillteann/Music_Box_Preservation_Stone_Icon.png"},{"name":"Palala Crystal","buy":130,"weight":6,"max":38,"limit":Infinity,"img":"tradeposts/normal/taillteann/Palala_Crystal_Icon.png"},{"name":"Circle Barrier Spikes","buy":126,"weight":3,"max":30,"limit":Infinity,"img":"tradeposts/normal/taillteann/Circle_Barrier_Spike_Crystal_Icon.png"},{"name":"Alchemy Crystal","buy":720,"weight":5,"max":8,"limit":Infinity,"img":"tradeposts/normal/taillteann/Alchemy_Crystal_Icon.png"}],
+                "Tara":[{"name":"Mini Dressing Table","buy":205,"weight":15,"max":10,"limit":Infinity,"img":"tradeposts/normal/tara/Mini_Dressing_Table_Icon.png"},{"name":"Tea Table","buy":896,"weight":38,"max":3,"limit":Infinity,"img":"tradeposts/normal/tara/Tea_Table_Icon.png"},{"name":"Rocking Chair","buy":918,"weight":25,"max":5,"limit":Infinity,"img":"tradeposts/normal/tara/Rocking_Chair_Icon.png"},{"name":"Bunk Bed","buy":3690,"weight":60,"max":3,"limit":Infinity,"img":"tradeposts/normal/tara/Bunk_Bed_Icon.png"},{"name":"Giant Wine Rack","buy":8640,"weight":90,"max":2,"limit":Infinity,"img":"tradeposts/normal/tara/Giant_Wine_Rack_Icon.png"}],
+                "Cobh":[{"name":"Cobh Seaweed","buy":11,"weight":2,"max":32,"limit":Infinity,"img":"tradeposts/normal/cobh/Cobh_Seaweed_Icon.png"},{"name":"Cobh Oyster","buy":46,"weight":3,"max":26,"limit":Infinity,"img":"tradeposts/normal/cobh/Cobh_Oyster_Icon.png"},{"name":"Shark Fin","buy":264,"weight":10,"max":25,"limit":Infinity,"img":"tradeposts/normal/cobh/Shark_Fin_Icon.png"},{"name":"Jellyfish","buy":201,"weight":6,"max":30,"limit":Infinity,"img":"tradeposts/normal/cobh/Jelly_Fish_Icon.png"},{"name":"Neid Scale","buy":187,"weight":2,"max":28,"limit":Infinity,"img":"tradeposts/normal/cobh/Neid_Scales_Icon.png"}],
+                "Belvast":[{"name":"Iron Whip","buy":103,"weight":8,"max":15,"limit":Infinity,"img":"tradeposts/normal/belvast/Iron_Whip_Icon.png"},{"name":"Dark Sword","buy":477,"weight":12,"max":10,"limit":Infinity,"img":"tradeposts/normal/belvast/Dark_Sword_Icon.png"},{"name":"Safe","buy":9757,"weight":90,"max":2,"limit":Infinity,"img":"tradeposts/normal/belvast/Safe_Icon.png"},{"name":"Skeleton Armour","buy":15546,"weight":115,"max":1,"limit":Infinity,"img":"tradeposts/normal/belvast/Skeleton_Ogre_Armor_Icon.png"},{"name":"Fake Helmet","buy":4740,"weight":30,"max":6,"limit":Infinity,"img":"tradeposts/normal/belvast/Fake_Morgant_Helmet_Icon.png"}],
+                "Qilla":[{"name":"Mint Chocolate Powder","buy":35,"weight":1,"max":60,"limit":Infinity,"img":"tradeposts/normal/qilla/Mint_Chocolate_Powder_Icon.png"},{"name":"Pomegranate","buy":58,"weight":2,"max":50,"limit":Infinity,"img":"tradeposts/normal/qilla/Fresh_Pomegranate_Icon.png"},{"name":"Mana Tunnel Figure","buy":102,"weight":2,"max":65,"limit":Infinity,"img":"tradeposts/normal/qilla/Mana_Tunnel_Figure_Icon.png"},{"name":"Exploration Rescue Kit","buy":247,"weight":3,"max":38,"limit":Infinity,"img":"tradeposts/normal/qilla/Exploration_Rescue_Kit_Icon.png"},{"name":"Kaypi Cactus Essence","buy":566,"weight":2,"max":26,"limit":Infinity,"img":"tradeposts/normal/qilla/Kaypi_Cactus_Essence_Icon.png"}],
+                "Filia":[{"name":"Small Glass Chunk","buy":72,"weight":10,"max":60,"limit":Infinity,"img":"tradeposts/normal/filia/Small_Glass_Chunk_Icon.png"},{"name":"Cinnamon Perfume","buy":564,"weight":22,"max":15,"limit":Infinity,"img":"tradeposts/normal/filia/Cinnamon_Perfume_Icon.png"},{"name":"Dried Saffron","buy":906,"weight":25,"max":10,"limit":Infinity,"img":"tradeposts/normal/filia/Dried_Saffron_Icon.png"},{"name":"Longa Rock Salt","buy":2342,"weight":40,"max":5,"limit":Infinity,"img":"tradeposts/normal/filia/Longa_Natural_Rock_Salt_Icon.png"},{"name":"Filia Jerky","buy":1567,"weight":20,"max":12,"limit":Infinity,"img":"tradeposts/normal/filia/Filia_Jerky_Icon.png"}],
+                "Cor":[{"name":"Courcle Ruins Souvenir","buy":8,"weight":2,"max":50,"limit":Infinity,"img":"tradeposts/normal/cor/Courcle_Ruins_Souvenir_Icon.png"},{"name":"Large Ritual Mask","buy":61,"weight":3,"max":40,"limit":Infinity,"img":"tradeposts/normal/cor/Large_Ritual_Mask_Icon.png"},{"name":"La Terra Raspberry","buy":56,"weight":2,"max":60,"limit":Infinity,"img":"tradeposts/normal/cor/La_Terra_Raspberry_Icon.png"},{"name":"Artifact Rest. Tool","buy":81,"weight":2,"max":70,"limit":Infinity,"img":"tradeposts/normal/cor/Artifact_Restoration_Tool_Set_Icon.png"},{"name":"Courcle Natural Rubber","buy":935,"weight":5,"max":8,"limit":Infinity,"img":"tradeposts/normal/cor/Courcle_Natural_Rubber_Icon.png"}],
+                "Vales":[{"name":"Vales Coat","buy":30,"weight":1,"max":50,"limit":Infinity,"img":"tradeposts/normal/vales/Vales_Padded_Coat_Icon.png"},{"name":"Glacial Water","buy":118,"weight":2,"max":35,"limit":Infinity,"img":"tradeposts/normal/vales/Natural_Glacial_Water_Icon.png"},{"name":"Ice Skates","buy":216,"weight":1,"max":50,"limit":Infinity,"img":"tradeposts/normal/vales/Ice_Skates_Icon.png"},{"name":"Snowboard","buy":1079,"weight":3,"max":20,"limit":Infinity,"img":"tradeposts/normal/vales/Snowboard_Icon.png"},{"name":"Vales Vodka","buy":1204,"weight":2,"max":16,"limit":Infinity,"img":"tradeposts/normal/vales/Vales_Vodka_Icon.png"}]
             },
-            "Barter": {
-                "Karu Forest": [
-                    { name: "Wooden Table", buy: 0, weight: 15, max: 10, limit: 25, img: "tradeposts/barter/karu/Wooden_Table_Icon.png" },
-                    { name: "Wooden Craft", buy: 0, weight: 15, max: 7, limit: 15, img: "tradeposts/barter/karu/Wooden_Craft_Icon.png" },
-                    { name: "Stone Horse Statue", buy: 0, weight: 20, max: 7, limit: 10, img: "tradeposts/barter/karu/Stone_Horse_Statue_Icon.png" },
-                    { name: "Karu Mushroom", buy: 0, weight: 25, max: 7, limit: 8, img: "tradeposts/barter/karu/Karu_Shiitake_Mushroom_Icon.png" },
-                    { name: "Shellfish Fossil", buy: 0, weight: 30, max: 5, limit: 3, img: "tradeposts/barter/karu/Shellfish_Fossil_Icon.png" }
-                ],
-                "Oasis": [
-                    { name: "Fine Sand", buy: 0, weight: 15, max: 10, limit: 25, img: "tradeposts/barter/oasis/Fine_Sand_Icon.png" },
-                    { name: "Prison Ghost Wings", buy: 0, weight: 15, max: 7, limit: 15, img: "tradeposts/barter/oasis/Prison_Ghost_Wings_Icon.png" },
-                    { name: "Oasis Painting", buy: 0, weight: 20, max: 7, limit: 10, img: "tradeposts/barter/oasis/Oasis_Painting_Icon.png" },
-                    { name: "Cactus Flower", buy: 0, weight: 25, max: 7, limit: 8, img: "tradeposts/barter/oasis/Cactus_Flower_Icon.png" },
-                    { name: "Giant Canine Fossil", buy: 0, weight: 30, max: 5, limit: 3, img: "tradeposts/barter/oasis/Giant_Canine_Fossil_Icon.png" }
-                ],
-                "Lake Calida": [
-                    { name: "Elvan Egg", buy: 0, weight: 15, max: 10, limit: 25, img: "tradeposts/barter/calida/Elvan_Egg_Icon.png" },
-                    { name: "Salmon", buy: 0, weight: 15, max: 7, limit: 15, img: "tradeposts/barter/calida/Calida_Salmon_Icon.png" },
-                    { name: "Bath Bomb", buy: 0, weight: 20, max: 7, limit: 10, img: "tradeposts/barter/calida/Hot_Spring_Bath_Bomb_Icon.png" },
-                    { name: "Large Tent", buy: 0, weight: 25, max: 7, limit: 8, img: "tradeposts/barter/calida/Large_Camping_Tent_Icon.png" },
-                    { name: "Pink Salt", buy: 0, weight: 30, max: 5, limit: 3, img: "tradeposts/barter/calida/Pink_Salt_Icon.png" }
-                ],
-                "Pera Volcano": [
-                    { name: "Mud Pack", buy: 0, weight: 15, max: 10, limit: 25, img: "tradeposts/barter/pera/Volcanic_Mud_Pack_Icon.png" },
-                    { name: "Magma Stone", buy: 0, weight: 15, max: 7, limit: 15, img: "tradeposts/barter/pera/Magma_Stone_Icon.png" },
-                    { name: "Ixion Horn", buy: 0, weight: 20, max: 7, limit: 10, img: "tradeposts/barter/pera/Ixion_Horn_Icon.png" },
-                    { name: "Lizard Egg", buy: 0, weight: 25, max: 7, limit: 8, img: "tradeposts/barter/pera/Volcano_Lizard_Egg_Icon.png" },
-                    { name: "Leopard Leather", buy: 0, weight: 30, max: 5, limit: 3, img: "tradeposts/barter/pera/Raspa_Black_Leopard_Leather_Icon.png" }
-                ],
-                "Scathach Beach": [
-                    { name: "Ocean Tear", buy: 0, weight: 7, max: 15, limit: 100, img: "tradeposts/barter/scathach/Ocean_Tear.png" },
-                    { name: "Alluring Stem", buy: 0, weight: 15, max: 10, limit: 100, img: "tradeposts/barter/scathach/Allure_Stem.png" },
-                    { name: "Abyss Crystal", buy: 0, weight: 5, max: 15, limit: 100, img: "tradeposts/barter/scathach/Abyss_Crystal.png" },
-                    { name: "Sage Crystal", buy: 0, weight: 10, max: 15, limit: 100, img: "tradeposts/barter/scathach/Sage_Crystal.png" },
-                    { name: "River's Source", buy: 0, weight: 25, max: 10, limit: 100, img: "tradeposts/barter/scathach/River_Source.png" },
-                    { name: "Night Leather", buy: 0, weight: 4, max: 30, limit: 100, img: "tradeposts/barter/scathach/Night_Sky_Leather.png" },
-                    { name: "Fish", buy: 0, weight: 5, max: 20, limit: 100, img: "tradeposts/barter/scathach/Unidentified_Fish.png" },
-                    { name: "Crystal Blade", buy: 0, weight: 15, max: 10, limit: 100, img: "tradeposts/barter/scathach/Crystal_Blade.png" }
-                ]
+            "Barter":{
+                "Karu Forest":[{"name":"Wooden Table","buy":0,"weight":15,"max":10,"limit":25,"img":"tradeposts/barter/karu/Wooden_Table_Icon.png"},{"name":"Wooden Craft","buy":0,"weight":15,"max":7,"limit":15,"img":"tradeposts/barter/karu/Wooden_Craft_Icon.png"},{"name":"Stone Horse Statue","buy":0,"weight":20,"max":7,"limit":10,"img":"tradeposts/barter/karu/Stone_Horse_Statue_Icon.png"},{"name":"Karu Mushroom","buy":0,"weight":25,"max":7,"limit":8,"img":"tradeposts/barter/karu/Karu_Shiitake_Mushroom_Icon.png"},{"name":"Shellfish Fossil","buy":0,"weight":30,"max":5,"limit":3,"img":"tradeposts/barter/karu/Shellfish_Fossil_Icon.png"}],
+                "Oasis":[{"name":"Fine Sand","buy":0,"weight":15,"max":10,"limit":25,"img":"tradeposts/barter/oasis/Fine_Sand_Icon.png"},{"name":"Prison Ghost Wings","buy":0,"weight":15,"max":7,"limit":15,"img":"tradeposts/barter/oasis/Prison_Ghost_Wings_Icon.png"},{"name":"Oasis Painting","buy":0,"weight":20,"max":7,"limit":10,"img":"tradeposts/barter/oasis/Oasis_Painting_Icon.png"},{"name":"Cactus Flower","buy":0,"weight":25,"max":7,"limit":8,"img":"tradeposts/barter/oasis/Cactus_Flower_Icon.png"},{"name":"Giant Canine Fossil","buy":0,"weight":30,"max":5,"limit":3,"img":"tradeposts/barter/oasis/Giant_Canine_Fossil_Icon.png"}],
+                "Lake Calida":[{"name":"Elvan Egg","buy":0,"weight":15,"max":10,"limit":25,"img":"tradeposts/barter/calida/Elvan_Egg_Icon.png"},{"name":"Salmon","buy":0,"weight":15,"max":7,"limit":15,"img":"tradeposts/barter/calida/Calida_Salmon_Icon.png"},{"name":"Bath Bomb","buy":0,"weight":20,"max":7,"limit":10,"img":"tradeposts/barter/calida/Hot_Spring_Bath_Bomb_Icon.png"},{"name":"Large Tent","buy":0,"weight":25,"max":7,"limit":8,"img":"tradeposts/barter/calida/Large_Camping_Tent_Icon.png"},{"name":"Pink Salt","buy":0,"weight":30,"max":5,"limit":3,"img":"tradeposts/barter/calida/Pink_Salt_Icon.png"}],
+                "Pera Volcano":[{"name":"Mud Pack","buy":0,"weight":15,"max":10,"limit":25,"img":"tradeposts/barter/pera/Volcanic_Mud_Pack_Icon.png"},{"name":"Magma Stone","buy":0,"weight":15,"max":7,"limit":15,"img":"tradeposts/barter/pera/Magma_Stone_Icon.png"},{"name":"Ixion Horn","buy":0,"weight":20,"max":7,"limit":10,"img":"tradeposts/barter/pera/Ixion_Horn_Icon.png"},{"name":"Lizard Egg","buy":0,"weight":25,"max":7,"limit":8,"img":"tradeposts/barter/pera/Volcano_Lizard_Egg_Icon.png"},{"name":"Leopard Leather","buy":0,"weight":30,"max":5,"limit":3,"img":"tradeposts/barter/pera/Raspa_Black_Leopard_Leather_Icon.png"}],
+                "Scathach Beach":[{"name":"Ocean Tear","buy":0,"weight":7,"max":15,"limit":100,"img":"tradeposts/barter/scathach/Ocean_Tear.png"},{"name":"Alluring Stem","buy":0,"weight":15,"max":10,"limit":100,"img":"tradeposts/barter/scathach/Allure_Stem.png"},{"name":"Abyss Crystal","buy":0,"weight":5,"max":15,"limit":100,"img":"tradeposts/barter/scathach/Abyss_Crystal.png"},{"name":"Sage Crystal","buy":0,"weight":10,"max":15,"limit":100,"img":"tradeposts/barter/scathach/Sage_Crystal.png"},{"name":"River's Source","buy":0,"weight":25,"max":10,"limit":100,"img":"tradeposts/barter/scathach/River_Source.png"},{"name":"Night Leather","buy":0,"weight":4,"max":30,"limit":100,"img":"tradeposts/barter/scathach/Night_Sky_Leather.png"},{"name":"Fish","buy":0,"weight":5,"max":20,"limit":100,"img":"tradeposts/barter/scathach/Unidentified_Fish.png"},{"name":"Crystal Blade","buy":0,"weight":15,"max":10,"limit":100,"img":"tradeposts/barter/scathach/Crystal_Blade.png"}]
             },
-            "Group": {
-                "Qilla": [
-                    { name: "Building Lumber", buy: 571, weight: 15, max: 8, limit: 144, img: "tradeposts/group/qilla/Building_Lumber_Icon.png" },
-                    { name: "Ancient Fossil Specimen", buy: 550, weight: 8, max: 10, limit: 180, img: "tradeposts/group/qilla/Ancient_Fossil_Specimen_Icon.png" },
-                    { name: "Personal Camping Tent", buy: 951, weight: 20, max: 7, limit: 125, img: "tradeposts/group/qilla/Personal_Camping_Tent_Icon.png" },
-                    { name: "Lutra Freshwater Eel", buy: 657, weight: 7, max: 11, limit: 198, img: "tradeposts/group/qilla/Lutra_Freshwater_Eel_Icon.png" },
-                    { name: "Kaypi Red Clay", buy: 919, weight: 6, max: 8, limit: 144, img: "tradeposts/group/qilla/Kaypi_Red_Clay_Icon.png" }
-                ],
-                "Filia": [
-                    { name: "Sun Hourglass", buy: 2003, weight: 70, max: 12, limit: 35, img: "tradeposts/group/filia/Sun_Hourglass_Icon.png" },
-                    { name: "Shyllien Icebox", buy: 3724, weight: 120, max: 5, limit: 20, img: "tradeposts/group/filia/Shyllien_Icebox_Icon.png" },
-                    { name: "Desert-Terrain Wheel", buy: 3078, weight: 90, max: 7, limit: 25, img: "tradeposts/group/filia/Desert-Terrain_Wheel_Icon.png" },
-                    { name: "Filia Traditional Carpet", buy: 1486, weight: 35, max: 20, limit: 71, img: "tradeposts/group/filia/Filia_Traditional_Carpet_Icon.png" },
-                    { name: "Gem Parasol", buy: 905, weight: 20, max: 25, limit: 125, img: "tradeposts/group/filia/Gem_Parasol_Icon.png" }
-                ],
-                "Cor": [
-                    { name: "Lipai Pattern Textile", buy: 342, weight: 6, max: 15, limit: 270, img: "tradeposts/group/cor/Lipai_Pattern_Textile_Icon.png" },
-                    { name: "Cor Honeycomb", buy: 474, weight: 12, max: 13, limit: 208, img: "tradeposts/group/cor/Cor_Honeycomb_Icon.png" },
-                    { name: "Swamp Ash", buy: 717, weight: 18, max: 9, limit: 138, img: "tradeposts/group/cor/Swamp_Ash_Icon.png" },
-                    { name: "Rosewood", buy: 1084, weight: 25, max: 10, limit: 100, img: "tradeposts/group/cor/Rosewood_Icon.png" },
-                    { name: "Ebony", buy: 1358, weight: 28, max: 8, limit: 89, img: "tradeposts/group/cor/Ebony_Icon.png" }
-                ],
-                "Vales": [
-                    { name: "Calida Flint", buy: 503, weight: 5, max: 10, limit: 180, img: "tradeposts/group/vales/Calida_Flint_Icon.png" },
-                    { name: "Physis Sled", buy: 1238, weight: 10, max: 5, limit: 90, img: "tradeposts/group/vales/Physis_Sled_Icon.png" },
-                    { name: "Portable Hand Warmer", buy: 723, weight: 2, max: 10, limit: 180, img: "tradeposts/group/vales/Portable_Hand_Warmer_Icon.png" },
-                    { name: "Ice Statue", buy: 982, weight: 8, max: 8, limit: 144, img: "tradeposts/group/vales/Ice_Statue_Icon.png" },
-                    { name: "Hillwen Commemorative Coin", buy: 604, weight: 4, max: 15, limit: 270, img: "tradeposts/group/vales/Hillwen_Commemorative_Coin_Icon.png" }
-                ]
+            "Group":{
+                "Qilla":[{"name":"Building Lumber","buy":571,"weight":15,"max":8,"limit":144,"img":"tradeposts/group/qilla/Building_Lumber_Icon.png"},{"name":"Ancient Fossil Specimen","buy":550,"weight":8,"max":10,"limit":180,"img":"tradeposts/group/qilla/Ancient_Fossil_Specimen_Icon.png"},{"name":"Personal Camping Tent","buy":951,"weight":20,"max":7,"limit":125,"img":"tradeposts/group/qilla/Personal_Camping_Tent_Icon.png"},{"name":"Lutra Freshwater Eel","buy":657,"weight":7,"max":11,"limit":198,"img":"tradeposts/group/qilla/Lutra_Freshwater_Eel_Icon.png"},{"name":"Kaypi Red Clay","buy":919,"weight":6,"max":8,"limit":144,"img":"tradeposts/group/qilla/Kaypi_Red_Clay_Icon.png"}],
+                "Filia":[{"name":"Sun Hourglass","buy":2003,"weight":70,"max":12,"limit":35,"img":"tradeposts/group/filia/Sun_Hourglass_Icon.png"},{"name":"Shyllien Icebox","buy":3724,"weight":120,"max":5,"limit":20,"img":"tradeposts/group/filia/Shyllien_Icebox_Icon.png"},{"name":"Desert-Terrain Wheel","buy":3078,"weight":90,"max":7,"limit":25,"img":"tradeposts/group/filia/Desert-Terrain_Wheel_Icon.png"},{"name":"Filia Traditional Carpet","buy":1486,"weight":35,"max":20,"limit":71,"img":"tradeposts/group/filia/Filia_Traditional_Carpet_Icon.png"},{"name":"Gem Parasol","buy":905,"weight":20,"max":25,"limit":125,"img":"tradeposts/group/filia/Gem_Parasol_Icon.png"}],
+                "Cor":[{"name":"Lipai Pattern Textile","buy":342,"weight":6,"max":15,"limit":270,"img":"tradeposts/group/cor/Lipai_Pattern_Textile_Icon.png"},{"name":"Cor Honeycomb","buy":474,"weight":12,"max":13,"limit":208,"img":"tradeposts/group/cor/Cor_Honeycomb_Icon.png"},{"name":"Swamp Ash","buy":717,"weight":18,"max":9,"limit":138,"img":"tradeposts/group/cor/Swamp_Ash_Icon.png"},{"name":"Rosewood","buy":1084,"weight":25,"max":10,"limit":100,"img":"tradeposts/group/cor/Rosewood_Icon.png"},{"name":"Ebony","buy":1358,"weight":28,"max":8,"limit":89,"img":"tradeposts/group/cor/Ebony_Icon.png"}],
+                "Vales":[{"name":"Calida Flint","buy":503,"weight":5,"max":10,"limit":180,"img":"tradeposts/group/vales/Calida_Flint_Icon.png"},{"name":"Physis Sled","buy":1238,"weight":10,"max":5,"limit":90,"img":"tradeposts/group/vales/Physis_Sled_Icon.png"},{"name":"Portable Hand Warmer","buy":723,"weight":2,"max":10,"limit":180,"img":"tradeposts/group/vales/Portable_Hand_Warmer_Icon.png"},{"name":"Ice Statue","buy":982,"weight":8,"max":8,"limit":144,"img":"tradeposts/group/vales/Ice_Statue_Icon.png"},{"name":"Hillwen Commemorative Coin","buy":604,"weight":4,"max":15,"limit":270,"img":"tradeposts/group/vales/Hillwen_Commemorative_Coin_Icon.png"}]
             }
         };
 
@@ -598,28 +452,19 @@
         let publicStocks = {};
         let publicBasePrices = {};
         let townRanks = {}; 
-        let transportOwnership = {
-            "Hand Cart": false,
-            "Wagon": false,
-            "Elephant": false,
-            "Husky": false,
-            "Camel": false,
-            "Skiff": false,
-            "Air Ship": false
-        };
+        let transportOwnership = { "Hand Cart": false, "Wagon": false, "Elephant": false, "Husky": false, "Camel": false, "Skiff": false, "Air Ship": false };
 
         let currentUser = null;
         let saveTimeout = null;
         let rtdb = null;
         let auth = null;
-        let skipRender = false; // Prevents focus loss when typing
+        let skipRender = false;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // --- 3. LOGIC ---
         function getStock(itemName) { return publicStocks[itemName] || 0; }
         function getPrice(itemName, city) { return publicPrices[`${itemName}_${city}`.replace(/[.#$[\]]/g, "_")] || 0; }
 
-        // Optimization: Read DOM once per refresh
         function getUIState() {
             return {
                 commerceType: document.getElementById('commerce-type-select').value,
@@ -657,14 +502,7 @@
         function getActiveModifiers(uiState) {
             const masteryBonus = masteryRanks[uiState.mastery] || 0;
             const letterInfo = guaranteeLetters[uiState.letter] || guaranteeLetters["None"];
-            
-            let letterMultiplier = 0;
-            if (uiState.commerceType === "Barter") {
-                letterMultiplier = uiState.fine ? letterInfo.fine_barter : letterInfo.barter;
-            } else {
-                letterMultiplier = uiState.fine ? letterInfo.fine_normal : letterInfo.normal;
-            }
-
+            let letterMultiplier = (uiState.commerceType === "Barter") ? (uiState.fine ? letterInfo.fine_barter : letterInfo.barter) : (uiState.fine ? letterInfo.fine_normal : letterInfo.normal);
             let williamBonus = 0;
             if (uiState.william) {
                 const like = uiState.williamLike;
@@ -672,7 +510,6 @@
                 else if (like >= 130) williamBonus = 0.02;
                 else if (like >= 80) williamBonus = 0.01;
             }
-
             return { totalMultiplier: (1 + masteryBonus + letterMultiplier + williamBonus) };
         }
 
@@ -682,14 +519,11 @@
             const dBuy = getDiscountedBuyPrice(basePrice, uiState);
             const stats = getModifiedStats(uiState.transport, uiState);
             const load = Math.min(Math.floor(stats.weight / item.weight), stats.slots * item.max, item.limit);
-            
             const baseProfit = (sellVal !== "") ? (sellVal - dBuy) * load : 0;
             const mods = getActiveModifiers(uiState);
             let finalProfit = baseProfit > 0 ? Math.floor(baseProfit * mods.totalMultiplier) : baseProfit;
-
             const divisor = (uiState.commerceType === "Barter") ? 34 : 17;
             const score = Math.max(0, Math.floor(((sellVal - (item.buy || 0)) * load) / divisor));
-
             return { profit: finalProfit, score: score, load: load };
         }
 
@@ -758,53 +592,65 @@
             const box = document.getElementById(boxId), list = document.getElementById(listId), total = document.getElementById(totalId);
             if (!trip || trip.profit <= 0) {
                 box.style.display = 'block';
-                list.innerHTML = `<div style="color:#aaa; font-size:10px; padding:10px; text-align:center;">NO ROUTES</div>`;
+                list.innerHTML = `<div style="color:var(--text-dim); font-size:10px; padding:10px; text-align:center;">NO ROUTES FOUND</div>`;
                 total.textContent = `PROFIT: 0`;
                 return;
             }
             box.style.display = 'block';
-            let slotHtml = '<div style="display: flex; flex-wrap: wrap; gap: 4px;">';
+            document.getElementById('manifest-dest').innerText = trip.dest;
+            
+            let slotHtml = '';
             let filled = 0;
             trip.items.forEach(item => {
                 let rem = item.q;
                 for (let i = 0; i < item.s; i++) {
                     const sqty = Math.min(item.maxPerSlot, rem); rem -= sqty;
-                    slotHtml += `<div class="manifest-slot filled" style="background-image: url('${getImagePath(item.img)}');"><span class="slot-badge">${sqty}</span></div>`;
+                    slotHtml += `<div class="slot filled" style="background-image: url('${getImagePath(item.img)}');"><span class="slot-badge">${sqty}</span></div>`;
                     filled++;
                 }
             });
-            for (let i = filled; i < trip.maxSlots; i++) slotHtml += `<div class="manifest-slot empty"></div>`;
-            list.innerHTML = `<div style="color:var(--accent); font-weight:bold;">DEST: ${trip.dest}</div><div style="font-size:10px; opacity:0.6; margin-bottom:10px;">UNIT: ${trip.mount}</div>${slotHtml}</div>`;
-            total.textContent = `TOTAL: ${trip.profit.toLocaleString()}`;
+            for (let i = filled; i < trip.maxSlots; i++) slotHtml += `<div class="slot empty"></div>`;
+            list.innerHTML = slotHtml;
+            total.textContent = `+${trip.profit.toLocaleString()}`;
         }
 
         function renderGlobalManifest(trip, container) {
-            let slotHtml = '<div style="display: flex; flex-wrap: wrap; gap: 4px;">';
+            let slotHtml = '<div class="manifest-slots">';
             trip.items.forEach(item => {
                 let rem = item.q;
                 for (let i = 0; i < item.s; i++) {
                     const sqty = Math.min(item.maxPerSlot, rem); rem -= sqty;
-                    slotHtml += `<div class="manifest-slot filled" style="background-image: url('${getImagePath(item.img)}');"><span class="slot-badge">${sqty}</span></div>`;
+                    slotHtml += `<div class="slot filled" style="background-image: url('${getImagePath(item.img)}');"><span class="slot-badge">${sqty}</span></div>`;
                 }
             });
-            container.innerHTML = `<div class="recommendation-box"><div class="rec-title" style="color:#a29bfe;">GLOBAL_BEST</div><div style="color:var(--accent); font-weight:bold;">${trip.origin} → ${trip.dest}</div><div style="font-size:10px; opacity:0.6; margin-bottom:10px;">UNIT: ${trip.mount}</div>${slotHtml}</div><div class="manifest-footer">PROFIT: ${trip.profit.toLocaleString()}</div></div>`;
+            slotHtml += '</div>';
+
+            container.innerHTML = `
+                <div class="manifest-container" style="border-color:var(--warning);">
+                    <div class="manifest-header" style="color:var(--warning);">
+                        <span>Global Best</span>
+                        <span style="color:#fff;">${trip.origin} → ${trip.dest}</span>
+                    </div>
+                    ${slotHtml}
+                    <div class="manifest-total">+${trip.profit.toLocaleString()}</div>
+                </div>`;
         }
 
         function refreshUI() {
-            // Check for any input focus to prevent destruction
             if (document.activeElement && (
                 document.activeElement.classList.contains('price-input') || 
                 document.activeElement.classList.contains('qty-input') ||
                 document.activeElement.id === 'base-price-input'
             )) return;
             
-            const uiState = getUIState(); // Capture state ONCE
+            const uiState = getUIState(); 
             updateMarketItems(uiState); 
             showPrices(uiState); 
             updatePreview(uiState); 
             updateRecommendationAndStats(); 
             updateTownIcon(); 
             runManifests(uiState);
+            updateTransportDropdown(); 
 
             const wCheck = document.getElementById('william-check');
             const wBox = document.getElementById('william-like-box');
@@ -820,7 +666,7 @@
             document.getElementById('base-price-input').value = currentBase;
             document.getElementById('base-price-container').style.display = 'flex';
 
-            document.getElementById('max-inventory-display').textContent = ` Weight: ${currentItem.weight} • Stack: ${currentItem.max}`;
+            document.getElementById('max-inventory-display').textContent = `Weight: ${currentItem.weight} | Stack: ${currentItem.max}`;
         }
 
         function updateTownIcon() {
@@ -856,8 +702,12 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item' + (isSelected ? ' selected-item' : '');
                 const cStock = getStock(item.name);
-                itemDiv.innerHTML = `<div class="item-list-icon-box" style="background-image: url('${getImagePath(item.img)}')"></div><div class="item-list-content"><div><span class="item-name">${item.name}</span>${item._townName ? `<span class="item-town-badge">📍 ${item._townName}</span>` : ''}</div><div class="stock-input-row"><span style="font-size:9px; color:#aaa;">STOCK</span><input type="number" class="qty-input" value="${cStock || ''}" placeholder="0" onfocus="this.select()" onclick="event.stopPropagation()" onchange="updateStock('${item.name.replace(/'/g, "\\'")}', this.value)"></div></div>`;
-                itemDiv.addEventListener('click', () => { currentItem = item; refreshUI(); });
+                itemDiv.innerHTML = `<div class="item-list-icon-box" style="background-image: url('${getImagePath(item.img)}')"></div><div class="item-list-content"><div><span class="item-name">${item.name}</span>${item._townName ? `<span class="item-town-badge">📍 ${item._townName}</span>` : ''}</div><div class="stock-input-row"><span style="font-size:9px; color:#aaa;">STOCK</span><input type="number" class="qty-input input-dark" value="${cStock || ''}" placeholder="0" onfocus="this.select()" onclick="event.stopPropagation()" onchange="updateStock('${item.name.replace(/'/g, "\\'")}', this.value)"></div></div>`;
+                itemDiv.addEventListener('click', () => { 
+                    currentItem = item; 
+                    refreshUI(); 
+                    if (window.innerWidth <= 1000) closeSidebars(); // Auto-close drawer on mobile
+                });
                 fragment.appendChild(itemDiv);
             });
             container.appendChild(fragment);
@@ -877,7 +727,7 @@
                 const res = calculateItemProfit(currentItem, city, uiState, sellVal);
                 const row = document.createElement('div');
                 row.className = 'market-row';
-                row.innerHTML = `<div class="market-left"><b>${city}</b></div><div class="col-price"><input type="number" class="price-input" value="${sellVal || ''}" onfocus="this.select()" oninput="updatePrice('${city}', this.value)"></div><div class="market-profit-col"><span class="${res.profit < 0 ? 'profit-val negative' : 'profit-val'}">${res.profit.toLocaleString()}</span></div><div class="market-score-col"><span class="season-val">${res.score.toLocaleString()}</span></div>`;
+                row.innerHTML = `<div class="market-left"><b>${city}</b></div><div class="col-price"><input type="number" class="price-input input-dark" value="${sellVal || ''}" onfocus="this.select()" oninput="updatePrice('${city}', this.value)"></div><div class="market-profit-col"><span class="profit-val ${res.profit < 0 ? 'negative' : ''}">${res.profit.toLocaleString()}</span></div><div class="market-score-col"><span class="score-val ${res.score < 0 ? 'negative' : ''}">${res.score.toLocaleString()}</span></div>`;
                 fragment.appendChild(row);
             });
             list.appendChild(fragment);
@@ -886,14 +736,7 @@
         function updateTransportDropdown() {
             const dropdown = document.getElementById('transport-dropdown');
             const current = dropdown.value || "Back Pack";
-            // Check transport ownership directly here as well to ensure latest state is reflected if needed, but uiState passed down is better. 
-            // However, getAvailableMounts logic relies on the global 'transportOwnership' variable which is updated by toggles.
-            // So we rely on that.
-            // We use a temporary uiState to check type
             const tempState = { commerceType: document.getElementById('commerce-type-select').value };
-            
-            // Re-implement getAvailableMounts logic inline or call function? Call function but it needs uiState.
-            // Let's just create array here
             const mounts = ['Back Pack'];
             Object.keys(transportOwnership).forEach(key => {
                 if (transportOwnership[key]) {
@@ -901,7 +744,6 @@
                     mounts.push(key);
                 }
             });
-            
             dropdown.innerHTML = mounts.map(m => `<option value="${m}">${m}</option>`).join('');
             if (mounts.includes(current)) dropdown.value = current; else dropdown.value = "Back Pack";
         }
@@ -914,39 +756,28 @@
             const sellVal = parseInt(val, 10) || 0;
             const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
             publicPrices[priceKey] = sellVal;
-            
-            skipRender = true; // Fix focus loss
-            
-            // Try to update DB, ignore errors
+            skipRender = true;
             if(rtdb) { try { rtdb.ref(`public_commerce/prices/${priceKey}`).set(sellVal); } catch(e){} }
-            // Optimistic Row Update
             const activeInput = document.activeElement;
             if (activeInput && activeInput.classList.contains('price-input')) {
                 const row = activeInput.closest('.market-row');
                 if (row) {
-                    // We need uiState for calc
                     const uiState = getUIState();
                     const result = calculateItemProfit(currentItem, city, uiState, sellVal);
                     const profitEl = row.querySelector('.market-profit-col span');
                     const scoreEl = row.querySelector('.market-score-col span');
-                    if (profitEl) { profitEl.textContent = result.profit.toLocaleString(); profitEl.className = result.profit < 0 ? 'profit-val negative' : 'profit-val'; }
+                    if (profitEl) { profitEl.textContent = result.profit.toLocaleString(); profitEl.className = `profit-val ${result.profit < 0 ? 'negative' : ''}`; }
                     if (scoreEl) { scoreEl.textContent = result.score.toLocaleString(); }
                 }
             }
-            // Trigger manifest update without full re-render if possible, but runManifests needs uiState.
             runManifests(getUIState());
         }
 
         function updateStock(itemName, quantity) {
             const qty = parseInt(quantity) || 0;
             publicStocks[itemName] = qty;
-            
-            skipRender = true; // Fix focus loss
-            
+            skipRender = true;
             if(rtdb) { try { rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty); } catch(e){} }
-            
-            // Don't call refreshUI() here to prevent focus loss.
-            // Update manifest calculations instead.
             runManifests(getUIState());
         }
 
@@ -954,12 +785,8 @@
             if (!currentItem) return;
             const price = parseInt(val) || 0;
             publicBasePrices[currentItem.name] = price;
-            
-            skipRender = true; // Fix focus loss
-            
+            skipRender = true;
             if(rtdb) { try { rtdb.ref(`public_commerce/base_prices/${currentItem.name}`).set(price); } catch(e){} }
-            
-            // Recalculate profit display since base price affects it
             const uiState = getUIState();
             showPrices(uiState);
             runManifests(uiState);
@@ -967,14 +794,10 @@
 
         function savePrefs() {
             const prefs = getUIState();
-            // Add transports manually since getUIState doesn't return the full ownership map
             prefs.transports = transportOwnership;
-            // Clean up: type -> commerceType
-            prefs.type = prefs.commerceType; 
-            delete prefs.commerceType;
-            prefs.city = document.getElementById('city-select').value; // Add city
-            prefs.mount = prefs.transport; // Rename for consistency
-            delete prefs.transport;
+            prefs.type = prefs.commerceType; delete prefs.commerceType;
+            prefs.city = document.getElementById('city-select').value;
+            prefs.mount = prefs.transport; delete prefs.transport;
 
             localStorage.setItem('mabi_prefs', JSON.stringify(prefs));
             localStorage.setItem('mabi_transports', JSON.stringify(transportOwnership));
@@ -994,6 +817,29 @@
             if(!city) return;
             document.getElementById('merchant-rating-select').value = townRanks[city] || "1";
             refreshUI();
+        }
+
+        // --- MOBILE NAV LOGIC ---
+        function toggleSidebar(side) {
+            const left = document.getElementById('left-panel');
+            const right = document.getElementById('right-panel');
+            const backdrop = document.getElementById('mobile-backdrop');
+            
+            if (side === 'left') {
+                const isActive = left.classList.contains('active');
+                closeSidebars();
+                if (!isActive) { left.classList.add('active'); backdrop.classList.add('active'); }
+            } else if (side === 'right') {
+                const isActive = right.classList.contains('active');
+                closeSidebars();
+                if (!isActive) { right.classList.add('active'); backdrop.classList.add('active'); }
+            }
+        }
+
+        function closeSidebars() {
+            document.getElementById('left-panel').classList.remove('active');
+            document.getElementById('right-panel').classList.remove('active');
+            document.getElementById('mobile-backdrop').classList.remove('active');
         }
 
         // --- INIT ---
@@ -1036,9 +882,8 @@
             document.getElementById('global-search').oninput = refreshUI;
             document.getElementById('clear-search').onclick = () => { document.getElementById('global-search').value = ''; refreshUI(); };
 
-            // 4. RESTORE PREFS & INITIAL RENDER (CRITICAL: Runs before Firebase)
+            // 4. RESTORE PREFS & INITIAL RENDER
             if (saved.type && citiesByType[saved.type]) typeSelect.value = saved.type; else typeSelect.value = "Normal";
-            
             const validCities = citiesByType[typeSelect.value];
             citySelect.innerHTML = validCities.map(c => `<option value="${c}">${c}</option>`).join('');
             if (saved.city && validCities.includes(saved.city)) citySelect.value = saved.city; else if (validCities.length > 0) citySelect.value = validCities[0];
@@ -1055,7 +900,6 @@
             document.getElementById('alpaca-check').checked = !!saved.alpaca;
             if(saved.transports) {
                 transportOwnership = saved.transports;
-                // Sync checkboxes
                 Object.keys(transportOwnership).forEach(key => {
                     const toggle = document.querySelector(`.transport-toggle[data-mount="${key}"]`);
                     if(toggle) toggle.checked = transportOwnership[key];
@@ -1064,10 +908,9 @@
             
             updateCityContext();
             updateTransportDropdown();
-            // RENDER NOW
             refreshUI();
 
-            // 5. Firebase Init (Graceful)
+            // 5. Firebase Init
             function initApp() {
                 try {
                     const firebaseConfig = {
@@ -1084,7 +927,6 @@
                     rtdb = firebase.database();
                     auth = firebase.auth();
                     
-                    // Public Data Listeners
                     rtdb.ref('public_commerce/prices').on('value', (s) => { 
                         if (skipRender) { skipRender = false; return; }
                         publicPrices = s.val() || {}; refreshUI(); 
@@ -1098,9 +940,7 @@
                         publicBasePrices = s.val() || {}; refreshUI(); 
                     });
 
-                    // User Data
                     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                    
                     if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) auth.signInWithCustomToken(__initial_auth_token);
 
                     auth.onAuthStateChanged((user) => {
@@ -1111,7 +951,6 @@
                                     const d=s.val(); 
                                     if(d.transports) {
                                         transportOwnership=d.transports; 
-                                        // Sync Checkboxes from Firebase update
                                         Object.keys(transportOwnership).forEach(key => {
                                             const toggle = document.querySelector(`.transport-toggle[data-mount="${key}"]`);
                                             if(toggle) toggle.checked = transportOwnership[key];
@@ -1123,9 +962,7 @@
                             rtdb.ref(`users/${user.uid}/town_ranks`).on('value', (s) => { if(s.val()) { townRanks = s.val(); updateCityContext(); } });
                         }
                     });
-                } catch(e) {
-                    console.log("Running in offline mode (Firebase init failed)");
-                }
+                } catch(e) { console.log("Running in offline mode"); }
             }
 
             initApp();
