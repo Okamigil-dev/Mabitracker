@@ -214,7 +214,7 @@
                 <div class="table-container">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:0 15px;">
                         <span style="font-weight:700; font-size:14px; color:var(--accent);">REQUIRED MATERIALS</span>
-                        <span id="sync-status" style="font-size:9px; color:var(--text-dim);">LOCAL</span>
+                        <button id="finish-trip-btn" onclick="completeTrip()" class="hub-btn" style="font-size: 10px; padding: 4px 12px; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; font-weight: 700; transition: 0.1s;">TRIP FINISHED</button>
                     </div>
 
                     <div class="materials-dual-layout">
@@ -272,20 +272,8 @@
 
     <script>
         const townIcons={"Karu Forest":"tradeposts/Commerce_Karu_Forest_Icon.png","Oasis":"tradeposts/Commerce_Oasis_Icon.png","Lake Calida":"tradeposts/Commerce_Calida_Icon.png","Pera Volcano":"tradeposts/Commerce_Pera_Icon.png","Scathach Beach":"tradeposts/Commerce_Beach_of_Scathach_Icon.png"};
+        const transportIcons={"Elephant":"images/transports/Elephant_Icon.png","Wagon":"images/transports/Wagon_Icon.png","Camel":"images/transports/Camel_Icon.png","Skiff":"images/transports/Trader's_Skiff_Icon.png","Husky":"images/transports/Dog_Sled_Icon.png","Hand Cart":"images/transports/Handcart_Icon.png","Back Pack":"images/transports/Backpack_Icon.png","Airship":"images/transports/Airship_Icon.png"};
         
-        // TRANSPORT ICON MAPPING
-        const transportIcons={
-            "Elephant":"images/transports/Elephant_Icon.png",
-            "Wagon":"images/transports/Wagon_Icon.png",
-            "Camel":"images/transports/Camel_Icon.png",
-            "Skiff":"images/transports/Traders_Skiff_Icon.png",
-            "Husky":"images/transports/Dog_Sled_Icon.png",
-            "Hand Cart":"images/transports/Handcart_Icon.png",
-            "Back Pack":"images/transports/Backpack_Icon.png",
-            "Airship":"images/transports/Airship_Icon.png"
-        };
-        
-        // Standard Order - Backpack, Hand Cart, Wagon, Elephant, Husky, Camel, Skiff
         const transportData={
             "Back Pack":{slots:4,weight:400},
             "Hand Cart":{slots:6,weight:800},
@@ -326,7 +314,7 @@
             { town: "Scathach Beach", item: "Fish", weight: 5, stack: 20, limit: 100, img: "tradeposts/barter/scathach/Unidentified_Fish.png", mats: { "Unknown": 0 } },
             { town: "Scathach Beach", item: "Crystal Blade", weight: 15, stack: 10, limit: 100, img: "tradeposts/barter/scathach/Crystal_Blade.png", mats: { "Unknown": 0 } }
         ];
-        const recipeDb = [{item:"Artificial Turf",mats:{"Fresh Grass":20,"Bundle of Flowers":5}},{item:"Cotton Cushion Stuffing",mats:{"Fine Wool":20,"Thin Thread":5}},{item:"Hay Bale",mats:{"Wheat Chaff":20,"Finest Leather Strap":1}},{item:"Poison Tip Wyvern Ballista Bolt",mats:{"Firewood":1,"Wyvern Claw":1,"Poison Potion":1}},{item:"Average Firewood",mats:{Firewood:3}},{item:"Fine Firewood",mats:{"Average Firewood":3}},{item:"Finest Firewood",mats:{"Fine Firewood":3}},{item:"Special Firewood",mats:{"Finest Firewood":1,"Purified Enhancer":1}},{item:"Braid",mats:{"Thick Thread":1,"Thin Thread":1}},{item:"Fine Fabric",mats:{"Thick Thread":5}},{item:"Fine Leather Strap",mats:{"Fine Leather":1}},{item:"Fine Silk",mats:{"Thin Thread":5}},{item:"Finest Fabric",mats:{"Thick Thread":6}},{item:"Finest Leather Strap",mats:{"Finest Leather":1}},{item:"Finest Silk",mats:{"Thin Thread":6}},{item:"Sturdy Loop",mats:{Braid:1,"Infernal Blade Fragment":1}},{item:"Tough String",mats:{"Thick Thread":5}},{item:"Tough Thread",mats:{"Thin Thread":5}},{item:"Copper Plate",mats:{"Cooper Ingot":1}},{item:"Gold Plate",mats:{"Gold Ingot":1}},{item:"Large Mythril Nail",mats:{"Mythril Ingot":20}},{item:"Mythril Plate",mats:{"Mythril Ingot":1}},{item:"Silver Plate",mats:{"Silver Ingot":1}},{item:"Emerald Fuse",mats:{"Emerald Core":1}},{item:"Energy Amplifier",mats:{"Emerald Core":3,"Energy Converter":3}},{item:"Energy Converter",mats:{Hillwen:1,Shyllien:1}},{item:"Hillwen Alloy",mats:{"Soft Hillwen Ore Fragment":15}},{item:"Enchanted Firewood",mats:{Hillwen:1,Shyllien:1,"Average Firewood":1}},{item:"Mutant",mats:{"Mutant Rabbit Foot":10,"Mutant Plant Mucilage":5,"Sasquatch Heart":3}},{item:"Mysterious Herb Powder",mats:{"Bloody Herb":1,"Mana Herb":1,"Poison Herb":1}},{item:"Purified Rabbit Foot",mats:{"Mutant Rabbit Foot":1,Shyllien:1}},{item:"Shyllien",mats:{"Shyllien Crystal":5}},{item:"Sundew",mats:{"Mutant Plant Mucilage":1,Shyllien:1}},{item:"Glittering Paper",mats:{Paper:10,"Small Silver Gem":1,"Small Red Gem":1,"Small Blue Gem":1,"Small Green Gem":1}},{item:"HP 500 Potion",mats:{"Four-Leaf Clover":1,"HP 300 Potion":1,"Bottled Water":1}},{item:"Marionette 500 Potion",mats:{"Gold Herb":1,"Base Potion":1,"Tin Ore Fragment":1,"Zinc Ore Fragment":1,"Nickel Ore Fragment":1}},{item:"MP 500 Potion",mats:{"Four-Leaf Clover":1,"MP 300 Potion":1,"Bottled Water":1}},{item:"Spirit Liqueur",mats:{"White Herb":1,"Piece of Ancient Spirit Fossil":1,"Elemental Remover":2}},{item:"Stamina 500 Potion",mats:{"Four-Leaf Clover":1,"Stamina 300 Potion":1,"Bottled Water":1}},{item:"Shrimp Taming Bait",mats:{Shrimp:1,Sugar:1,Garlic:1}},{item:"Magic Parchment",mats:{"Soft Parchment":1,"Mana Herb":10,"Sunlight Herb":10}},{item:"Magic Quill Pen",mats:{"Vital Feather":1,"Mana Herb":10,"Gold Herb":10}},{item:"Harmonious Cosmos Perfume",mats:{"Empty Bottle":1,"Magic Powder":10,"Base Herb":10,"Cosmos Extract":1}},{item:"Pet Playset",mats:{"Pet's Favorite Knickknack":1,"Wood Board":1}},{item:"Barley Flour",mats:{Barley:10}},{item:"Wheat Flour",mats:{Wheat:10}}];
+        const recipeDb = [{item:"Artificial Turf",mats:{"Fresh Grass":20,"Bundle of Flowers":5}},{item:"Cotton Cushion Stuffing",mats:{"Fine Wool":20,"Thin Thread":5}},{item:"Finest Vanilla Scented Candle",mats:{"Fine Vanilla Scented Candle":1,"Refined Catalyst":1}},{item:"Hay Bale",mats:{"Wheat Chaff":20,"Finest Leather Strap":1}},{item:"Poison Tip Wyvern Ballista Bolt",mats:{"Firewood":1,"Wyvern Claw":1,"Poison Potion":1}},{item:"Average Firewood",mats:{Firewood:3}},{item:"Fine Firewood",mats:{"Average Firewood":3}},{item:"Finest Firewood",mats:{"Fine Firewood":3}},{item:"Special Firewood",mats:{"Finest Firewood":1,"Purified Enhancer":1}},{item:"Braid",mats:{"Thick Thread":1,"Thin Thread":1}},{item:"Fine Fabric",mats:{"Thick Thread":5}},{item:"Fine Leather Strap",mats:{"Fine Leather":1}},{item:"Fine Silk",mats:{"Thin Thread":5}},{item:"Finest Fabric",mats:{"Thick Thread":6}},{item:"Finest Leather Strap",mats:{"Finest Leather":1}},{item:"Finest Silk",mats:{"Thin Thread":6}},{item:"Sturdy Loop",mats:{Braid:1,"Infernal Blade Fragment":1}},{item:"Tough String",mats:{"Thick Thread":5}},{item:"Tough Thread",mats:{"Thin Thread":5}},{item:"Copper Plate",mats:{"Cooper Ingot":1}},{item:"Gold Plate",mats:{"Gold Ingot":1}},{item:"Large Mythril Nail",mats:{"Mythril Ingot":20}},{item:"Mythril Plate",mats:{"Mythril Ingot":1}},{item:"Silver Plate",mats:{"Silver Ingot":1}},{item:"Emerald Fuse",mats:{"Emerald Core":1}},{item:"Energy Amplifier",mats:{"Emerald Core":3,"Energy Converter":3}},{item:"Energy Converter",mats:{Hillwen:1,Shyllien:1}},{item:"Hillwen Alloy",mats:{"Soft Hillwen Ore Fragment":15}},{item:"Enchanted Firewood",mats:{Hillwen:1,Shyllien:1,"Average Firewood":1}},{item:"Mutant",mats:{"Mutant Rabbit Foot":10,"Mutant Plant Mucilage":5,"Sasquatch Heart":3}},{item:"Mysterious Herb Powder",mats:{"Bloody Herb":1,"Mana Herb":1,"Poison Herb":1}},{item:"Purified Rabbit Foot",mats:{"Mutant Rabbit Foot":1,Shyllien:1}},{item:"Shyllien",mats:{"Shyllien Crystal":5}},{item:"Sundew",mats:{"Mutant Plant Mucilage":1,Shyllien:1}},{item:"Glittering Paper",mats:{Paper:10,"Small Silver Gem":1,"Small Red Gem":1,"Small Blue Gem":1,"Small Green Gem":1}},{item:"HP 500 Potion",mats:{"Four-Leaf Clover":1,"HP 300 Potion":1,"Bottled Water":1}},{item:"Marionette 500 Potion",mats:{"Gold Herb":1,"Base Potion":1,"Tin Ore Fragment":1,"Zinc Ore Fragment":1,"Nickel Ore Fragment":1}},{item:"MP 500 Potion",mats:{"Four-Leaf Clover":1,"MP 300 Potion":1,"Bottled Water":1}},{item:"Spirit Liqueur",mats:{"White Herb":1,"Piece of Ancient Spirit Fossil":1,"Elemental Remover":2}},{item:"Stamina 500 Potion",mats:{"Four-Leaf Clover":1,"Stamina 300 Potion":1,"Bottled Water":1}},{item:"Shrimp Taming Bait",mats:{Shrimp:1,Sugar:1,Garlic:1}},{item:"Magic Parchment",mats:{"Soft Parchment":1,"Mana Herb":10,"Sunlight Herb":10}},{item:"Magic Quill Pen",mats:{"Vital Feather":1,"Mana Herb":10,"Gold Herb":10}},{item:"Harmonious Cosmos Perfume",mats:{"Empty Bottle":1,"Magic Powder":10,"Base Herb":10,"Cosmos Extract":1}},{item:"Pet Playset",mats:{"Pet's Favorite Knickknack":1,"Wood Board":1}},{item:"Barley Flour",mats:{Barley:10}},{item:"Wheat Flour",mats:{Wheat:10}}];
 
         let currentCargo=[], ownedInventory={}, activeBuffs={gm:false,william:false,alpaca:false}, selectedTown="Karu Forest", transportA="Elephant", transportB="Back Pack", currentUser=null, isSaving=false;
 
@@ -397,19 +385,12 @@
             calculateMaterials(); renderCatalog();
         }
 
-        /* UPDATED: Dynamic icon handling with Alpaca logic */
         const applyIcon=(el,name)=>{
             let p=null; 
-            if(townIcons[name]) {
-                p=`images/${townIcons[name]}`; 
-            } else if(name === "Wagon") {
-                p = activeBuffs.alpaca ? 'images/transports/Alpaca_Wagon_Icon.png' : 'images/transports/Wagon_Icon.png';
-            } else if(transportIcons[name]) {
-                p = transportIcons[name];
-            } else { 
-                const i=barterDb.find(x=>x.item===name); 
-                if(i) p=`images/${i.img}`; 
-            }
+            if(townIcons[name]) { p=`images/${townIcons[name]}`; } 
+            else if(name === "Wagon") { p = activeBuffs.alpaca ? 'images/transports/Alpaca_Wagon_Icon.png' : 'images/transports/Wagon_Icon.png'; } 
+            else if(transportIcons[name]) { p = transportIcons[name]; } 
+            else { const i=barterDb.find(x=>x.item===name); if(i) p=`images/${i.img}`; }
             if(p) el.style.backgroundImage=`url('${p}')`; 
             else el.style.backgroundImage='none';
         };
@@ -426,7 +407,8 @@
                 const b=document.createElement('div'); b.className=`picker-btn ${cur===t?'active':''}`; 
                 b.onclick=()=>{if(n===1)transportA=t;else transportB=t;renderTransportTabs(n);calculateLoadout();saveData();}; 
                 const i=document.createElement('div'); i.className='picker-icon'; applyIcon(i,t);
-                const l=document.createElement('div'); l.className='picker-label'; l.innerText=t; 
+                const l=document.createElement('div'); l.className='picker-label'; 
+                l.innerText = (t === "Wagon" && activeBuffs.alpaca) ? "Alpaca Wagon" : t;
                 b.append(i,l); c.appendChild(b); 
             });
         }
@@ -471,7 +453,18 @@
             if(!items.length){ b.innerHTML='<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-dim);">No materials needed</td></tr>'; return; }
             items.forEach(item=>{
                 const n=Math.ceil(data[item]), h=ownedInventory[item]||0, def=n-h, tr=document.createElement('tr');
-                tr.innerHTML=`<td><div class="cell-flex"></div></td><td><input type="number" class="owned-input" value="${h}"></td><td style="text-align:center;">${n}</td><td class="status-cell ${def<=0?'ready':'deficit'}"><span>${def<=0?'READY':def}</span></td>`;
+                
+                // --- DYNAMIC STATUS LOGIC ---
+                let statusDisplay = "";
+                if (def <= 0) {
+                    const weeks = Math.floor(h / n);
+                    // Show weeks worth if it's 2 or more, otherwise just READY
+                    statusDisplay = (weeks > 1 && isFinite(weeks)) ? `<span>${weeks} WEEKS</span>` : "<span>READY</span>";
+                } else {
+                    statusDisplay = `<span>${def}</span>`;
+                }
+
+                tr.innerHTML=`<td><div class="cell-flex"></div></td><td><input type="number" class="owned-input" value="${h}"></td><td style="text-align:center;">${n}</td><td class="status-cell ${def<=0?'ready':'deficit'}">${statusDisplay}</td>`;
                 const icon=document.createElement('div'); icon.className='icon-small'; applyIcon(icon,item);
                 const span=document.createElement('span'); span.textContent=item;
                 tr.querySelector('.cell-flex').append(icon,span);
@@ -480,7 +473,33 @@
             });
         }
 
-        document.querySelectorAll('.toggle-input').forEach(chk=>{ chk.onchange=(e)=>{ const id=e.target.id.replace('buff-',''); if(id==='william'&&e.target.checked) document.getElementById('buff-alpaca').checked=activeBuffs.alpaca=false; if(id==='alpaca'&&e.target.checked) document.getElementById('buff-william').checked=activeBuffs.william=false; activeBuffs[id]=e.target.checked; calculateLoadout(); saveData(); }; });
+        function completeTrip() {
+            // Subtract immediate Crafted Components from HAVE stash
+            currentCargo.forEach(item => {
+                if (item.mats) {
+                    Object.entries(item.mats).forEach(([mat, qty]) => {
+                        ownedInventory[mat] = Math.max(0, (ownedInventory[mat] || 0) - qty);
+                    });
+                }
+            });
+
+            // DO NOT CLEAR LOADOUT
+            calculateLoadout(); 
+            saveData();
+        }
+
+        document.querySelectorAll('.toggle-input').forEach(chk=>{ 
+            chk.onchange=(e)=>{ 
+                const id=e.target.id.replace('buff-',''); 
+                if(id==='william'&&e.target.checked) document.getElementById('buff-alpaca').checked=activeBuffs.alpaca=false; 
+                if(id==='alpaca'&&e.target.checked) document.getElementById('buff-william').checked=activeBuffs.william=false; 
+                activeBuffs[id]=e.target.checked; 
+                calculateLoadout(); 
+                renderTransportTabs(1);
+                renderTransportTabs(2);
+                saveData(); 
+            }; 
+        });
         window.toggleSidebar=(s)=>{document.getElementById(s+'-panel').classList.add('active');document.getElementById('mobile-backdrop').classList.add('active');};
         window.closeSidebars=()=>{document.getElementById('left-panel').classList.remove('active');document.getElementById('right-panel').classList.remove('active');document.getElementById('mobile-backdrop').classList.remove('active');};
         window.onload=calculateLoadout;
