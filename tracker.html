@@ -3,209 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mabi Tracker - v46.8</title>
+    <title>Mabi Tracker - v2.7</title>
+    
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg: #050505;
-            --sidebar-bg: #0a0a0a;
-            --card-bg: #111;
+            /* V2.7 Theme */
+            --bg: #09090b;
+            --sidebar-bg: #121214;
+            --card-bg: #18181b;
             --accent: #00ff88;
+            --accent-dim: rgba(0, 255, 136, 0.1);
             --thu: #0088ff;
             --sat: #cc44ff;
-            --border: rgba(255,255,255,0.05);
-            --text-main: #d0d0d0;
-            --text-dim: #444;
+            --border: #27272a;
+            --text-main: #e4e4e7;
+            --text-dim: #a1a1aa;
+            --danger: #ef4444;
         }
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-
+        
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            display: flex;
-            height: 100vh;
+            font-size: 13px;
             overflow: hidden;
-            font-size: 12px;
-            scrollbar-gutter: stable;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        body.ready { opacity: 1; }
+        body.ready { opacity: 1; transition: opacity 0.3s ease; }
 
-        /* --- SCROLLBARS --- */
+        /* Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        /* SIDEBAR */
-        #sidebar {
-            width: 220px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; padding: 12px; gap: 12px; flex-shrink: 0; height: 100%;
-        }
-        #sidebar-list { overflow-y: auto; flex-grow: 1; padding-right: 4px; }
-        .sidebar-header { font-size: 9px; font-weight: 900; letter-spacing: 1px; color: #333; text-transform: uppercase; }
+        /* Layout */
+        .interface-container { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 1500px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
         
-        #user-info { 
-            font-size: 10px; 
-            color: var(--accent); 
-            word-break: break-all; 
-            white-space: normal; 
-            line-height: 1.3;
-        }
+        .header-bar { background: var(--sidebar-bg); border-bottom: 1px solid var(--border); padding: 10px 20px; flex-shrink: 0; }
+        .title-section { display: flex; justify-content: space-between; align-items: center; }
+        .main-title { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+        .sub-title { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-left: 10px; }
+        
+        .content-grid { display: grid; grid-template-columns: 280px 1fr 280px; flex-grow: 1; overflow: hidden; }
+        .panel { background: var(--bg); display: flex; flex-direction: column; border-right: 1px solid var(--border); overflow-y: auto; }
+        .panel:last-child { border-right: none; }
+        .center-panel { background: #0c0c0e; }
 
-        .timer-card { background: rgba(255,255,255,0.02); padding: 6px; border-radius: 4px; border-left: 2px solid var(--accent); margin-bottom: 4px; }
+        /* Components */
+        .hub-btn { color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 6px; transition: 0.2s; border: 1px solid transparent; }
+        .hub-btn:hover { color: #fff; background: var(--border); }
+
+        .input-dark { background: var(--card-bg); border: 1px solid var(--border); color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px; border-radius: 6px; width: 100%; transition: border-color 0.2s; }
+        .input-dark:focus { border-color: var(--accent); }
+
+        .panel-label { font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; display: block; text-transform: uppercase; }
+        .config-section { padding: 20px; border-bottom: 1px solid var(--border); }
+
+        /* Left Panel Specifics */
+        .user-profile-box { display: flex; align-items: center; gap: 12px; padding: 15px; border-bottom: 1px solid var(--border); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--card-bg); border: 1px solid var(--border); background-size: cover; background-position: center; flex-shrink: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1a1aa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"); }
+        #user-info { font-size: 13px; font-weight: 600; color: var(--text-main); word-break: break-all; line-height: 1.2; }
+        
+        .timer-card { background: var(--card-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); border-left: 3px solid var(--accent); margin-bottom: 8px; }
         .timer-card.thu { border-left-color: var(--thu); }
         .timer-card.sat { border-left-color: var(--sat); }
-        .t-label { font-size: 8px; color: var(--text-dim); text-transform: uppercase; }
-        .t-val { font-family: 'JetBrains Mono'; font-size: 12px; color: #eee; }
-        .side-cat { margin-top: 10px; margin-bottom: 4px; color: var(--accent); font-size: 8px; font-weight: 900; text-transform: uppercase; opacity: 0.5; }
-        .side-task { font-size: 10px; color: #777; padding: 4px 6px; border-left: 1px solid #222; margin-bottom: 2px; cursor: pointer; transition: 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .side-task:hover { color: #fff; border-left-color: var(--accent); background: rgba(255,255,255,0.03); }
+        .t-label { font-size: 11px; color: var(--text-dim); font-weight: 500; }
+        .t-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #fff; float: right; }
 
-        /* MAIN CONTENT */
-        #main-content { flex-grow: 1; padding: 15px 30px; overflow-y: auto; scroll-behavior: smooth; }
-        .container { width: 100%; max-width: 1500px; margin: 0 auto; padding-bottom: 100px; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 10px 0; }
+        /* Center Panel (Tasks) */
+        .toolbar { padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; overflow-x: auto; background: var(--card-bg); align-items: center; flex-shrink: 0; }
+        .tab-btn { padding: 6px 12px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: 0.2s; }
+        .tab-btn:hover { color: #fff; background: var(--border); }
+        .tab-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+        .task-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
         
-        /* UNIFORM HUB BUTTON */
-        .hub-btn {
-            color: #fff; text-decoration: none; font-weight: 900; font-size: 10px; 
-            background: #1a1a1a; border: 1px solid var(--border); padding: 5px 15px; 
-            transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
-            cursor: pointer; border-radius: 3px;
-        }
-        .hub-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 12px var(--accent); border-color: var(--accent); }
-
-        .tab-btn { padding: 4px 10px; border: none; background: none; color: var(--text-dim); font-size: 10px; font-weight: 900; cursor: pointer; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; touch-action: manipulation; }
-        .tab-btn.active { background: #222; color: #fff; }
-
-        /* TASKS UI */
-        .group-wrap { margin-bottom: 15px; scroll-margin-top: 60px; }
-        summary { list-style: none; cursor: pointer; padding: 4px 0; display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 900; color: #444; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        summary::before { content: '▶'; font-size: 7px; transition: 0.2s; color: #222; }
+        .group-wrap { margin-bottom: 20px; }
+        summary { list-style: none; cursor: pointer; padding: 8px 0; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+        summary::before { content: '▶'; font-size: 8px; transition: 0.2s; color: var(--text-dim); }
         details[open] summary::before { transform: rotate(90deg); color: var(--accent); }
-
-        /* DESKTOP BASE STYLES - COMPACT */
-        .task-card { background: var(--card-bg); border-bottom: 1px solid var(--bg); padding: 5px 10px; display: flex; align-items: center; position: relative; border-left: 2px solid transparent; transition: 0.2s; min-height: 40px; }
-        .task-card:active { background: #161616; }
-        .task-card.type-thu { border-left-color: var(--thu); }
-        .task-card.type-sat { border-left-color: var(--sat); }
-        .task-card.complete { opacity: 0.15; filter: grayscale(1); }
-        .task-card.highlight { outline: 1px solid var(--accent); z-index: 5; }
-
-        .type-tag { font-size: 7px; padding: 1px 4px; border-radius: 2px; margin-left: 5px; text-transform: uppercase; font-weight: 900; }
-        .tag-thu { background: var(--thu); color: #fff; }
-        .tag-sat { background: var(--sat); color: #fff; }
-
-        .t-info { flex-grow: 1; display: flex; align-items: center; gap: 10px; overflow: hidden; }
-        .t-char-tag { font-size: 8px; font-weight: 900; color: var(--accent); width: 55px; opacity: 0.7; flex-shrink: 0; }
-        .t-name { font-size: 12px; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .pips { display: flex; gap: 2px; margin-right: 15px; }
-        .pip { width: 6px; height: 2px; background: #222; border-radius: 1px; }
-        .pip.on { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
-
-        /* DESKTOP BUTTONS - COMPACT */
-        .btn-c { width: 28px; height: 28px; border: 1px solid #222; background: #000; color: #fff; cursor: pointer; border-radius: 2px; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: background 0.1s, transform 0.1s; }
-        .btn-c:active { background: #222; transform: scale(0.92); }
         
-        .prog-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent); transition: width 0.3s; opacity: 0.4; }
+        /* Task Cards */
+        .task-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; position: relative; overflow: hidden; transition: 0.2s; }
+        .task-card:hover { border-color: #3f3f46; }
+        .task-card.complete { opacity: 0.4; filter: grayscale(1); background: var(--bg); }
+        
+        .t-info { flex-grow: 1; display: flex; align-items: center; gap: 12px; overflow: hidden; z-index: 2; position: relative; }
+        .t-char-tag { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-dim); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+        .t-name { font-size: 13px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; }
+        
+        .prog-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--accent); transition: width 0.3s; z-index: 1; opacity: 0.8; }
+        
+        /* Interactive Elements */
+        .btn-c { width: 24px; height: 24px; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); cursor: pointer; border-radius: 4px; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+        .btn-c:hover { color: #fff; border-color: var(--text-dim); }
+        .btn-c:active { transform: scale(0.95); background: var(--border); }
+        
+        .pips { display: flex; gap: 3px; margin-right: 15px; }
+        .pip { width: 6px; height: 6px; background: #333; border-radius: 1px; }
+        .pip.on { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
 
-        .mgmt-p { background: #000; border: 1px solid var(--border); padding: 8px; border-radius: 4px; margin-bottom: 10px; font-size: 10px; }
-        .inp-s { background: #111; border: 1px solid #222; color: #fff; padding: 6px; border-radius: 2px; font-size: 11px; }
-
-        .edit-ui { display: none; gap: 8px; width: 100%; align-items: center; }
+        /* Edit Mode UI */
+        .edit-ui { display: none; gap: 8px; width: 100%; align-items: center; z-index: 10; position: relative; }
         .show-mgmt .edit-ui { display: flex !important; }
         .show-mgmt .view-ui { display: none !important; }
+        .show-mgmt .task-card { border-style: dashed; }
+        .drag-handle { display: none; cursor: grab; padding: 0 10px; color: #555; }
+        .show-mgmt .drag-handle { display: block; }
+        
+        /* Toggles */
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; cursor: pointer; }
+        .toggle-label { font-size: 13px; color: var(--text-main); }
+        .toggle-switch { width: 36px; height: 20px; background: var(--border); border-radius: 99px; position: relative; transition: 0.2s; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: 0.2s; }
+        input:checked + .toggle-switch { background: var(--accent); }
+        input:checked + .toggle-switch::after { transform: translateX(16px); }
 
-        .edit-ui select:nth-child(2) { min-width: 90px !important; flex: 0 0 auto; } 
-        .edit-ui select:nth-child(3) { min-width: 125px !important; flex: 0 0 auto; } 
-        .edit-ui input[type="number"] { width: 45px !important; flex: 0 0 auto; text-align: center; } 
-        .edit-ui input[type="text"] { flex: 1; min-width: 100px; } 
+        /* Mobile Nav */
+        .mobile-nav { display: none; }
+        .mobile-backdrop { display: none; }
 
-        .drag-handle, .group-handle { display: none; cursor: grab; padding-right: 8px; }
-        .show-mgmt .drag-handle, .show-mgmt .group-handle { display: block; }
-
-        /* MOBILE OVERRIDES - BIG ELEMENTS */
-        @media (max-width: 600px) {
-            #sidebar { display: none; }
-            #main-content { padding: 10px 15px; }
-            body { font-size: 14px; }
+        @media (max-width: 1000px) {
+            .content-grid { display: block; height: calc(100vh - 50px); }
+            .header-bar { display: none; }
+            .mobile-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); height: 50px; z-index: 50; flex-shrink: 0; }
+            .nav-trigger { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; }
             
-            .task-card { padding: 12px; margin-bottom: 2px; min-height: 50px; }
+            .panel { position: fixed; top: 0; bottom: 0; width: 300px; max-width: 85%; z-index: 1001; box-shadow: 0 0 50px rgba(0,0,0,0.8); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .left-panel { left: 0; transform: translateX(-100%); border-right: 1px solid var(--border); }
+            .left-panel.active { transform: translateX(0); }
+            .right-panel { right: 0; transform: translateX(100%); border-left: 1px solid var(--border); }
+            .right-panel.active { transform: translateX(0); }
+            .center-panel { height: 100%; width: 100%; border: none; }
             
-            .t-info { flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 0; }
-            .t-char-tag { width: auto; font-size: 8px; letter-spacing: 0.5px; opacity: 1; color: var(--accent); }
-            .t-name { font-size: 15px; width: 100%; font-weight: 600; color: #fff; }
+            .mobile-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px); }
+            .mobile-backdrop.active { opacity: 1; pointer-events: all; }
             
-            .pips { margin-right: 0; margin-top: 2px; }
-            
-            /* ULTIMATE TOUCH SIZE FOR MOBILE */
-            .btn-c { width: 52px; height: 52px; font-size: 26px; border-radius: 8px; } 
-            
-            .header-row { padding: 10px 0; margin-bottom: 20px; }
-            .container { padding-bottom: 150px; }
-            
-            .view-ui { gap: 10px !important; }
-            .view-ui div { font-size: 14px !important; width: 25px !important; }
+            /* Mobile Task Card Adjustments */
+            .task-card { padding: 15px; min-height: 55px; }
+            .btn-c { width: 32px; height: 32px; font-size: 16px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <div class="sidebar-header">USER_IDENTITY</div>
-        <div id="user-info" style="font-size:10px; color:var(--accent);">...</div>
-        <button id="logout-btn" onclick="firebase.auth().signOut()" class="tab-btn" style="padding:0; text-align:left; font-size:8px;">[ LOGOUT ]</button>
-        <button id="login-redirect-btn" onclick="window.location.href='index.html'" class="tab-btn" style="display:none; padding:0; text-align:left; font-size:8px; color:var(--accent);">[ LOGIN_TO_SAVE_CLOUD ]</button>
-        
-        <hr style="border:0; border-top:1px solid #111; margin:5px 0;">
-        <div class="sidebar-header">RESETS</div>
-        <div class="timer-card"><div class="t-label">Daily</div><div id="timer-daily" class="t-val">00:00:00</div></div>
-        <div class="timer-card thu"><div class="t-label">Thu</div><div id="timer-thu" class="t-val">00:00:00</div></div>
-        <div class="timer-card sat"><div class="t-label">Sat</div><div id="timer-sat" class="t-val">00:00:00</div></div>
-        <div class="sidebar-header" style="margin-top:10px;">PENDING</div>
-        <div id="sidebar-list"></div>
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <button class="nav-trigger" onclick="toggleSidebar('left')">☰ Menu</button>
+        <span style="font-weight:700; color:#fff;">Task Tracker</span>
+        <button class="nav-trigger" onclick="toggleSidebar('right')">Config ⚙</button>
     </div>
 
-    <div id="main-content">
-        <div class="container" id="app">
-            <div class="header-row">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <button class="hub-btn" onclick="location.href='index.html'">HUB</button>
-                    <div style="background:#000; border:1px solid var(--border); padding:2px; border-radius:4px; display:flex; align-items:center;">
-                        <button id="nav-daily" class="tab-btn active" onclick="setView('daily')">Dailies</button>
-                        <button id="nav-weekly" class="tab-btn" onclick="setView('weekly')">Weeklies</button>
+    <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeSidebars()"></div>
+
+    <div class="interface-container">
+        <!-- Desktop Header -->
+        <div class="header-bar">
+            <div class="title-section">
+                <div style="display:flex; align-items:center;">
+                    <span class="main-title">MABI TRACKER</span>
+                    <span class="sub-title">SYNC_V2.7</span>
+                </div>
+                <a href="index.html" class="hub-btn">Back to Hub</a>
+            </div>
+        </div>
+
+        <div class="content-grid" id="app">
+            <!-- LEFT PANEL: User & Timers -->
+            <div class="panel left-panel" id="left-panel">
+                <div class="user-profile-box">
+                    <div id="user-avatar" class="user-avatar"></div>
+                    <div style="flex-grow:1; min-width:0;">
+                        <div id="user-info">Guest</div>
+                        <div style="font-size:10px; color:var(--text-dim);" id="connection-status">Local Mode</div>
                     </div>
                 </div>
-                <button onclick="toggleMgmt()" class="tab-btn" style="color:#222; white-space:nowrap;">[ SYSTEM_CONFIG ]</button>
+                
+                <div class="config-section">
+                    <label class="panel-label">Server Resets</label>
+                    <div class="timer-card"><span class="t-label">Daily</span><span id="timer-daily" class="t-val">00:00:00</span></div>
+                    <div class="timer-card thu"><span class="t-label">Thursday</span><span id="timer-thu" class="t-val">00:00:00</span></div>
+                    <div class="timer-card sat"><span class="t-label">Saturday</span><span id="timer-sat" class="t-val">00:00:00</span></div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <button class="hub-btn" style="width:100%; text-align:center;" onclick="window.location.href='index.html'">Return to Hub</button>
+                </div>
             </div>
 
-            <div id="char-filters" style="display: flex; gap: 4px; margin-bottom: 12px; overflow-x: auto; position: sticky; top: 41px; background: var(--bg); z-index: 99; padding: 10px 0; border-bottom: 1px solid var(--border); "></div>
+            <!-- CENTER PANEL: Tasks -->
+            <div class="panel center-panel">
+                <div class="toolbar">
+                    <button id="nav-daily" class="tab-btn active" onclick="setView('daily')">Daily Tasks</button>
+                    <button id="nav-weekly" class="tab-btn" onclick="setView('weekly')">Weekly Tasks</button>
+                    <div style="width:1px; height:20px; background:var(--border); margin:0 5px;"></div>
+                    <div id="char-filters" style="display:flex; gap:5px;"></div>
+                </div>
 
-            <div id="mgmt-panel" class="mgmt-p" style="display:none; border: 1px solid var(--accent);">
-                CHARS: <input type="text" id="char-input" class="inp-s" style="width:px;" onchange="updateChars(this.value)">
+                <div id="list-container" class="task-list"></div>
             </div>
 
-            <div id="list-container"></div>
-            <div class="edit-ui" style="margin-top:20px; border-top:1px dashed #222; padding-top:10px;">
-                <input type="text" id="new-cat" class="inp-s" placeholder="New Group Name...">
-                <button onclick="addCat()" class="tab-btn active" style="border:1px solid #333;">+ CREATE GROUP</button>
+            <!-- RIGHT PANEL: Config -->
+            <div class="panel right-panel" id="right-panel">
+                <div class="config-section">
+                    <label class="panel-label" style="color:var(--accent);">TRACKER CONFIG</label>
+                    
+                    <div class="toggle-row">
+                        <span class="toggle-label">Edit Mode</span>
+                        <label><input type="checkbox" id="edit-mode-toggle" onchange="toggleMgmt()"><div class="toggle-switch"></div></label>
+                    </div>
+                    
+                    <div style="margin-top:20px;">
+                        <label class="panel-label">Characters (Comma Separated)</label>
+                        <input type="text" id="char-input" class="input-dark" placeholder="Main, Alt1, Alt2..." onchange="updateChars(this.value)">
+                        <div style="font-size:10px; color:var(--text-dim); margin-top:5px;">Add characters to filter tasks.</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <label class="panel-label">ADD NEW GROUP</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="new-cat" class="input-dark" placeholder="Group Name...">
+                        <button onclick="addCat()" class="hub-btn" style="background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent);">Add</button>
+                    </div>
+                </div>
+                
+                <div class="config-section" style="border-bottom:none;">
+                    <div style="font-size:11px; color:var(--text-dim); text-align:center;">
+                        Tip: In Edit Mode, you can drag tasks to reorder them, rename groups, or delete items.
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-    // UPDATED CONFIGURATION TO MATCH HUB
     const firebaseConfig = {
         apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
         authDomain: "mabinogi-tracker.firebaseapp.com",
@@ -223,47 +269,53 @@
 
     let tasks = [], chars = ["Main"], collapsed = {}, catOrder = [], lastReset = { daily: 0, thu: 0, sat: 0 };
     let currentView = 'daily', activeFilter = "ALL", currentUser = null;
-    let skipRender = false; // Prevents focus loss when typing
+    let skipRender = false;
 
+    // --- AUTH & SYNC ---
     auth.onAuthStateChanged(user => {
+        const uInfo = document.getElementById('user-info');
+        const uAvatar = document.getElementById('user-avatar');
+        const status = document.getElementById('connection-status');
+
         if (user) { 
-            currentUser = user; 
-            document.getElementById('user-info').innerText = user.email; 
-            document.getElementById('user-info').style.color = "var(--accent)";
-            document.getElementById('logout-btn').style.display = 'block';
-            document.getElementById('login-redirect-btn').style.display = 'none';
+            currentUser = user;
+            status.innerText = "Online & Syncing";
+            status.style.color = "var(--accent)";
+            
+            // Try cache for immediate display
+            try {
+                const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
+                uInfo.innerText = cached.username || user.email;
+                if(cached.avatar) uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+            } catch(e) { uInfo.innerText = user.email; }
+            
             startSync(); 
         } else { 
             currentUser = { uid: 'local_guest', isGuest: true };
-            document.getElementById('user-info').innerText = "GUEST_SESSION (LOCAL)";
-            document.getElementById('user-info').style.color = "#555";
-            document.getElementById('logout-btn').style.display = 'none';
-            document.getElementById('login-redirect-btn').style.display = 'block';
+            uInfo.innerText = "Guest";
+            status.innerText = "Local Storage Mode";
             startSync();
         }
         document.body.classList.add('ready');
     });
 
-    function haptic() {
-        if ("vibrate" in navigator) {
-            navigator.vibrate(12);
-        }
-    }
-
     function startSync() {
         if (currentUser.isGuest) {
             const localData = JSON.parse(localStorage.getItem('mabi_tracker_guest_data') || '{}');
-            tasks = localData.tasks || [];
-            chars = localData.chars || ["Main"];
-            catOrder = localData.catOrder || [];
-            lastReset = localData.lastReset || { daily: 0, thu: 0, sat: 0 };
+            tasks = localData.tasks || []; chars = localData.chars || ["Main"]; catOrder = localData.catOrder || []; lastReset = localData.lastReset || { daily: 0, thu: 0, sat: 0 };
             checkAndReset(); render();
         } else {
-            // Note: This maintains the simple users/$uid path used in this file
             db.ref(`users/${currentUser.uid}`).on('value', (snap) => {
-                if (skipRender) { skipRender = false; return; } // Skip re-rendering if this client caused the update
+                if (skipRender) { skipRender = false; return; }
                 const data = snap.val() || {};
                 tasks = data.tasks || []; chars = data.chars || ["Main"]; catOrder = data.catOrder || []; lastReset = data.lastReset || { daily: 0, thu: 0, sat: 0 };
+                
+                // Update profile info from DB if available
+                if (data.profile) {
+                    document.getElementById('user-info').innerText = data.profile.username || currentUser.email;
+                    if(data.profile.avatar) document.getElementById('user-avatar').style.backgroundImage = `url('${data.profile.avatar}')`;
+                }
+
                 checkAndReset(); render();
             });
         }
@@ -274,10 +326,11 @@
         if (currentUser.isGuest) {
             localStorage.setItem('mabi_tracker_guest_data', JSON.stringify({ tasks, chars, catOrder, lastReset }));
         } else {
-            db.ref(`users/${currentUser.uid}`).set({ tasks, chars, catOrder, lastReset }); 
+            db.ref(`users/${currentUser.uid}`).update({ tasks, chars, catOrder, lastReset }); 
         }
     }
 
+    // --- LOGIC ---
     function checkAndReset() {
         const now = new Date(), pac = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
         const getR = (dayNum) => {
@@ -297,9 +350,10 @@
     function render() {
         if(!currentUser) return;
         const isEdit = document.getElementById('app').classList.contains('show-mgmt');
-        document.getElementById('nav-daily').classList.toggle('active', currentView === 'daily');
-        document.getElementById('nav-weekly').classList.toggle('active', currentView === 'weekly');
-        document.getElementById('char-input').value = chars.join(', ');
+        
+        // Update Inputs (without triggering change event)
+        const charInp = document.getElementById('char-input');
+        if (document.activeElement !== charInp) charInp.value = chars.join(', ');
 
         const fBar = document.getElementById('char-filters');
         fBar.innerHTML = `<button class="tab-btn ${activeFilter==='ALL'?'active':''}" onclick="setF('ALL')">ALL</button>`;
@@ -318,37 +372,49 @@
             det.ontoggle = () => { collapsed[cat] = det.open; };
 
             const sum = document.createElement('summary');
-            sum.innerHTML = `<div class="group-handle">⠿</div>`;
             if(isEdit) {
-                const inp = document.createElement('input'); inp.style = "background:none; border:none; color:var(--accent); font-weight:900; font-size:10px; width:150px;";
-                inp.value = cat; inp.onclick = e => e.stopPropagation();
-                inp.onchange = e => { tasks.forEach(t => { if(t.cat === cat) t.cat = e.target.value; }); catOrder = catOrder.map(c => c === cat ? e.target.value : c); pushData(); };
+                const inp = document.createElement('input'); 
+                inp.className = "input-dark";
+                inp.style = "width:200px; font-weight:700;";
+                inp.value = cat; 
+                inp.onclick = e => e.stopPropagation();
+                inp.onchange = e => { 
+                    skipRender = true;
+                    tasks.forEach(t => { if(t.cat === cat) t.cat = e.target.value; }); 
+                    catOrder = catOrder.map(c => c === cat ? e.target.value : c); 
+                    pushData(); 
+                };
                 sum.appendChild(inp);
-            } else { sum.innerHTML += cat + (finalTasks.every(t => t.done >= t.max) ? ' ✓' : ''); }
+            } else { 
+                sum.innerHTML = `${cat} <span style="font-weight:400; font-size:10px; opacity:0.6; margin-left:5px;">${finalTasks.every(t => t.done >= t.max) ? '(Complete)' : ''}</span>`; 
+            }
 
             const list = document.createElement('div'); list.className = "sort-list"; list.dataset.cat = cat;
             finalTasks.forEach(t => {
-                const card = document.createElement('div'); card.className = `task-card type-${t.type} ${t.done >= t.max ? 'complete' : ''}`; card.dataset.id = t.id;
-                let tag = t.type === 'thu' ? `<span class="type-tag tag-thu">THU</span>` : t.type === 'sat' ? `<span class="type-tag tag-sat">SAT</span>` : "";
+                const card = document.createElement('div'); 
+                card.className = `task-card type-${t.type} ${t.done >= t.max ? 'complete' : ''}`; 
+                card.dataset.id = t.id;
+                
                 card.innerHTML = `
-                    <div class="drag-handle">≡</div>
+                    <div class="drag-handle">::</div>
                     <div class="t-info">
                         <div class="view-ui t-char-tag">${t.char || 'GB'}</div>
-                        <div class="view-ui t-name">${t.name} ${tag}</div>
+                        <div class="view-ui t-name">${t.name}</div>
                         <div class="view-ui pips">${Array.from({length:t.max}, (_,i) => `<div class="pip ${i<t.done?'on':''}"></div>`).join('')}</div>
+                        
                         <div class="edit-ui">
-                            <input type="text" class="inp-s" value="${t.name}" onchange="upd(${t.id},'name',this.value)">
-                            <select class="inp-s" onchange="upd(${t.id},'char',this.value)">
+                            <input type="text" class="input-dark" value="${t.name}" onchange="upd(${t.id},'name',this.value)">
+                            <select class="input-dark" onchange="upd(${t.id},'char',this.value)">
                                 <option value="">GB</option>
                                 ${chars.map(c => `<option value="${c}" ${t.char === c ? 'selected' : ''}>${c}</option>`).join('')}
                             </select>
-                            <select class="inp-s" onchange="upd(${t.id},'type',this.value)">
+                            <select class="input-dark" onchange="upd(${t.id},'type',this.value)">
                                 <option value="daily" ${t.type==='daily'?'selected':''}>Daily</option>
-                                <option value="thu" ${t.type==='thu'?'selected':''}>Thu Weekly</option>
-                                <option value="sat" ${t.type==='sat'?'selected':''}>Sat Weekly</option>
+                                <option value="thu" ${t.type==='thu'?'selected':''}>Thu</option>
+                                <option value="sat" ${t.type==='sat'?'selected':''}>Sat</option>
                             </select>
-                            <input type="number" class="inp-s" value="${t.max}" onchange="upd(${t.id},'max',this.value)">
-                            <button onclick="del(${t.id})" style="color:red; background:none; border:none; cursor:pointer; font-size:16px;">×</button>
+                            <input type="number" class="input-dark" value="${t.max}" onchange="upd(${t.id},'max',this.value)">
+                            <button onclick="del(${t.id})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:16px;">×</button>
                         </div>
                         <div class="prog-bar" style="width:${(t.done/t.max)*100}%"></div>
                     </div>
@@ -359,55 +425,36 @@
                     </div>`;
                 list.appendChild(card);
             });
-            if(isEdit) { const add = document.createElement('button'); add.className = "tab-btn active"; add.style="width:100%; border:1px dashed #222; margin-top:5px;"; add.innerText = "+ TASK"; add.onclick = () => addTask(cat); list.appendChild(add); }
+            
+            if(isEdit) { 
+                const add = document.createElement('button'); 
+                add.className = "hub-btn"; 
+                add.style="width:100%; border:1px dashed var(--border); margin-top:5px; opacity:0.5;"; 
+                add.innerText = "+ Add Task"; 
+                add.onclick = () => addTask(cat); 
+                list.appendChild(add); 
+            }
+            
             det.append(sum, list); wrap.appendChild(det); cont.appendChild(wrap);
             new Sortable(list, { group: 'tasks', handle: '.drag-handle', animation: 150, onEnd: saveTaskOrder });
         });
         new Sortable(cont, { handle: '.group-handle', animation: 150, onEnd: saveCatOrder });
-        renderSidebar();
     }
 
-    function renderSidebar() {
-        const list = document.getElementById('sidebar-list'); list.innerHTML = '';
-        const visible = tasks.filter(t => (t.done < t.max) && (currentView === 'daily' ? t.type === 'daily' : t.type !== 'daily') && (activeFilter === "ALL" || t.char === activeFilter));
-        let catsInSidebar = [...new Set(visible.map(t => t.cat))].sort((a,b) => catOrder.indexOf(a) - catOrder.indexOf(b));
-        catsInSidebar.forEach(cat => {
-            const divCat = document.createElement('div'); divCat.className = 'side-cat'; divCat.innerText = cat; list.appendChild(divCat);
-            visible.filter(t => t.cat === cat).forEach(t => {
-                const divT = document.createElement('div'); divT.className = 'side-task'; divT.innerText = t.name; divT.onclick = () => jumpTo(t.id, cat); list.appendChild(divT);
-            });
-        });
-    }
-
-    function jumpTo(taskId, catName) {
-        const wrap = document.querySelector(`.group-wrap[data-catname="${catName}"]`); if(!wrap) return;
-        const det = wrap.querySelector('details'); det.open = true; collapsed[catName] = true;
-        const card = document.querySelector(`.task-card[data-id="${taskId}"]`);
-        if(card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.classList.add('highlight'); setTimeout(() => card.classList.remove('highlight'), 1500); }
-    }
-
-    function mod(id, d) { 
-        haptic();
-        const t = tasks.find(x => x.id == id); 
-        t.done = Math.max(0, Math.min(t.max, t.done + d)); 
-        pushData(); 
-    }
-    
-    function upd(id, f, v) { 
-        const t = tasks.find(x => x.id == id); 
-        t[f] = (f==='max'?parseInt(v):v); 
-        // FIX: Prevent re-render loop on simple text updates to maintain focus
-        if(f === 'name' || f === 'max') skipRender = true;
-        pushData(); 
-    }
-    
+    function haptic() { if ("vibrate" in navigator) navigator.vibrate(12); }
+    function mod(id, d) { haptic(); const t = tasks.find(x => x.id == id); t.done = Math.max(0, Math.min(t.max, t.done + d)); pushData(); }
+    function upd(id, f, v) { const t = tasks.find(x => x.id == id); t[f] = (f==='max'?parseInt(v):v); skipRender = true; pushData(); }
     function del(id) { tasks = tasks.filter(x => x.id != id); pushData(); }
     function addTask(cat) { tasks.push({ id: Date.now(), name: "New Task", cat, done: 0, max: 1, type: currentView === 'daily' ? "daily" : "thu", char: chars[0] }); pushData(); }
     function addCat() { const i = document.getElementById('new-cat'); if(i.value.trim()){ addTask(i.value.trim()); i.value=''; } }
-    function updateChars(v) { chars = v.split(',').map(s => s.trim()).filter(s => s !== ""); pushData(); }
+    function updateChars(v) { chars = v.split(',').map(s => s.trim()).filter(s => s !== ""); skipRender = true; pushData(); }
     function setView(v) { currentView = v; render(); }
     function setF(f) { activeFilter = f; render(); }
-    function toggleMgmt() { document.getElementById('app').classList.toggle('show-mgmt'); document.getElementById('mgmt-panel').style.display = document.getElementById('app').classList.contains('show-mgmt') ? 'block' : 'none'; render(); }
+    
+    function toggleMgmt() { 
+        document.getElementById('app').classList.toggle('show-mgmt'); 
+        render(); 
+    }
     
     function saveTaskOrder() { 
         let nt = []; 
@@ -420,8 +467,21 @@
         tasks = [...nt, ...hidden]; 
         pushData(); 
     }
-    
     function saveCatOrder() { catOrder = Array.from(document.querySelectorAll('.group-wrap')).map(w => w.dataset.catname); pushData(); }
+
+    // Mobile Navigation
+    function toggleSidebar(side) {
+        const left = document.getElementById('left-panel');
+        const right = document.getElementById('right-panel');
+        const backdrop = document.getElementById('mobile-backdrop');
+        if (side === 'left') { closeSidebars(); left.classList.add('active'); backdrop.classList.add('active'); }
+        if (side === 'right') { closeSidebars(); right.classList.add('active'); backdrop.classList.add('active'); }
+    }
+    function closeSidebars() {
+        document.getElementById('left-panel').classList.remove('active');
+        document.getElementById('right-panel').classList.remove('active');
+        document.getElementById('mobile-backdrop').classList.remove('active');
+    }
 
     function updateEngine() {
         const now = new Date();
@@ -444,7 +504,6 @@
         if(tElem) tElem.innerText = formatDiff(getNextReset(4));
         if(sElem) sElem.innerText = formatDiff(getNextReset(6));
     }
-
     setInterval(updateEngine, 1000);
     setInterval(checkAndReset, 60000);
     updateEngine();
