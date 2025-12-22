@@ -103,15 +103,15 @@
             border-bottom: 1px solid var(--border);
         }
         .user-avatar {
-            width: 80px;   /* Increased from 36px */
-            height: 80px;  /* Increased from 36px */
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-color: var(--bg);
-            border: 2px solid var(--border);
+            border: 1px solid var(--border);
             background-size: cover;
             background-position: center;
             flex-shrink: 0;
-            background-image: url('https://placehold.co/80x80/111/444?text=?');
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1a1aa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E");
         }
         #user-info { 
             font-size: 13px; 
@@ -393,7 +393,7 @@
                 currentUser = null;
                 uInfo.innerText = "Guest";
                 guestLabel.style.display = 'block';
-                uAvatar.style.backgroundImage = "url('https://placehold.co/80x80/111/444?text=?')";
+                uAvatar.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1a1aa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E\")";
                 
                 loginBtn.style.display = 'block';
                 loggedInControls.style.display = 'none';
@@ -425,7 +425,7 @@
                 if (profile.avatar) {
                     uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
                 } else {
-                    uAvatar.style.backgroundImage = "url('https://placehold.co/80x80/111/444?text=?')";
+                    uAvatar.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1a1aa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E\")";
                 }
 
                 // Update cache
