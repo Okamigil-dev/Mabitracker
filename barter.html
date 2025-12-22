@@ -76,35 +76,39 @@
         .hub-btn { color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 6px; transition: 0.1s; border: 1px solid transparent; background: transparent; cursor: pointer; }
         .hub-btn:hover { color: #fff; background: var(--border); }
 
-        /* TAB PICKERS (Performance replacement for Dropdowns) */
+        /* TAB PICKERS */
         .tab-picker {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 6px;
+            gap: 8px;
             margin-bottom: 15px;
         }
         .picker-btn {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 8px 4px;
+            padding: 10px 4px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             transition: 0.15s;
+            min-height: 85px;
+            justify-content: center;
         }
-        .picker-btn:hover { background: #27272a; }
+        .picker-btn:hover { background: #27272a; border-color: var(--text-dim); }
         .picker-btn.active {
             background: var(--accent-dim);
             border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.05);
         }
         .picker-icon {
-            width: 24px; height: 24px;
+            width: 48px; height: 48px;
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
+            flex-shrink: 0;
         }
         .picker-label {
             font-size: 9px;
@@ -112,7 +116,7 @@
             color: var(--text-dim);
             text-transform: uppercase;
             text-align: center;
-            line-height: 1;
+            line-height: 1.1;
         }
         .picker-btn.active .picker-label { color: var(--accent); }
 
@@ -225,11 +229,14 @@
             font-size: 9px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; 
         }
 
-        /* Toggles */
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; cursor: pointer; }
-        .toggle-label { font-size: 13px; color: var(--text-main); }
-        .toggle-switch { width: 36px; height: 20px; background: var(--border); border-radius: 99px; position: relative; transition: 0.15s; }
-        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: 0.15s; }
+        /* Toggles Redesigned */
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-label { font-size: 12px; color: var(--text-main); font-weight: 500; }
+        
+        .toggle-switch { width: 34px; height: 18px; background: var(--border); border-radius: 99px; position: relative; transition: 0.2s; flex-shrink: 0; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: 0.2s; }
+        
         input:checked + .toggle-switch { background: var(--accent); }
         input:checked + .toggle-switch::after { transform: translateX(16px); }
         .toggle-input { display: none; }
@@ -389,21 +396,21 @@
 
                 <div class="config-section">
                     <label class="panel-label">ACTIVE BUFFS</label>
-                    <div class="buff-row-side">
-                        <label class="toggle-container">
+                    <div class="buff-list">
+                        <label class="toggle-row">
+                            <span class="toggle-label">Grandmaster Merchant</span>
                             <input type="checkbox" id="buff-gm" class="toggle-input">
-                            <div class="toggle-slider"></div>
-                            <span>Grandmaster</span>
+                            <div class="toggle-switch"></div>
                         </label>
-                        <label class="toggle-container">
+                        <label class="toggle-row">
+                            <span class="toggle-label">William (Partner)</span>
                             <input type="checkbox" id="buff-william" class="toggle-input">
-                            <div class="toggle-slider"></div>
-                            <span>William</span>
+                            <div class="toggle-switch"></div>
                         </label>
-                        <label class="toggle-container">
+                        <label class="toggle-row">
+                            <span class="toggle-label">Alpaca</span>
                             <input type="checkbox" id="buff-alpaca" class="toggle-input">
-                            <div class="toggle-slider"></div>
-                            <span>Alpaca</span>
+                            <div class="toggle-switch"></div>
                         </label>
                     </div>
                 </div>
@@ -491,6 +498,7 @@
             { item: "Fine Leather Strap", mats: { "Fine Leather": 1 } },
             { item: "Fine Silk", mats: { "Thin Thread": 5 } },
             { item: "Finest Fabric", mats: { "Thick Thread": 6 } },
+            { item: "Finest Leather Strap", mats: { "Finest Leather": 1 } },
             { item: "Finest Silk", mats: { "Thin Thread": 6 } },
             { item: "Sturdy Loop", mats: { "Braid": 1, "Infernal Blade Fragment": 1 } },
             { item: "Tough String", mats: { "Thick Thread": 5 } },
@@ -694,7 +702,7 @@
             calculateMaterials(); renderCatalog();
         }
 
-        // --- 6. TAB UI RENDERERS ---
+        // --- 6. UI RENDERERS ---
         function renderTownTabs() {
             const container = document.getElementById('town-tabs');
             container.innerHTML = '';
@@ -703,8 +711,15 @@
                 btn.className = `picker-btn ${selectedTown === town ? 'active' : ''}`;
                 btn.onclick = () => { selectedTown = town; renderTownTabs(); renderCatalog(); saveData(); };
                 
-                const icon = document.createElement('div'); icon.className = 'picker-icon'; applyIcon(icon, town);
-                const label = document.createElement('div'); label.className = 'picker-label'; label.innerText = town.split(' ')[0];
+                const icon = document.createElement('div'); 
+                icon.className = 'picker-icon'; 
+                icon.style.width = "48px";
+                icon.style.height = "48px";
+                applyIcon(icon, town);
+
+                const label = document.createElement('div'); 
+                label.className = 'picker-label'; 
+                label.innerText = town; 
                 
                 btn.append(icon, label); container.appendChild(btn);
             });
@@ -717,7 +732,8 @@
             Object.keys(transportData).forEach(tName => {
                 const btn = document.createElement('div');
                 btn.className = `picker-btn ${current === tName ? 'active' : ''}`;
-                btn.style.padding = "6px 2px";
+                btn.style.minHeight = "40px";
+                btn.style.padding = "8px 4px";
                 btn.onclick = () => { 
                     if(num === 1) transportA = tName; else transportB = tName; 
                     renderTransportTabs(num); calculateLoadout(); saveData(); 
@@ -864,8 +880,15 @@
         document.querySelectorAll('.toggle-input').forEach(chk => {
             chk.onchange = (e) => {
                 const id = e.target.id.replace('buff-', '');
-                if (id === 'william' && e.target.checked) document.getElementById('buff-alpaca').checked = activeBuffs.alpaca = false;
-                if (id === 'alpaca' && e.target.checked) document.getElementById('buff-william').checked = activeBuffs.william = false;
+                // Partner Buff Mutually Exclusive logic
+                if (id === 'william' && e.target.checked) {
+                    document.getElementById('buff-alpaca').checked = false; 
+                    activeBuffs.alpaca = false;
+                }
+                if (id === 'alpaca' && e.target.checked) {
+                    document.getElementById('buff-william').checked = false; 
+                    activeBuffs.william = false;
+                }
                 activeBuffs[id] = e.target.checked;
                 calculateLoadout(); saveData();
             };
