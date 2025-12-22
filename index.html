@@ -97,20 +97,20 @@
         .user-profile-box {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px; /* Increased gap for better spacing with larger avatar */
             padding-bottom: 12px;
             border-bottom: 1px solid var(--border);
         }
         .user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 100px;   /* Increased from 36px */
+            height: 100px;  /* Increased from 36px */
             border-radius: 50%;
             background-color: var(--bg);
-            border: 1px solid var(--border);
+            border: 2px solid var(--border);
             background-size: cover;
             background-position: center;
             flex-shrink: 0;
-            background-image: url('https://placehold.co/36x36/111/444?text=?');
+            background-image: url('https://placehold.co/80x80/111/444?text=?');
         }
         #user-info { 
             font-size: 13px; 
@@ -268,10 +268,6 @@
                 </div>
             </a>
         </div>
-
-        <div class="footer">
-            System v2.7 // Ready
-        </div>
     </div>
 
     <!-- RIGHT SIDEBAR: Pending Tasks -->
@@ -342,7 +338,7 @@
                 currentUser = null;
                 uInfo.innerText = "Guest";
                 guestLabel.style.display = 'block';
-                uAvatar.style.backgroundImage = "url('https://placehold.co/36x36/111/444?text=?')";
+                uAvatar.style.backgroundImage = "url('https://placehold.co/80x80/111/444?text=?')";
                 
                 loginBtn.style.display = 'block';
                 loggedInControls.style.display = 'none';
@@ -373,7 +369,15 @@
                 
                 if (profile.avatar) {
                     uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
+                } else {
+                    uAvatar.style.backgroundImage = "url('https://placehold.co/80x80/111/444?text=?')";
                 }
+
+                // Update cache
+                localStorage.setItem('mabi_user_cache_' + currentUser.uid, JSON.stringify({
+                    username: profile.username || currentUser.email,
+                    avatar: profile.avatar || ''
+                }));
 
                 renderSidebar();
             });
