@@ -66,7 +66,7 @@
         .center-panel { background: #0c0c0e; }
 
         /* Components */
-        .hub-btn { color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 6px; transition: 0.2s; border: 1px solid transparent; }
+        .hub-btn { color: var(--text-dim); text-decoration: none; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 6px; transition: 0.2s; border: 1px solid transparent; background: transparent; cursor: pointer; }
         .hub-btn:hover { color: #fff; background: var(--border); }
 
         .input-dark { background: var(--card-bg); border: 1px solid var(--border); color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px; border-radius: 6px; width: 100%; transition: border-color 0.2s; }
@@ -86,6 +86,9 @@
         .timer-card.sat { border-left-color: var(--sat); }
         .t-label { font-size: 11px; color: var(--text-dim); font-weight: 500; }
         .t-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #fff; float: right; }
+
+        /* Pending List in Sidebar */
+        .mini-task-row { font-size: 12px; color: var(--text-dim); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Center Panel (Tasks) */
         .toolbar { 
@@ -108,7 +111,6 @@
             background: var(--bg);
             flex-shrink: 0;
             white-space: nowrap;
-            /* Hide scrollbar visually but allow scrolling */
             scrollbar-width: none; 
             -ms-overflow-style: none;
         }
@@ -180,18 +182,28 @@
         .mobile-nav { display: none; }
         .mobile-backdrop { display: none; }
         .drawer-header { display: none; } /* Hidden on desktop */
+        .mobile-only { display: none; }
 
         @media (max-width: 1000px) {
+            .mobile-only { display: block; }
+            .desktop-only { display: none; }
             .content-grid { display: block; height: calc(100dvh - 50px); }
             .header-bar { display: none; }
             .mobile-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); height: 50px; z-index: 50; flex-shrink: 0; }
             .nav-trigger { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; }
             
-            .panel { position: fixed; top: 0; bottom: 0; width: 300px; max-width: 85%; z-index: 1001; box-shadow: 0 0 50px rgba(0,0,0,0.8); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .panel { 
+                position: fixed; top: 0; bottom: 0; width: 300px; max-width: 85%; z-index: 1001; 
+                box-shadow: 0 0 50px rgba(0,0,0,0.8); 
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+                visibility: hidden; /* Hide by default to prevent visual artifacts */
+            }
             .left-panel { left: 0; transform: translateX(-100%); border-right: 1px solid var(--border); }
-            .left-panel.active { transform: translateX(0); }
+            .left-panel.active { transform: translateX(0); visibility: visible; }
+            
             .right-panel { right: 0; transform: translateX(100%); border-left: 1px solid var(--border); }
-            .right-panel.active { transform: translateX(0); }
+            .right-panel.active { transform: translateX(0); visibility: visible; }
+            
             .center-panel { height: 100%; width: 100%; border: none; }
             
             .mobile-backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px); }
@@ -243,6 +255,12 @@
                     <span class="drawer-title">Menu</span>
                     <button class="drawer-close" onclick="closeSidebars()">×</button>
                 </div>
+                
+                <!-- Mobile Only: Back to Hub -->
+                <div class="mobile-only" style="padding: 10px 15px; border-bottom: 1px solid var(--border);">
+                    <button class="hub-btn" style="width:100%; text-align:center;" onclick="window.location.href='index.html'">← Back to Hub</button>
+                </div>
+
                 <div class="user-profile-box">
                     <div id="user-avatar" class="user-avatar"></div>
                     <div style="flex-grow:1; min-width:0;">
@@ -258,7 +276,16 @@
                     <div class="timer-card sat"><span class="t-label">Saturday</span><span id="timer-sat" class="t-val">00:00:00</span></div>
                 </div>
 
-                <div style="padding: 20px;">
+                <!-- Remaining Tasks List (Replaces Desktop Button) -->
+                <div class="config-section" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; border-bottom: none;">
+                    <label class="panel-label">Remaining Tasks</label>
+                    <div id="left-sidebar-pending" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Desktop Only: Return to Hub Button (At Bottom) -->
+                <div class="desktop-only" style="padding: 20px;">
                     <button class="hub-btn" style="width:100%; text-align:center;" onclick="window.location.href='index.html'">Return to Hub</button>
                 </div>
             </div>
@@ -345,7 +372,6 @@
             status.innerText = "Online & Syncing";
             status.style.color = "var(--accent)";
             
-            // Try cache for immediate display
             try {
                 const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
                 uInfo.innerText = cached.username || user.email;
@@ -366,30 +392,32 @@
         if (currentUser.isGuest) {
             const localData = JSON.parse(localStorage.getItem('mabi_tracker_guest_data') || '{}');
             tasks = localData.tasks || []; chars = localData.chars || ["Main"]; catOrder = localData.catOrder || []; lastReset = localData.lastReset || { daily: 0, thu: 0, sat: 0 };
-            checkAndReset(); render();
+            collapsed = localData.collapsed || {};
+            checkAndReset(); render(); renderPendingSidebar();
         } else {
             db.ref(`users/${currentUser.uid}`).on('value', (snap) => {
                 if (skipRender) { skipRender = false; return; }
                 const data = snap.val() || {};
                 tasks = data.tasks || []; chars = data.chars || ["Main"]; catOrder = data.catOrder || []; lastReset = data.lastReset || { daily: 0, thu: 0, sat: 0 };
+                collapsed = data.collapsed || {};
                 
-                // Update profile info from DB if available
                 if (data.profile) {
                     document.getElementById('user-info').innerText = data.profile.username || currentUser.email;
                     if(data.profile.avatar) document.getElementById('user-avatar').style.backgroundImage = `url('${data.profile.avatar}')`;
                 }
 
-                checkAndReset(); render();
+                checkAndReset(); render(); renderPendingSidebar();
             });
         }
     }
 
     function pushData() { 
         if (!currentUser) return;
+        const dataToSave = { tasks, chars, catOrder, lastReset, collapsed };
         if (currentUser.isGuest) {
-            localStorage.setItem('mabi_tracker_guest_data', JSON.stringify({ tasks, chars, catOrder, lastReset }));
+            localStorage.setItem('mabi_tracker_guest_data', JSON.stringify(dataToSave));
         } else {
-            db.ref(`users/${currentUser.uid}`).update({ tasks, chars, catOrder, lastReset }); 
+            db.ref(`users/${currentUser.uid}`).update(dataToSave); 
         }
     }
 
@@ -408,6 +436,29 @@
         if (lastReset.thu < rt) { tasks.forEach(t => { if(t.type === 'thu') t.done = 0; }); lastReset.thu = rt; changed = true; }
         if (lastReset.sat < rs) { tasks.forEach(t => { if(t.type === 'sat') t.done = 0; }); lastReset.sat = rs; changed = true; }
         if (changed) pushData();
+    }
+
+    function renderPendingSidebar() {
+        const list = document.getElementById('left-sidebar-pending');
+        if(!list) return;
+        list.innerHTML = '';
+        
+        // Filter tasks that are NOT done
+        const pending = tasks.filter(t => t.done < t.max);
+        
+        if(pending.length === 0) {
+            list.innerHTML = '<div style="color:var(--text-dim); font-size:11px; text-align:center; padding:10px;">All clear!</div>';
+            return;
+        }
+
+        pending.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'mini-task-row';
+            // Use color to indicate urgency (Red for Weekly, Green for Daily)
+            const color = t.type === 'daily' ? 'var(--accent)' : (t.type === 'thu' ? 'var(--thu)' : 'var(--sat)');
+            div.innerHTML = `<span style="color:${color}; margin-right:5px;">●</span> ${t.name}`;
+            list.appendChild(div);
+        });
     }
 
     function render() {
@@ -432,7 +483,8 @@
 
             const wrap = document.createElement('div'); wrap.className = 'group-wrap'; wrap.dataset.catname = cat;
             const det = document.createElement('details'); det.open = collapsed[cat] !== false;
-            det.ontoggle = () => { collapsed[cat] = det.open; };
+            // Only update collapse state when toggled, skip render to prevent flicker
+            det.ontoggle = () => { collapsed[cat] = det.open; skipRender = true; pushData(); };
 
             const sum = document.createElement('summary');
             if(isEdit) {
@@ -502,6 +554,7 @@
             new Sortable(list, { group: 'tasks', handle: '.drag-handle', animation: 150, onEnd: saveTaskOrder });
         });
         new Sortable(cont, { handle: '.group-handle', animation: 150, onEnd: saveCatOrder });
+        renderPendingSidebar(); // Update sidebar list whenever we render
     }
 
     function haptic() { if ("vibrate" in navigator) navigator.vibrate(12); }
