@@ -168,9 +168,6 @@
         .toggle-input:checked + .toggle-slider { background: rgba(255, 215, 0, 0.15); border-color: var(--accent); }
         .toggle-input:checked + .toggle-slider::after { transform: translateX(12px); background: var(--accent); }
 
-        .partner-info { padding: 15px; border-bottom: 1px solid var(--border); }
-        .partner-name { font-size: 10px; font-weight: 900; color: var(--text-dim); margin-bottom: 5px; }
-        
         .recommendation-box {
             margin: 15px; padding: 15px; background: rgba(0,0,0,0.3);
             border: 1px solid var(--accent); border-radius: 4px; box-shadow: 0 0 15px rgba(255,255,255,0.05);
@@ -215,12 +212,21 @@
         <div class="content-grid">
             <div class="left-panel">
                 <div class="commerce-type-section">
-                    <label class="panel-small-label">Commerce Mode</label>
-                    <select id="commerce-type-select" class="city-dropdown">
-                        <option value="Normal">Normal Commerce</option>
-                        <option value="Barter">Bartering</option>
-                        <option value="Group">Group Commerce</option>
-                    </select>
+                    <!-- Updated Layout: Mode and Transport side-by-side -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <div style="flex: 1;">
+                            <label class="panel-small-label">Commerce Mode</label>
+                            <select id="commerce-type-select" class="city-dropdown" style="width:100%;">
+                                <option value="Normal">Normal Commerce</option>
+                                <option value="Barter">Bartering</option>
+                                <option value="Group">Group Commerce</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label class="panel-small-label">Transport</label>
+                            <select id="transport-dropdown" class="city-dropdown" style="width:100%;"></select>
+                        </div>
+                    </div>
 
                     <div style="margin-top: 10px;">
                         <label class="panel-small-label">Global Search</label>
@@ -367,10 +373,7 @@
                     </label>
                 </div>
 
-                <div class="partner-info">
-                    <div class="partner-name">Current Transport</div>
-                    <select id="transport-dropdown" class="custom-dropdown"></select>
-                </div>
+                <!-- Removed empty partner-info section since dropdown moved to left -->
 
                 <div class="recommendation-box" id="manifest-box" style="display:none;">
                     <div class="rec-title">Local Best Loadout</div>
@@ -853,6 +856,9 @@
             const sellVal = parseInt(val, 10) || 0;
             const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
             publicPrices[priceKey] = sellVal;
+            
+            skipRender = true; // Fix focus loss
+            
             // Try to update DB, ignore errors
             if(rtdb) { try { rtdb.ref(`public_commerce/prices/${priceKey}`).set(sellVal); } catch(e){} }
             // Optimistic Row Update
@@ -873,6 +879,9 @@
         function updateStock(itemName, quantity) {
             const qty = parseInt(quantity) || 0;
             publicStocks[itemName] = qty;
+            
+            skipRender = true; // Fix focus loss
+            
             if(rtdb) { try { rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty); } catch(e){} }
             refreshUI();
         }
@@ -1012,8 +1021,9 @@
                     });
 
                     // User Data
+                    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                    
                     if(typeof __initial_auth_token !== 'undefined' && __initial_auth_token) auth.signInWithCustomToken(__initial_auth_token);
-                    else auth.signInAnonymously().catch(e => console.log("Auth skipped (offline)"));
 
                     auth.onAuthStateChanged((user) => {
                         currentUser = user;
