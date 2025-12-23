@@ -38,7 +38,6 @@
             margin: 0;
             font-size: 13px;
             overflow: hidden;
-            /* Use dvh for mobile address bar handling, fallback to vh */
             height: 100vh;
             height: 100dvh;
             display: flex;
@@ -149,8 +148,12 @@
         .show-mgmt .edit-ui { display: flex !important; }
         .show-mgmt .view-ui { display: none !important; }
         .show-mgmt .task-card { border-style: dashed; }
+        
         .drag-handle { display: none; cursor: grab; padding: 0 10px; color: #555; }
         .show-mgmt .drag-handle { display: block; }
+
+        .group-handle { cursor: pointer; } 
+        .show-mgmt .group-handle { cursor: grab !important; }
         
         /* Toggles */
         .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; cursor: pointer; }
@@ -443,7 +446,12 @@
         if (lastReset.mon < rm) { tasks.forEach(t => { if(t.type === 'mon') t.done = 0; }); lastReset.mon = rm; changed = true; }
         if (lastReset.thu < rt) { tasks.forEach(t => { if(t.type === 'thu') t.done = 0; }); lastReset.thu = rt; changed = true; }
         if (lastReset.sat < rs) { tasks.forEach(t => { if(t.type === 'sat') t.done = 0; }); lastReset.sat = rs; changed = true; }
-        if (changed) pushData();
+        
+        // Fix: Force render if reset occurred to prevent stale UI
+        if (changed) { 
+            pushData(); 
+            render(); 
+        }
     }
 
     function applyTimerSettings() {
@@ -464,6 +472,7 @@
         timerSettings.thu = document.getElementById('toggle-timer-thu').checked;
         timerSettings.sat = document.getElementById('toggle-timer-sat').checked;
         applyTimerSettings();
+        render(); // Force render to ensure layout consistency if needed
         pushData();
     }
 
@@ -492,8 +501,22 @@
         });
     }
 
+    function deleteCat(catName) {
+        if(confirm(`Delete group "${catName}" and remove it from your list?`)) {
+            // Remove from order preference
+            catOrder = catOrder.filter(c => c !== catName);
+            // Optionally we can remove orphan tasks if you want, but for now we just remove the empty group shell
+            // If tasks still exist, they will just reappear under the category name, so this effectively only deletes empty groups or re-orders stuff.
+            // If you want to force delete TASKS too:
+            tasks = tasks.filter(t => t.cat !== catName);
+            pushData();
+            render();
+        }
+    }
+
     function render() {
         if(!currentUser) return;
+        if (!tasks) tasks = []; // Safety check
         const isEdit = document.getElementById('app').classList.contains('show-mgmt');
         
         document.getElementById('nav-daily').classList.toggle('active', currentView === 'daily');
@@ -521,7 +544,6 @@
         const cats = [...allCats].sort((a,b) => {
             const ia = catOrder.indexOf(a);
             const ib = catOrder.indexOf(b);
-            // If new category (index -1), put at end
             if (ia === -1) return 1;
             if (ib === -1) return -1;
             return ia - ib;
@@ -530,8 +552,18 @@
         cats.forEach(cat => {
             const finalTasks = visibleTasks.filter(t => t.cat === cat && (activeFilter === "ALL" || t.char === activeFilter));
             
-            // Only show if has tasks OR in edit mode OR group was explicitly saved (even if empty in this view)
-            if (finalTasks.length === 0 && !isEdit) return;
+            // Check if this group has ANY tasks globally (not just in current view)
+            const hasGlobalTasks = tasks.some(t => t.cat === cat);
+
+            // LOGIC FIX:
+            // 1. If group has tasks in current view -> SHOW
+            // 2. If group is in Edit Mode -> SHOW
+            // 3. If group is truly empty (no tasks anywhere) but exists in catOrder (manually added) -> SHOW (Prevents vanishing)
+            // 4. If group has global tasks but none in this view (e.g. Weekly group in Daily view) -> HIDE
+            
+            const shouldShow = (finalTasks.length > 0) || isEdit || (!hasGlobalTasks && catOrder.includes(cat));
+
+            if (!shouldShow) return;
 
             const wrap = document.createElement('div'); wrap.className = 'group-wrap'; wrap.dataset.catname = cat;
             const det = document.createElement('details'); det.open = collapsed[cat] !== false;
@@ -539,7 +571,17 @@
             det.ontoggle = () => { collapsed[cat] = det.open; skipRender = true; pushData(); };
 
             const sum = document.createElement('summary');
+            sum.className = 'group-handle';
+            
             if(isEdit) {
+                // Drag Handle
+                const dragIcon = document.createElement('span');
+                dragIcon.className = "drag-handle";
+                dragIcon.style.display = "inline-block";
+                dragIcon.style.marginRight = "10px";
+                dragIcon.innerHTML = "::";
+                sum.appendChild(dragIcon);
+
                 const inp = document.createElement('input'); 
                 inp.className = "input-dark";
                 inp.style = "width:200px; font-weight:700;";
@@ -547,60 +589,72 @@
                 inp.onclick = e => e.stopPropagation();
                 inp.onchange = e => { 
                     skipRender = true;
-                    // Update task categories
                     tasks.forEach(t => { if(t.cat === cat) t.cat = e.target.value; }); 
-                    // Update order list
                     const idx = catOrder.indexOf(cat);
                     if(idx !== -1) catOrder[idx] = e.target.value;
                     pushData(); 
+                    render(); 
                 };
                 sum.appendChild(inp);
+
+                // Delete Group Button
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = "×";
+                delBtn.style = "margin-left:auto; background:none; border:none; color:var(--danger); font-size:18px; cursor:pointer; padding:0 10px;";
+                delBtn.onclick = (e) => { e.preventDefault(); deleteCat(cat); };
+                sum.appendChild(delBtn);
+
             } else { 
                 sum.innerHTML = `${cat} <span style="font-weight:400; font-size:10px; opacity:0.6; margin-left:5px;">${finalTasks.length > 0 && finalTasks.every(t => t.done >= t.max) ? '(Complete)' : ''}</span>`; 
             }
 
             const list = document.createElement('div'); list.className = "sort-list"; list.dataset.cat = cat;
-            finalTasks.forEach(t => {
-                const card = document.createElement('div'); 
-                card.className = `task-card type-${t.type} ${t.done >= t.max ? 'complete' : ''}`; 
-                card.dataset.id = t.id;
-                
-                let tagHtml = "";
-                if(t.type === 'mon') tagHtml = `<span class="type-tag tag-mon">MON</span>`;
-                if(t.type === 'thu') tagHtml = `<span class="type-tag tag-thu">THU</span>`;
-                if(t.type === 'sat') tagHtml = `<span class="type-tag tag-sat">SAT</span>`;
+            
+            if(finalTasks.length === 0 && !isEdit) {
+                list.innerHTML = `<div style="padding:10px; font-size:11px; color:var(--text-dim); font-style:italic;">No tasks in this view.</div>`;
+            } else {
+                finalTasks.forEach(t => {
+                    const card = document.createElement('div'); 
+                    card.className = `task-card type-${t.type} ${t.done >= t.max ? 'complete' : ''}`; 
+                    card.dataset.id = t.id;
+                    
+                    let tagHtml = "";
+                    if(t.type === 'mon') tagHtml = `<span class="type-tag tag-mon">MON</span>`;
+                    if(t.type === 'thu') tagHtml = `<span class="type-tag tag-thu">THU</span>`;
+                    if(t.type === 'sat') tagHtml = `<span class="type-tag tag-sat">SAT</span>`;
 
-                card.innerHTML = `
-                    <div class="drag-handle">::</div>
-                    <div class="t-info">
-                        <div class="view-ui t-char-tag">${t.char || 'GB'}</div>
-                        <div class="view-ui t-name">${t.name} ${tagHtml}</div>
-                        <div class="view-ui pips">${Array.from({length:t.max}, (_,i) => `<div class="pip ${i<t.done?'on':''}"></div>`).join('')}</div>
-                        
-                        <div class="edit-ui">
-                            <input type="text" class="input-dark" value="${t.name}" onchange="upd(${t.id},'name',this.value)">
-                            <select class="input-dark" onchange="upd(${t.id},'char',this.value)">
-                                <option value="">GB</option>
-                                ${chars.map(c => `<option value="${c}" ${t.char === c ? 'selected' : ''}>${c}</option>`).join('')}
-                            </select>
-                            <select class="input-dark" onchange="upd(${t.id},'type',this.value)">
-                                <option value="daily" ${t.type==='daily'?'selected':''}>Daily</option>
-                                <option value="mon" ${t.type==='mon'?'selected':''}>Mon</option>
-                                <option value="thu" ${t.type==='thu'?'selected':''}>Thu</option>
-                                <option value="sat" ${t.type==='sat'?'selected':''}>Sat</option>
-                            </select>
-                            <input type="number" class="input-dark" value="${t.max}" onchange="upd(${t.id},'max',this.value)">
-                            <button onclick="del(${t.id})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:16px;">×</button>
+                    card.innerHTML = `
+                        <div class="drag-handle">::</div>
+                        <div class="t-info">
+                            <div class="view-ui t-char-tag">${t.char || 'GB'}</div>
+                            <div class="view-ui t-name">${t.name} ${tagHtml}</div>
+                            <div class="view-ui pips">${Array.from({length:t.max}, (_,i) => `<div class="pip ${i<t.done?'on':''}"></div>`).join('')}</div>
+                            
+                            <div class="edit-ui">
+                                <input type="text" class="input-dark" value="${t.name}" onchange="upd(${t.id},'name',this.value)">
+                                <select class="input-dark" onchange="upd(${t.id},'char',this.value)">
+                                    <option value="">GB</option>
+                                    ${chars.map(c => `<option value="${c}" ${t.char === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                </select>
+                                <select class="input-dark" onchange="upd(${t.id},'type',this.value)">
+                                    <option value="daily" ${t.type==='daily'?'selected':''}>Daily</option>
+                                    <option value="mon" ${t.type==='mon'?'selected':''}>Mon</option>
+                                    <option value="thu" ${t.type==='thu'?'selected':''}>Thu</option>
+                                    <option value="sat" ${t.type==='sat'?'selected':''}>Sat</option>
+                                </select>
+                                <input type="number" class="input-dark" value="${t.max}" onchange="upd(${t.id},'max',this.value)">
+                                <button onclick="del(${t.id})" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:16px;">×</button>
+                            </div>
+                            <div class="prog-bar" style="width:${(t.done/t.max)*100}%"></div>
                         </div>
-                        <div class="prog-bar" style="width:${(t.done/t.max)*100}%"></div>
-                    </div>
-                    <div class="view-ui" style="display:flex; align-items:center; gap:8px;">
-                        <button class="btn-c" onclick="mod(${t.id},-1)">-</button>
-                        <div style="font-family:'JetBrains Mono'; font-size:12px; width:22px; text-align:center; color:#fff; font-weight:700;">${t.done}</div>
-                        <button class="btn-c" onclick="mod(${t.id},1)">+</button>
-                    </div>`;
-                list.appendChild(card);
-            });
+                        <div class="view-ui" style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn-c" onclick="mod(${t.id},-1)">-</button>
+                            <div style="font-family:'JetBrains Mono'; font-size:12px; width:22px; text-align:center; color:#fff; font-weight:700;">${t.done}</div>
+                            <button class="btn-c" onclick="mod(${t.id},1)">+</button>
+                        </div>`;
+                    list.appendChild(card);
+                });
+            }
             
             if(isEdit) { 
                 const add = document.createElement('button'); 
@@ -614,14 +668,41 @@
             det.append(sum, list); wrap.appendChild(det); cont.appendChild(wrap);
             new Sortable(list, { group: 'tasks', handle: '.drag-handle', animation: 150, onEnd: saveTaskOrder });
         });
+        
+        // Added handle: '.group-handle' to allow category sorting
         new Sortable(cont, { handle: '.group-handle', animation: 150, onEnd: saveCatOrder });
     }
 
     function haptic() { if ("vibrate" in navigator) navigator.vibrate(12); }
-    function mod(id, d) { haptic(); const t = tasks.find(x => x.id == id); t.done = Math.max(0, Math.min(t.max, t.done + d)); pushData(); }
-    function upd(id, f, v) { const t = tasks.find(x => x.id == id); t[f] = (f==='max'?parseInt(v):v); skipRender = true; pushData(); }
-    function del(id) { tasks = tasks.filter(x => x.id != id); pushData(); }
-    function addTask(cat) { tasks.push({ id: Date.now(), name: "New Task", cat, done: 0, max: 1, type: currentView === 'daily' ? "daily" : "thu", char: chars[0] }); pushData(); }
+    
+    function mod(id, d) { 
+        haptic(); 
+        const t = tasks.find(x => x.id == id); 
+        t.done = Math.max(0, Math.min(t.max, t.done + d)); 
+        // Fix: Force immediate render for Guest mode/instant feedback
+        skipRender = true; // Prevent remote echo logic
+        pushData(); 
+        render(); 
+    }
+    
+    function upd(id, f, v) { 
+        const t = tasks.find(x => x.id == id); 
+        t[f] = (f==='max'?parseInt(v):v); 
+        skipRender = true; // Prevent remote echo logic
+        pushData(); 
+        render(); // Force local update immediately so dropdowns/colors update
+    }
+    
+    function del(id) { tasks = tasks.filter(x => x.id != id); pushData(); render(); }
+    
+    function addTask(cat) { 
+        // Safety check if chars is empty
+        const defaultChar = (chars && chars.length > 0) ? chars[0] : "Main";
+        tasks.push({ id: Date.now(), name: "New Task", cat, done: 0, max: 1, type: currentView === 'daily' ? "daily" : "thu", char: defaultChar }); 
+        pushData(); 
+        // If we are adding via the button in the list, we likely want to see it immediately
+        render();
+    }
     
     function addCat() { 
         const i = document.getElementById('new-cat'); 
@@ -634,7 +715,13 @@
         } 
     }
     
-    function updateChars(v) { chars = v.split(',').map(s => s.trim()).filter(s => s !== ""); skipRender = true; pushData(); }
+    function updateChars(v) { 
+        chars = v.split(',').map(s => s.trim()).filter(s => s !== ""); 
+        skipRender = true; 
+        pushData(); 
+        render(); // Force re-render to update dropdowns in Task Cards
+    }
+    
     function setView(v) { currentView = v; render(); }
     function setF(f) { activeFilter = f; render(); }
     
@@ -656,17 +743,9 @@
     }
     
     function saveCatOrder() { 
-        // 1. Get currently visible order
         const visibleOrder = Array.from(document.querySelectorAll('.group-wrap')).map(w => w.dataset.catname);
-        
-        // 2. Identify missing (hidden) categories
         const missing = catOrder.filter(c => !visibleOrder.includes(c));
-        
-        // 3. Merge: Visible (new order) + Missing (preserved order)
-        // Note: This appends hidden groups to the end. To truly preserve mixed order would require a more complex ID-based map,
-        // but this stops them from vanishing.
         catOrder = [...visibleOrder, ...missing];
-        
         pushData(); 
     }
 
@@ -714,5 +793,3 @@
     </script>
 </body>
 </html>
-
-
