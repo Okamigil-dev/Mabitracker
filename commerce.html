@@ -272,7 +272,6 @@
                     <span class="main-title">TRADING POST</span>
                 </div>
                 <div style="display:flex; gap:15px; align-items:center;">
-                    <!-- Updated User Display: No Uppercase Transform -->
                     <span id="user-display" style="font-size:11px; color:var(--accent);">GUEST</span>
                     <a href="index.html" class="hub-btn">Back to Hub</a>
                 </div>
@@ -297,9 +296,10 @@
                 <details class="drawer-wrap" open>
                     <summary>
                         <span>Trading Post</span>
-                        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
+                        <!-- FIXED: stopPropagation on click AND mousedown to prevent drawer toggle -->
+                        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
                             <span style="font-size:10px; color:var(--text-dim);">RATING</span>
-                            <input type="number" id="merchant-rating-input" class="input-dark" style="width:45px; padding:2px; height:24px; text-align:center;" min="1" max="9" value="1" onchange="validateRating(this)">
+                            <input type="number" id="merchant-rating-input" class="input-dark" style="width:45px; padding:2px; height:24px; text-align:center;" min="1" max="9" value="1" onchange="validateRating(this)" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()">
                         </div>
                     </summary>
                     <div id="city-tabs" class="horizontal-drawer"></div>
@@ -488,6 +488,7 @@
         let activeTransport = "Elephant";
         let activeCommerceType = "Normal";
         let selectedCity = "Tir Chonaill";
+        let townRatings = {}; // NEW STATE FOR RATINGS
 
         let currentUser = null;
         let saveTimeout = null;
@@ -536,6 +537,7 @@
                 commerceType: activeCommerceType,
                 transport: activeTransport,
                 city: selectedCity,
+                // UI State reads directly from input for active calculation
                 merchantRating: parseInt(document.getElementById('merchant-rating-input').value, 10) || 1,
                 trader: parseInt(document.getElementById('trader-qty').value, 10) || 0,
                 trust: parseInt(document.getElementById('trustworthy-qty').value, 10) || 0,
@@ -605,7 +607,15 @@
                     activeCommerceType = type; 
                     const valid = citiesByType[type];
                     if(valid.length > 0) selectedCity = valid[0];
-                    renderCommerceTabs(); renderCityTabs(); renderTransportTabs(); refreshUI(); savePrefs(); 
+                    renderCommerceTabs(); 
+                    renderCityTabs(); 
+                    renderTransportTabs(); 
+                    
+                    // Update rating input for new city
+                    document.getElementById('merchant-rating-input').value = townRatings[selectedCity] || 1;
+                    
+                    refreshUI(); 
+                    savePrefs(); 
                 };
                 const label = document.createElement('div');
                 label.className = 'picker-label';
@@ -648,7 +658,16 @@
             valid.forEach(city => {
                 const btn = document.createElement('div');
                 btn.className = `picker-btn ${selectedCity === city ? 'active' : ''}`;
-                btn.onclick = () => { selectedCity = city; renderCityTabs(); refreshUI(); savePrefs(); };
+                btn.onclick = () => { 
+                    selectedCity = city; 
+                    
+                    // Update rating input for selected city
+                    document.getElementById('merchant-rating-input').value = townRatings[city] || 1;
+                    
+                    renderCityTabs(); 
+                    refreshUI(); 
+                    savePrefs(); 
+                };
                 const icon = document.createElement('div');
                 icon.className = 'picker-icon';
                 applyIcon(icon, city);
@@ -818,8 +837,13 @@
 
         function validateRating(input) {
             let val = parseInt(input.value);
-            if(val < 1) input.value = 1;
-            if(val > 9) input.value = 9;
+            if(val < 1) val = 1;
+            if(val > 9) val = 9;
+            input.value = val;
+            
+            // Save specific rating for current town
+            townRatings[selectedCity] = val;
+            
             refreshUI();
             savePrefs();
         }
@@ -828,6 +852,9 @@
             const prefs = getUIState();
             prefs.transports = transportOwnership;
             prefs.activeTransport = activeTransport;
+            prefs.city = document.getElementById('city-select').value;
+            prefs.townRatings = townRatings; // SAVE MAP
+
             localStorage.setItem('mabi_prefs', JSON.stringify(prefs));
             if (currentUser && rtdb) {
                 clearTimeout(saveTimeout);
@@ -849,6 +876,9 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const saved = JSON.parse(localStorage.getItem('mabi_prefs')) || {};
+            
+            if (saved.townRatings) townRatings = saved.townRatings; // LOAD MAP
+
             document.getElementById('mastery-rank').innerHTML = Object.keys(masteryRanks).map(r => `<option value="${r}">Rank ${r} (+${Math.round(masteryRanks[r]*100)}%)</option>`).join('');
             document.getElementById('letter-select').innerHTML = ["None", "Ogre", "Goblin", "Imp", "Irusan's (Special)"].map(n => `<option value="${n}">${n}</option>`).join('');
             document.querySelectorAll('.transport-toggle').forEach(toggle => {
@@ -863,7 +893,10 @@
             
             if (saved.commerceType) activeCommerceType = saved.commerceType;
             if (saved.city) selectedCity = saved.city;
-            if (saved.merchantRating) document.getElementById('merchant-rating-input').value = saved.merchantRating;
+            
+            // Set initial rating from map if available
+            document.getElementById('merchant-rating-input').value = townRatings[selectedCity] || 1;
+            
             if (saved.activeTransport) activeTransport = saved.activeTransport;
             if (saved.transports) transportOwnership = saved.transports;
             Object.keys(transportOwnership).forEach(key => {
