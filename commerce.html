@@ -6,7 +6,7 @@
     <title>Commerce Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (Compat for RTDB) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -173,34 +173,82 @@
             display: flex; align-items: center; justify-content: space-between; margin-top: 2px;
         }
         
+        /* Styling for the small stock widget in the list */
         .stock-widget {
             display: flex; align-items: center; gap: 4px;
-            background: #121214; border: 1px solid var(--border);
-            border-radius: 4px; padding: 0 4px; height: 22px;
+            background: #000; border: 1px solid var(--border);
+            border-radius: 3px; padding: 0 4px; height: 18px;
         }
-        .stock-label { font-size: 9px; color: #555; font-weight: 700; letter-spacing: 0.5px; }
+        .stock-label { font-size: 8px; color: #666; font-weight: 700; }
         .stock-input {
-            width: 40px; background: transparent; border: none; color: var(--text-dim);
-            font-family: 'JetBrains Mono'; font-size: 10px; text-align: right; outline: none;
+            width: 30px; background: transparent; border: none; color: var(--text-dim);
+            font-family: 'JetBrains Mono'; font-size: 9px; text-align: right; outline: none;
         }
         .stock-input:focus { color: #fff; }
+
+        /* Styling for the larger stock input in the center panel */
+        .stock-widget-large {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 6px; padding: 0 8px; height: 32px;
+        }
+        .stock-label-large { font-size: 10px; color: var(--text-dim); font-weight: 700; text-transform: uppercase; }
+        .stock-input-large {
+            width: 50px; background: transparent; border: none; color: #fff;
+            font-family: 'JetBrains Mono'; font-size: 12px; text-align: right; outline: none;
+        }
 
         .qty-controls {
             display: flex; align-items: center; gap: 2px;
             background: #000; border: 1px solid var(--border); border-radius: 4px;
             padding: 2px; height: 24px;
         }
-        .qty-btn {
-            width: 20px; height: 100%;
-            background: var(--card-bg); border: none; color: var(--text-dim);
-            font-size: 10px; font-weight: 700; cursor: pointer;
-            border-radius: 2px; transition: 0.1s; display: flex; align-items: center; justify-content: center;
+        
+        /* New Styles for Action Buttons (Clear/Max Profit) */
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 5px;
         }
+        .action-btn:hover { background: var(--card-bg); color: #fff; border-color: #fff; }
+        
+        .action-btn.accent { 
+            border-color: var(--accent-dim); 
+            color: var(--accent); 
+            background: rgba(0, 255, 136, 0.05); 
+        }
+        .action-btn.accent:hover { 
+            background: var(--accent); 
+            color: #000; 
+            border-color: var(--accent); 
+            box-shadow: 0 0 10px var(--accent-dim);
+        }
+        
+        .action-btn.danger { 
+            border-color: rgba(239, 68, 68, 0.3); 
+            color: var(--danger); 
+        }
+        .action-btn.danger:hover { 
+            background: var(--danger); 
+            color: #fff; 
+            border-color: var(--danger); 
+        }
+
+        /* Styles for item + / - buttons */
+        .item-actions { display: flex; align-items: center; gap: 2px; background: #000; border-radius: 4px; border: 1px solid var(--border); padding: 1px; height: 20px; }
+        .qty-btn { width: 18px; height: 100%; background: var(--card-bg); border: none; color: #aaa; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 10px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
         .qty-btn:hover { background: var(--border); color: #fff; }
-        .qty-val {
-            min-width: 20px; text-align: center; font-family: 'JetBrains Mono';
-            font-size: 11px; color: var(--accent); font-weight: 600; padding: 0 4px;
-        }
+        .qty-val { min-width: 20px; text-align: center; font-size: 10px; font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 600; }
+        .stock-display { font-size: 9px; color: var(--text-dim); }
 
         /* --- Center Panel --- */
         .item-header {
@@ -356,7 +404,7 @@
                 <div style="display:flex; gap:12px; align-items:center;">
                     <div style="text-align:right;">
                         <div id="user-info" style="font-size:12px; font-weight:600; color:var(--text-main);">Guest</div>
-                        <div id="connection-status" style="font-size:10px; color:var(--text-dim);">Local Mode</div>
+                        <div id="connection-status" style="font-size:10px; color:var(--text-dim);">Connecting...</div>
                     </div>
                     <div id="user-avatar" style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--card-bg); border: 1px solid var(--border); background-size: cover; background-position: center; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23a1a1aa\'%3E%3Cpath d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/%3E%3C/svg%3E');"></div>
                 </div>
@@ -372,7 +420,7 @@
                 </div>
                 
                 <div class="mobile-only" style="padding: 10px 15px; border-bottom: 1px solid var(--border);">
-                    <button class="hub-btn" style="width:100%; text-align:center;" onclick="window.location.href='index.html'">Home</button>
+                    <button class="hub-btn" style="width:100%; text-align:center;" onclick="window.location.href='index.html'">← Back to Hub</button>
                 </div>
 
                 <div class="user-profile-box mobile-only">
@@ -419,14 +467,14 @@
                     <div class="big-icon" id="center-item-icon"></div>
                     <div class="item-title-box">
                         <div class="item-title-large" id="center-item-title">Select Item</div>
-                        <div style="display:grid; grid-template-columns: 0.8fr 0.8fr 1fr 1.2fr; align-items: center; width: 100%; margin-top: 8px; gap: 8px;">
+                        <div style="display:grid; grid-template-columns: 0.8fr 0.8fr 1.1fr 1.2fr; align-items: center; width: 100%; margin-top: 8px; gap:8px;">
                             <div class="item-inventory" id="weight-display" style="text-align: left;">Weight: -</div>
                             <div class="item-inventory" id="stack-display" style="text-align: center;">Stack: -</div>
                             
-                            <!-- MOVED: Stock Input -->
-                            <div id="stock-container" style="display:none; align-items:center; gap:4px; justify-content:center;">
-                                <span style="font-size:10px; color:var(--text-dim); font-weight:700;">STOCK</span>
-                                <input type="number" id="stock-input" class="input-dark" style="padding:4px; text-align:center;" oninput="updateCenterStock(this.value)" onfocus="this.select()">
+                            <!-- UPDATED STOCK INPUT -->
+                            <div id="stock-container" style="display:none;" class="stock-widget-large">
+                                <span class="stock-label-large">STOCK</span>
+                                <input type="number" id="stock-input" class="stock-input-large" oninput="updateCenterStock(this.value)" onfocus="this.select()">
                             </div>
 
                             <div id="base-price-container" style="display:none; justify-content: flex-end; align-items: center; gap: 8px;">
@@ -528,17 +576,19 @@
                     </div>
                 </details>
 
-                <!-- LOADOUT / MANIFEST BOX -->
+                <!-- OPTIMAL ROUTE / LOADOUT BOX -->
                 <div class="manifest-container" id="manifest-box" style="display:none;">
                     <div class="manifest-header">
                         <span>Current Loadout</span>
-                        <!-- New Auto-Optimize Button -->
-                        <button class="hub-btn" style="font-size:10px; padding:3px 8px; border:1px solid var(--accent); color:var(--accent);" onclick="autoFillLoadout()">✨ Max Profit</button>
+                        <!-- New Auto-Optimize Button with Class -->
+                        <button class="action-btn accent" onclick="autoFillLoadout()">
+                            <span>✨ Max Profit</span>
+                        </button>
                     </div>
-                    <!-- Clear Button -->
-                    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-                        <span id="manifest-dest" style="color:#fff; font-size:11px; margin-right:auto;">Target: -</span>
-                        <button class="hub-btn" style="font-size:10px; padding:2px 6px; border-color:var(--danger); color:var(--danger);" onclick="clearLoadout()">Clear</button>
+                    <!-- Clear Button with Class -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span id="manifest-dest" style="color:#fff; font-size:11px;">Target: -</span>
+                        <button class="action-btn danger" onclick="clearLoadout()">Clear</button>
                     </div>
                     <div id="manifest-list" class="manifest-slots"></div>
                     <div id="manifest-total" class="manifest-total"></div>
@@ -619,7 +669,7 @@
         let selectedCity = "Tir Chonaill";
         let townRatings = {}; 
 
-        // LOADOUT STATE
+        // Loadout State
         let userLoadout = {}; // { itemName: qty }
 
         let currentUser = null;
@@ -663,6 +713,7 @@
                 commerceType: activeCommerceType,
                 transport: activeTransport,
                 city: selectedCity,
+                // UI State reads directly from input for active calculation
                 merchantRating: parseInt(document.getElementById('merchant-rating-input').value, 10) || 1,
                 trader: parseInt(document.getElementById('trader-qty').value, 10) || 0,
                 trust: parseInt(document.getElementById('trustworthy-qty').value, 10) || 0,
@@ -704,7 +755,6 @@
                 
             let williamBonus = 0;
             if (uiState.william) {
-                const like = userSettings.williamLike; 
                 const uiLike = parseInt(document.getElementById('william-likeability').value) || 0;
                 if (uiLike >= 240) williamBonus = 0.03;
                 else if (uiLike >= 130) williamBonus = 0.02;
@@ -712,7 +762,6 @@
             }
             const total = (1 + masteryBonus + letterMultiplier + williamBonus);
             
-            // Update visual bonus indicator
             const disp = document.getElementById('modifier-display');
             if(disp) disp.innerText = `(Bonus: +${Math.round((total - 1) * 100)}%)`;
             
@@ -748,14 +797,14 @@
             refreshUI(); // Refresh list to update counts
         }
 
-        function clearLoadout() {
+        window.clearLoadout = function() {
             userLoadout = {};
             recalcLoadout();
             refreshUI();
         }
         
         // SHIFT+CLICK HANDLER
-        function handleQtyClick(event, itemName, dir) {
+        window.handleQtyClick = function(event, itemName, dir) {
             event.stopPropagation();
             if (!itemName) return;
             const itemData = commerceDbFind(itemName);
@@ -763,7 +812,7 @@
 
             if (event.shiftKey) {
                 if (dir > 0) {
-                    // FILL REMAINING CAPACITY
+                    // --- NEW LOGIC: ADD EXACTLY 1 STACK IF POSSIBLE ---
                     const uiState = getUIState();
                     const stats = getModifiedStats(activeTransport, uiState);
                     
@@ -778,35 +827,32 @@
                          }
                     }
                     
-                    // Add items one by one until full
+                    // Add items up to 1 stack size
                     let added = 0;
-                    while (true) {
-                         // Proposed new state
-                         const newWeight = usedWeight + itemData.weight;
-                         // Check if adding 1 requires a new slot or fits in existing partial slot
-                         // Simplified: Calculate total slots needed for (current + 1)
+                    let toAdd = itemData.max;
+                    
+                    while(toAdd > 0) {
                          const currentQty = (userLoadout[itemName] || 0) + added;
                          const newQty = currentQty + 1;
                          
-                         // Check item limit
+                         // Check limit
                          if (itemData.limit !== Infinity && newQty > itemData.limit) break;
+
+                         const newWeight = usedWeight + itemData.weight;
                          
-                         // Calculate new slot usage for this specific item
-                         // We need to subtract old slot usage of this item and add new
                          const oldItemSlots = Math.ceil(currentQty / itemData.max);
                          const newItemSlots = Math.ceil(newQty / itemData.max);
                          const slotDiff = newItemSlots - oldItemSlots;
-                         
                          const newSlots = usedSlots + slotDiff;
                          
                          if (newWeight <= stats.weight && newSlots <= stats.slots) {
                              usedWeight = newWeight;
                              usedSlots = newSlots;
                              added++;
+                             toAdd--;
                          } else {
                              break;
                          }
-                         if (added > 2000) break; // Safety
                     }
                     
                     if (added > 0) updateLoadout(itemName, added);
@@ -824,12 +870,12 @@
             }
         }
         
-        function updateCenterStock(val) {
+        window.updateCenterStock = function(val) {
             if(!currentItem) return;
-            updateStock(currentItem.name, val);
+            window.updateStock(currentItem.name, val);
         }
 
-        function autoFillLoadout() {
+        window.autoFillLoadout = function() {
             const uiState = getUIState();
             const origin = selectedCity;
             if(!origin) return;
@@ -900,7 +946,6 @@
             renderManifest(trip, 'manifest-box', 'manifest-list', 'manifest-total');
         }
 
-
         function renderCommerceTabs() {
             const container = document.getElementById('commerce-type-tabs');
             if (!container) return;
@@ -912,14 +957,11 @@
                     activeCommerceType = type; 
                     const valid = citiesByType[type];
                     if(valid.length > 0) selectedCity = valid[0];
-                    userLoadout = {}; // Clear loadout on mode change
+                    userLoadout = {}; 
                     renderCommerceTabs(); 
                     renderCityTabs(); 
                     renderTransportTabs(); 
-                    
-                    // Update rating input for new city
                     document.getElementById('merchant-rating-input').value = townRatings[selectedCity] || 1;
-                    
                     refreshUI(); 
                     savePrefs(); 
                 };
@@ -966,12 +1008,8 @@
                 btn.className = `picker-btn ${selectedCity === city ? 'active' : ''}`;
                 btn.onclick = () => { 
                     selectedCity = city; 
-                    
-                    // Update rating input for selected city
                     document.getElementById('merchant-rating-input').value = townRatings[city] || 1;
-                    
-                    userLoadout = {}; // Clear loadout on city change? Maybe safer.
-                    
+                    userLoadout = {}; 
                     renderCityTabs(); 
                     refreshUI(); 
                     savePrefs(); 
@@ -1001,7 +1039,6 @@
                     const effP = rawUnitP > 0 ? (rawUnitP * mods.totalMultiplier) : rawUnitP;
                     return { ...item, rawUnitP, dBuy, sellVal, eff: effP / Math.max(1, item.weight) };
                 }).filter(i => i.rawUnitP > 0).sort((a, b) => b.eff - a.eff);
-                
                 potential.forEach(item => {
                     const stock = getStock(item.name);
                     let qty = Math.min(Math.floor(remWeight / item.weight), remSlots * item.max, item.limit, stock);
@@ -1019,16 +1056,13 @@
 
         function renderManifest(trip, boxId, listId, totalId) {
             const box = document.getElementById(boxId), list = document.getElementById(listId), total = document.getElementById(totalId);
-            // Always show box if we have controls, but show empty msg if no trip
             box.style.display = 'block';
-            
             if (!trip || trip.profit <= 0) {
                 document.getElementById('manifest-dest').innerText = "Target: -";
                 list.innerHTML = `<div style="color:var(--text-dim); font-size:10px; padding:10px; text-align:center;">Loadout Empty</div>`;
                 total.textContent = `+0`;
                 return;
             }
-            
             document.getElementById('manifest-dest').innerText = `Target: ${trip.dest}`;
             let slotHtml = '';
             let filled = 0;
@@ -1048,16 +1082,12 @@
         function refreshUI() {
             const active = document.activeElement;
             if (active && active.classList.contains('price-input')) return;
-
             const uiState = getUIState(); 
             updateMarketItems(uiState); 
             showPrices(uiState); 
             updatePreview(uiState); 
             updateTownIcon(); 
-            
-            // Instead of running manifest algorithm, we recalc based on userLoadout
             recalcLoadout(); 
-
             const wCheck = document.getElementById('william-check');
             const wBox = document.getElementById('william-like-box');
             if(wCheck && wBox) wBox.style.display = wCheck.checked ? 'flex' : 'none';
@@ -1101,11 +1131,9 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item' + (isSelected ? ' selected-item' : '');
                 const cStock = getStock(item.name);
-                
-                // --- NEW QTY CONTROLS ---
                 const qtyInLoad = userLoadout[item.name] || 0;
                 
-                // Prevent click bubbling for buttons
+                // Prevent click bubbling
                 itemDiv.onclick = () => { currentItem = item; refreshUI(); if (window.innerWidth <= 1000) closeSidebars(); };
 
                 const controlHtml = `
@@ -1116,11 +1144,16 @@
                     </div>
                 `;
 
+                // Reorganized Item Row with Stock Input
                 itemDiv.innerHTML = `
                     <div class="item-icon-box" style="background-image: url('${getImagePath(item.img)}')"></div>
                     <div class="item-list-content">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span class="item-name">${item.name}</span>
+                            <div class="stock-widget">
+                                <span class="stock-label">STOCK</span>
+                                <input type="number" class="stock-input" value="${cStock}" onclick="event.stopPropagation()" oninput="window.updateStock('${item.name.replace(/'/g, "\\'")}', this.value)">
+                            </div>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                             <div class="stock-display" style="font-size:9px;">${item.weight}g / ${item.max}</div>
@@ -1132,17 +1165,6 @@
             });
             container.appendChild(fragment);
         }
-        
-        // CSS for new item actions
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .item-actions { display: flex; align-items: center; gap: 2px; background: #000; border-radius: 4px; border: 1px solid var(--border); padding: 1px; height: 20px; }
-            .qty-btn { width: 18px; height: 100%; background: var(--card-bg); border: none; color: #aaa; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 10px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
-            .qty-btn:hover { background: var(--border); color: #fff; }
-            .qty-val { min-width: 20px; text-align: center; font-size: 10px; font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 600; }
-            .stock-display { font-size: 10px; color: var(--text-dim); }
-        `;
-        document.head.appendChild(style);
 
         function showPrices(uiState) {
             const list = document.getElementById('profit-list');
@@ -1179,34 +1201,38 @@
             list.appendChild(fragment);
         }
 
+        // --- REALTIME DATABASE PERSISTENCE ---
+
         function updatePrice(city, val) {
             if (!currentItem) return;
             const sellVal = parseInt(val, 10) || 0;
             const priceKey = `${currentItem.name}_${city}`.replace(/[.#$[\]]/g, "_");
             publicPrices[priceKey] = sellVal;
             skipRender = true;
+            
             if(rtdb) rtdb.ref(`public_commerce/prices/${priceKey}`).set(sellVal);
             recalcLoadout();
         }
 
-        function updateStock(itemName, quantity) {
+        window.updateStock = function(itemName, quantity) {
             const qty = parseInt(quantity) || 0;
             publicStocks[itemName] = qty;
             skipRender = true;
+            
             if(rtdb) rtdb.ref(`public_commerce/stocks/${itemName}`).set(qty);
-            // Don't auto-run manifests
         }
 
-        function updateBasePrice(val) {
+        window.updateBasePrice = function(val) {
             if (!currentItem) return;
             const price = parseInt(val) || 0;
             publicBasePrices[currentItem.name] = price;
             skipRender = true;
+            
             if(rtdb) rtdb.ref(`public_commerce/base_prices/${currentItem.name}`).set(price);
             refreshUI();
         }
 
-        function validateRating(input) {
+        window.validateRating = function(input) {
             let val = parseInt(input.value);
             if(val < 1) val = 1;
             if(val > 9) val = 9;
@@ -1220,10 +1246,16 @@
             const prefs = getUIState();
             prefs.transports = transportOwnership;
             prefs.activeTransport = activeTransport;
-            prefs.city = document.getElementById('city-select').value;
-            prefs.townRatings = townRatings; // SAVE MAP
+            prefs.townRatings = townRatings; 
+            prefs.city = selectedCity;
+            
+            prefs.drawers = {};
+            document.querySelectorAll('details').forEach(d => {
+                if(d.id) prefs.drawers[d.id] = d.open;
+            });
 
             localStorage.setItem('mabi_prefs', JSON.stringify(prefs));
+            
             if (currentUser && rtdb) {
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => { rtdb.ref(`users/${currentUser.uid}/settings`).update(prefs); }, 1000);
@@ -1232,9 +1264,23 @@
 
         function applySettings(data) {
             if (!data) return;
+            
+            // --- STATE VALIDATION FIX ---
+            // Ensure loaded city is valid for loaded type
+            let tempType = data.commerceType || activeCommerceType;
+            let tempCity = data.city || selectedCity;
+            const validCities = citiesByType[tempType];
+            
+            if (!validCities || !validCities.includes(tempCity)) {
+                // Mismatch detected: Auto-correct to first valid city
+                console.warn(`Mismatch detected: ${tempCity} not in ${tempType}. Auto-correcting.`);
+                tempCity = validCities ? validCities[0] : "Tir Chonaill";
+            }
+            
+            activeCommerceType = tempType;
+            selectedCity = tempCity;
+            
             if (data.townRatings) townRatings = data.townRatings;
-            if (data.commerceType) activeCommerceType = data.commerceType;
-            if (data.city) selectedCity = data.city;
             if (data.activeTransport) activeTransport = data.activeTransport;
             if (data.transports) transportOwnership = data.transports;
             if (data.mastery) document.getElementById('mastery-rank').value = data.mastery;
@@ -1248,7 +1294,6 @@
             if (data.trader) document.getElementById('trader-qty').value = data.trader;
             if (data.trust) document.getElementById('trustworthy-qty').value = data.trust;
             
-            // Restore Drawers
             if (data.drawers) {
                 for (const [id, isOpen] of Object.entries(data.drawers)) {
                     const el = document.getElementById(id);
@@ -1268,13 +1313,13 @@
             refreshUI();
         }
 
-        function toggleSidebar(side) {
+        window.toggleSidebar = function(side) {
             const left = document.getElementById('left-panel'), right = document.getElementById('right-panel'), backdrop = document.getElementById('mobile-backdrop');
             if (side === 'left') { left.classList.toggle('active'); backdrop.classList.toggle('active', left.classList.contains('active')); right.classList.remove('active'); }
             else { right.classList.toggle('active'); backdrop.classList.toggle('active', right.classList.contains('active')); left.classList.remove('active'); }
         }
 
-        function closeSidebars() {
+        window.closeSidebars = function() {
             document.getElementById('left-panel').classList.remove('active');
             document.getElementById('right-panel').classList.remove('active');
             document.getElementById('mobile-backdrop').classList.remove('active');
@@ -1282,13 +1327,11 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const saved = JSON.parse(localStorage.getItem('mabi_prefs')) || {};
-            
-            if (saved.townRatings) townRatings = saved.townRatings; // LOAD MAP
+            if (saved.townRatings) townRatings = saved.townRatings; 
 
             document.getElementById('mastery-rank').innerHTML = Object.keys(masteryRanks).map(r => `<option value="${r}">Rank ${r} (+${Math.round(masteryRanks[r]*100)}%)</option>`).join('');
             document.getElementById('letter-select').innerHTML = ["None", "Ogre", "Goblin", "Imp", "Irusan's (Special)"].map(n => `<option value="${n}">${n}</option>`).join('');
 
-            // --- Robust Event Listeners ---
             document.querySelectorAll('.transport-toggle').forEach(toggle => {
                 toggle.onchange = (e) => { transportOwnership[toggle.dataset.mount] = e.target.checked; savePrefs(); renderTransportTabs(); refreshUI(); };
             });
@@ -1297,11 +1340,8 @@
             });
             document.getElementById('merchant-rating-input').onchange = (e) => validateRating(e.target);
             
-            // Single listener for Fine Letter Check
             const fineCheck = document.getElementById('fine-letter-check');
-            if (fineCheck) {
-                fineCheck.onchange = () => { refreshUI(); savePrefs(); };
-            }
+            if (fineCheck) { fineCheck.onchange = () => { refreshUI(); savePrefs(); }; }
             
             ['trader-qty', 'trustworthy-qty', 'mastery-rank', 'letter-select', 'gm-check', 'william-likeability'].forEach(id => {
                 const el = document.getElementById(id);
@@ -1317,7 +1357,6 @@
                 renderTransportTabs(); refreshUI(); savePrefs(); 
             };
             
-            // 1. Load Local
             const localSaved = JSON.parse(localStorage.getItem('mabi_prefs')) || {};
             applySettings(localSaved);
 
@@ -1332,39 +1371,46 @@
             firebase.initializeApp(firebaseConfig);
             rtdb = firebase.database();
             auth = firebase.auth();
-            // CRITICAL FIX: Set persistence to ensure session carries over from other pages
             auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
             
             rtdb.ref('public_commerce/prices').on('value', (s) => { if (!skipRender) { publicPrices = s.val() || {}; refreshUI(); } skipRender = false; });
             rtdb.ref('public_commerce/stocks').on('value', (s) => { if (!skipRender) { publicStocks = s.val() || {}; refreshUI(); } skipRender = false; });
             rtdb.ref('public_commerce/base_prices').on('value', (s) => { if (!skipRender) { publicBasePrices = s.val() || {}; refreshUI(); } skipRender = false; });
             
-            // --- AUTHENTICATION LISTENER: UPDATED TO REMOVE TRANSFORMATION ---
             auth.onAuthStateChanged(user => {
-                const displayElem = document.getElementById('user-display');
+                const uInfo = document.getElementById('user-info');
+                const uAvatar = document.getElementById('user-avatar');
+                const status = document.getElementById('connection-status');
+                const mobileUser = document.getElementById('mobile-user-info'); 
+
                 if (user) {
                     currentUser = user;
+                    status.innerText = "Online";
+                    status.style.color = "var(--accent)";
                     
-                    // 1. Initial fallback using email prefix (no transform)
-                    displayElem.textContent = user.email.split('@')[0];
+                    const name = user.email ? user.email.split('@')[0] : "User";
+                    uInfo.textContent = name;
+                    if(mobileUser) mobileUser.textContent = name;
 
-                    // 2. Try instant load from local settings cache (no transform)
                     const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
                     if (cached.username) {
-                        displayElem.textContent = cached.username;
+                        uInfo.textContent = cached.username;
+                        if(mobileUser) mobileUser.textContent = cached.username;
                     }
+                    if(cached.avatar) uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
 
-                    // 3. Real-time sync with database profile (no transform)
                     firebase.database().ref(`users/${user.uid}/profile`).on('value', (snap) => {
                         const profile = snap.val();
-                        if (profile && profile.username) {
-                            displayElem.textContent = profile.username;
-                            // Update local cache
+                        if (profile) {
+                            if(profile.username) {
+                                uInfo.textContent = profile.username;
+                                if(mobileUser) mobileUser.textContent = profile.username;
+                            }
+                            if(profile.avatar) uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
                             localStorage.setItem('mabi_user_cache_' + user.uid, JSON.stringify(profile));
                         }
                     });
 
-                    // 2. Load Cloud Settings
                     firebase.database().ref(`users/${user.uid}/settings`).once('value', (snap) => {
                         const cloudPrefs = snap.val();
                         if(cloudPrefs) applySettings(cloudPrefs);
@@ -1372,7 +1418,10 @@
 
                 } else {
                     currentUser = { uid: 'local_guest', isGuest: true };
-                    displayElem.textContent = "GUEST";
+                    uInfo.textContent = "Guest";
+                    if(mobileUser) mobileUser.textContent = "GUEST";
+                    status.innerText = "Local Mode";
+                    status.style.color = "var(--text-dim)";
                 }
             });
         });
