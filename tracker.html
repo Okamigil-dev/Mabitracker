@@ -343,6 +343,12 @@
                         <span class="toggle-label">Edit Mode</span>
                         <label><input type="checkbox" id="edit-mode-toggle" class="toggle-input" onchange="toggleMgmt()"><div class="toggle-switch"></div></label>
                     </div>
+
+                    <!-- NEW: Hide Completed Toggle -->
+                    <div class="toggle-row">
+                        <span class="toggle-label">Hide Completed Groups</span>
+                        <label><input type="checkbox" id="hide-completed-toggle" class="toggle-input" onchange="toggleHideCompleted()"><div class="toggle-switch"></div></label>
+                    </div>
                     
                     <div style="margin-top:20px;">
                         <label class="panel-label">Characters (Comma Separated)</label>
@@ -406,6 +412,7 @@
 
     let tasks = [], chars = ["Main"], collapsed = {}, catOrder = [], lastReset = { daily: 0, mon: 0, thu: 0, sat: 0 };
     let timerSettings = { daily: true, mon: true, thu: true, sat: true };
+    let hideCompletedGroups = false; // New state variable
     let currentView = 'daily', activeFilter = "ALL", currentUser = null;
     let skipRender = false;
 
@@ -442,6 +449,9 @@
             tasks = localData.tasks || []; chars = localData.chars || ["Main"]; catOrder = localData.catOrder || []; lastReset = localData.lastReset || { daily: 0, mon: 0, thu: 0, sat: 0 };
             collapsed = localData.collapsed || {};
             timerSettings = localData.timerSettings || { daily: true, mon: true, thu: true, sat: true };
+            hideCompletedGroups = localData.hideCompletedGroups || false;
+            
+            document.getElementById('hide-completed-toggle').checked = hideCompletedGroups;
             checkAndReset(); render(); renderPendingSidebar(); applyTimerSettings();
         } else {
             db.ref(`users/${currentUser.uid}`).on('value', (snap) => {
@@ -450,7 +460,10 @@
                 tasks = data.tasks || []; chars = data.chars || ["Main"]; catOrder = data.catOrder || []; lastReset = data.lastReset || { daily: 0, mon: 0, thu: 0, sat: 0 };
                 collapsed = data.collapsed || {};
                 timerSettings = data.timerSettings || { daily: true, mon: true, thu: true, sat: true };
+                hideCompletedGroups = data.hideCompletedGroups || false;
                 
+                document.getElementById('hide-completed-toggle').checked = hideCompletedGroups;
+
                 if (data.profile) {
                     document.getElementById('user-info').innerText = data.profile.username || currentUser.email;
                     if(data.profile.avatar) document.getElementById('user-avatar').style.backgroundImage = `url('${data.profile.avatar}')`;
@@ -463,7 +476,7 @@
 
     function pushData() { 
         if (!currentUser) return;
-        const dataToSave = { tasks, chars, catOrder, lastReset, collapsed, timerSettings };
+        const dataToSave = { tasks, chars, catOrder, lastReset, collapsed, timerSettings, hideCompletedGroups };
         if (currentUser.isGuest) {
             localStorage.setItem('mabi_tracker_guest_data', JSON.stringify(dataToSave));
         } else {
@@ -508,6 +521,12 @@
         timerSettings.sat = document.getElementById('toggle-timer-sat').checked;
         applyTimerSettings();
         pushData();
+    }
+    
+    function toggleHideCompleted() {
+        hideCompletedGroups = document.getElementById('hide-completed-toggle').checked;
+        pushData();
+        render();
     }
 
     function renderPendingSidebar() {
@@ -611,7 +630,13 @@
         cats.forEach(cat => {
             const finalTasks = visibleTasks.filter(t => t.cat === cat && (activeFilter === "ALL" || t.char === activeFilter));
             const hasGlobalTasks = tasks.some(t => t.cat === cat);
-            const shouldShow = (finalTasks.length > 0) || isEdit || (!hasGlobalTasks && catOrder.includes(cat));
+            const isComplete = finalTasks.length > 0 && finalTasks.every(t => t.done >= t.max);
+
+            // LOGIC: Show group if:
+            // 1. It has relevant tasks OR we are in Edit Mode OR it's an empty group in the user's list
+            // 2. AND (we are in Edit Mode OR "Hide Completed" is OFF OR the group is NOT complete)
+            const shouldShow = ((finalTasks.length > 0) || isEdit || (!hasGlobalTasks && catOrder.includes(cat)))
+                               && (isEdit || !hideCompletedGroups || !isComplete);
 
             if (!shouldShow) return;
 
@@ -653,7 +678,7 @@
                 sum.appendChild(delBtn);
 
             } else { 
-                sum.innerHTML = `${cat} <span style="font-weight:400; font-size:10px; opacity:0.6; margin-left:5px;">${finalTasks.length > 0 && finalTasks.every(t => t.done >= t.max) ? '(Complete)' : ''}</span>`; 
+                sum.innerHTML = `${cat} <span style="font-weight:400; font-size:10px; opacity:0.6; margin-left:5px;">${isComplete ? '(Complete)' : ''}</span>`; 
             }
 
             const list = document.createElement('div'); list.className = "sort-list"; list.dataset.cat = cat;
