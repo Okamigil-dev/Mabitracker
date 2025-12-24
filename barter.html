@@ -14,6 +14,7 @@
     
     <style>
         :root {
+            /* V2.7 Theme */
             --bg: #09090b;
             --sidebar-bg: #121214;
             --card-bg: #18181b;
@@ -56,7 +57,7 @@
             gap: 20px;
             padding: 0 20px;
             height: 40px;
-            background: #050506; /* Slightly darker than sidebar for distinction */
+            background: #050506;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
         }
@@ -77,7 +78,7 @@
             flex-direction: column; 
             height: 100%; 
             width: 100%; 
-            /* REMOVED max-width and margin to stretch screen */
+            /* Full Width Layout (No Max Width) */
             border-left: 1px solid var(--border); 
             border-right: 1px solid var(--border); 
         }
@@ -238,7 +239,7 @@
     <div class="interface-container">
         <!-- GLOBAL NAVIGATION BAR -->
         <nav class="global-nav">
-            <a href="index.html">HUB</a>
+            <a href="index.html">HOME</a>
             <a href="tracker.html">TRACKER</a>
             <a href="barter.html" class="active">BARTER</a>
             <a href="commerce.html">COMMERCE</a>
@@ -249,8 +250,13 @@
                 <div style="display:flex; align-items:center;">
                     <span class="main-title">BARTER TRACKER</span>
                 </div>
-                <div style="display:flex; gap:15px; align-items:center;">
-                    <span id="user-display" style="font-size:11px; color:var(--accent);">GUEST</span>
+                <!-- User Profile Section -->
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div style="text-align:right;">
+                        <div id="user-info" style="font-size:12px; font-weight:600; color:var(--text-main);">Guest</div>
+                        <div id="connection-status" style="font-size:10px; color:var(--text-dim);">Local Mode</div>
+                    </div>
+                    <div id="user-avatar" style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--card-bg); border: 1px solid var(--border); background-size: cover; background-position: center; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23a1a1aa\'%3E%3Cpath d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/%3E%3C/svg%3E');"></div>
                 </div>
             </div>
         </div>
@@ -431,32 +437,52 @@
             calculateLoadout(); 
         });
         
+        // --- AUTHENTICATION LISTENER ---
         auth.onAuthStateChanged(user => {
-            const displayElem = document.getElementById('user-display');
+            const uInfo = document.getElementById('user-info');
+            const uAvatar = document.getElementById('user-avatar');
+            const status = document.getElementById('connection-status');
+            const mobileUser = document.getElementById('user-display'); // For mobile header
+
             if (user) {
                 currentUser = user;
-                displayElem.textContent = user.email.split('@')[0];
-                const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
-                if (cached.username) displayElem.textContent = cached.username;
+                status.innerText = "Online";
+                status.style.color = "var(--accent)";
+                
+                // 1. Initial fallback using email prefix
+                const name = user.email.split('@')[0];
+                uInfo.textContent = name;
+                if(mobileUser) mobileUser.textContent = name;
 
-                firebase.database().ref(`users/${user.uid}/profile`).on('value', (snap) => {
+                // 2. Try instant load from local settings cache
+                const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
+                if (cached.username) {
+                    uInfo.textContent = cached.username;
+                    if(mobileUser) mobileUser.textContent = cached.username;
+                }
+                if(cached.avatar) uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+
+                // 3. Real-time sync with database profile
+                rtdb.ref(`users/${user.uid}/profile`).on('value', (snap) => {
                     const profile = snap.val();
-                    if (profile && profile.username) {
-                        displayElem.textContent = profile.username;
+                    if (profile) {
+                        if(profile.username) {
+                            uInfo.textContent = profile.username;
+                            if(mobileUser) mobileUser.textContent = profile.username;
+                        }
+                        if(profile.avatar) uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
                         localStorage.setItem('mabi_user_cache_' + user.uid, JSON.stringify(profile));
                     }
                 });
 
                 // --- SHARED SETTINGS LISTENER ---
-                firebase.database().ref(`users/${user.uid}/settings`).on('value', (snap) => {
+                rtdb.ref(`users/${user.uid}/settings`).on('value', (snap) => {
                     const prefs = snap.val();
                     if(prefs) {
-                        // 1. Update activeBuffs (for weight/slots)
                         activeBuffs.gm = prefs.gm || false;
                         activeBuffs.william = prefs.william || false;
                         activeBuffs.alpaca = prefs.alpaca || false;
                         
-                        // 2. Update userSettings (for profit math)
                         userSettings = {
                             mastery: prefs.mastery || '1',
                             letter: prefs.letter || 'None',
@@ -469,7 +495,6 @@
                             alpaca: prefs.alpaca
                         };
                         
-                        // 3. Update DOM checkboxes to match
                         const gmBox = document.getElementById('buff-gm');
                         const wBox = document.getElementById('buff-william');
                         const aBox = document.getElementById('buff-alpaca');
@@ -477,7 +502,6 @@
                         if(wBox) wBox.checked = activeBuffs.william;
                         if(aBox) aBox.checked = activeBuffs.alpaca;
 
-                        // 4. Refresh Everything
                         calculateLoadout(); 
                         renderTransportTabs(1);
                         renderTransportTabs(2);
@@ -487,7 +511,10 @@
                 startSync();
             } else {
                 currentUser = { uid: 'local_guest', isGuest: true };
-                displayElem.textContent = "GUEST";
+                uInfo.textContent = "Guest";
+                if(mobileUser) mobileUser.textContent = "GUEST";
+                status.innerText = "Local Mode";
+                status.style.color = "var(--text-dim)";
                 startSync();
             }
         });
@@ -802,15 +829,32 @@
         document.querySelectorAll('.toggle-input').forEach(chk=>{ 
             chk.onchange=(e)=>{ 
                 const id=e.target.id.replace('buff-',''); 
-                if(id==='william'&&e.target.checked) document.getElementById('buff-alpaca').checked=activeBuffs.alpaca=false; 
-                if(id==='alpaca'&&e.target.checked) document.getElementById('buff-william').checked=activeBuffs.william=false; 
+                
+                // Logic to uncheck conflicting partners
+                if(id==='william'&&e.target.checked) document.getElementById('buff-alpaca').checked=false; 
+                if(id==='alpaca'&&e.target.checked) document.getElementById('buff-william').checked=false; 
+                
+                // Update Local
                 activeBuffs[id]=e.target.checked; 
+                if(id==='william') activeBuffs.alpaca=false;
+                if(id==='alpaca') activeBuffs.william=false;
+
+                // Sync to Database
+                if(currentUser && !currentUser.isGuest) {
+                    const updates = {};
+                    updates[id] = e.target.checked;
+                    if(id === 'william' && e.target.checked) updates['alpaca'] = false;
+                    if(id === 'alpaca' && e.target.checked) updates['william'] = false;
+                    firebase.database().ref(`users/${currentUser.uid}/settings`).update(updates);
+                }
+
                 calculateLoadout(); 
                 renderTransportTabs(1);
                 renderTransportTabs(2);
                 saveData(); 
             }; 
         });
+
         window.toggleSidebar=(s)=>{document.getElementById(s+'-panel').classList.add('active');document.getElementById('mobile-backdrop').classList.add('active');};
         window.closeSidebars=()=>{document.getElementById('left-panel').classList.remove('active');document.getElementById('right-panel').classList.remove('active');document.getElementById('mobile-backdrop').classList.remove('active');};
         window.onload=calculateLoadout;
