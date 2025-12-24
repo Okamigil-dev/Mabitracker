@@ -760,10 +760,8 @@
                 else if (uiLike >= 80) williamBonus = 0.01;
             }
             const total = (1 + masteryBonus + letterMultiplier + williamBonus);
-            
             const disp = document.getElementById('modifier-display');
             if(disp) disp.innerText = `(Bonus: +${Math.round((total - 1) * 100)}%)`;
-            
             return { totalMultiplier: total };
         }
 
@@ -774,13 +772,9 @@
             const stats = getModifiedStats(uiState.transport, uiState);
             const load = Math.min(Math.floor(stats.weight / item.weight), stats.slots * item.max, item.limit);
             
-            // Item Profit Logic: Total Base Profit for stack * Multiplier
             const baseProfit = (sellVal !== "" && sellVal > 0) ? (sellVal - dBuy) * load : 0;
             const mods = getActiveModifiers(uiState);
-            
-            // Multiplier applies to PROFIT only
             let finalProfit = baseProfit > 0 ? Math.floor(baseProfit * mods.totalMultiplier) : baseProfit;
-            
             const divisor = (uiState.commerceType === "Barter") ? 34 : 17;
             const score = Math.max(0, Math.floor(((sellVal - (item.buy || 0)) * load) / divisor));
             return { profit: finalProfit, score: score, load: load };
@@ -793,7 +787,7 @@
             userLoadout[itemName] += change;
             if (userLoadout[itemName] <= 0) delete userLoadout[itemName];
             recalcLoadout();
-            refreshUI(); // Refresh list to update counts
+            refreshUI(); 
         }
 
         window.clearLoadout = function() {
@@ -809,13 +803,13 @@
             const itemData = commerceDbFind(itemName);
             if (!itemData) return;
 
-            if (event.shiftKey) {
+            // CTRL+CLICK: MAX FILL or REMOVE ALL
+            if (event.ctrlKey || event.metaKey) {
                 if (dir > 0) {
-                    // --- NEW LOGIC: ADD EXACTLY 1 STACK IF POSSIBLE ---
+                    // MAX FILL
                     const uiState = getUIState();
                     const stats = getModifiedStats(activeTransport, uiState);
                     
-                    // Calculate current usage
                     let usedWeight = 0;
                     let usedSlots = 0;
                     for (const [n, q] of Object.entries(userLoadout)) {
@@ -825,16 +819,12 @@
                              usedSlots += Math.ceil(q / iData.max);
                          }
                     }
-                    
-                    // Add items up to 1 stack size
+
                     let added = 0;
-                    let toAdd = itemData.max;
-                    
-                    while(toAdd > 0) {
+                    while(true) {
                          const currentQty = (userLoadout[itemName] || 0) + added;
                          const newQty = currentQty + 1;
                          
-                         // Check limit
                          if (itemData.limit !== Infinity && newQty > itemData.limit) break;
 
                          const newWeight = usedWeight + itemData.weight;
@@ -848,12 +838,63 @@
                              usedWeight = newWeight;
                              usedSlots = newSlots;
                              added++;
-                             toAdd--;
                          } else {
                              break;
                          }
+                         if (added > 10000) break; // Safety
+                    }
+                    if (added > 0) updateLoadout(itemName, added);
+                } else {
+                    // REMOVE ALL
+                    const current = userLoadout[itemName] || 0;
+                    if (current > 0) {
+                        updateLoadout(itemName, -current);
+                    }
+                }
+                return;
+            }
+
+            if (event.shiftKey) {
+                if (dir > 0) {
+                    // ADD UP TO 1 STACK IF POSSIBLE
+                    const uiState = getUIState();
+                    const stats = getModifiedStats(activeTransport, uiState);
+                    
+                    let usedWeight = 0;
+                    let usedSlots = 0;
+                    for (const [n, q] of Object.entries(userLoadout)) {
+                         const iData = commerceDbFind(n);
+                         if (iData) {
+                             usedWeight += iData.weight * q;
+                             usedSlots += Math.ceil(q / iData.max);
+                         }
                     }
                     
+                    // Try to add exactly 1 stack (itemData.max) or fit remainder
+                    let added = 0;
+                    let toAdd = itemData.max; 
+                    
+                    while(toAdd > 0) {
+                         const currentQty = (userLoadout[itemName] || 0) + added;
+                         const newQty = currentQty + 1;
+                         
+                         if (itemData.limit !== Infinity && newQty > itemData.limit) break;
+
+                         const newWeight = usedWeight + itemData.weight;
+                         const oldItemSlots = Math.ceil(currentQty / itemData.max);
+                         const newItemSlots = Math.ceil(newQty / itemData.max);
+                         const slotDiff = newItemSlots - oldItemSlots;
+                         const newSlots = usedSlots + slotDiff;
+                         
+                         if (newWeight <= stats.weight && newSlots <= stats.slots) {
+                             usedWeight = newWeight;
+                             usedSlots = newSlots;
+                             added++;
+                             toAdd--;
+                         } else {
+                             break; // No more room
+                         }
+                    }
                     if (added > 0) updateLoadout(itemName, added);
 
                 } else {
