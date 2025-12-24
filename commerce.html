@@ -669,7 +669,7 @@
         let selectedCity = "Tir Chonaill";
         let townRatings = {}; 
 
-        // Loadout State
+        // LOADOUT STATE
         let userLoadout = {}; // { itemName: qty }
 
         let currentUser = null;
@@ -1378,6 +1378,7 @@
                 const uAvatar = document.getElementById('user-avatar');
                 const status = document.getElementById('connection-status');
                 const mobileUser = document.getElementById('mobile-user-info'); 
+                const mobileAvatar = document.getElementById('mobile-user-avatar');
 
                 if (user) {
                     currentUser = user;
@@ -1393,7 +1394,10 @@
                         uInfo.textContent = cached.username;
                         if(mobileUser) mobileUser.textContent = cached.username;
                     }
-                    if(cached.avatar) uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+                    if(cached.avatar) {
+                        uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+                        if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+                    }
 
                     firebase.database().ref(`users/${user.uid}/profile`).on('value', (snap) => {
                         const profile = snap.val();
@@ -1402,7 +1406,10 @@
                                 uInfo.textContent = profile.username;
                                 if(mobileUser) mobileUser.textContent = profile.username;
                             }
-                            if(profile.avatar) uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
+                            if(profile.avatar) {
+                                uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
+                                if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${profile.avatar}')`;
+                            }
                             localStorage.setItem('mabi_user_cache_' + user.uid, JSON.stringify(profile));
                         }
                     });
