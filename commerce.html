@@ -173,7 +173,7 @@
             display: flex; align-items: center; justify-content: space-between; margin-top: 2px;
         }
         
-        /* Styling for the small stock widget in the list */
+        /* Styling for the small stock widget in the list - REMOVED from use but style kept for reference */
         .stock-widget {
             display: flex; align-items: center; gap: 4px;
             background: #000; border: 1px solid var(--border);
@@ -1150,10 +1150,6 @@
                     <div class="item-list-content">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span class="item-name">${item.name}</span>
-                            <div class="stock-widget">
-                                <span class="stock-label">STOCK</span>
-                                <input type="number" class="stock-input" value="${cStock}" onclick="event.stopPropagation()" oninput="window.updateStock('${item.name.replace(/'/g, "\\'")}', this.value)">
-                            </div>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                             <div class="stock-display" style="font-size:9px;">${item.weight}g / ${item.max}</div>
