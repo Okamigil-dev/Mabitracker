@@ -80,6 +80,7 @@
             flex-direction: column; 
             height: 100%; 
             width: 100%; 
+            /* Full Width Layout */
             border-left: 1px solid var(--border); 
             border-right: 1px solid var(--border); 
         }
@@ -393,7 +394,7 @@
                 <div class="config-section">
                     <label class="panel-label">ADD NEW GROUP</label>
                     <div style="display:flex; gap:8px;">
-                        <input type="text" id="new-cat" class="input-dark" placeholder="Group Name...">
+                        <input type="text" id="new-cat" class="input-dark" placeholder="Group Name..." onkeydown="if(event.key==='Enter') addCat()">
                         <button onclick="addCat()" class="hub-btn" style="background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent);">Add</button>
                     </div>
                 </div>
