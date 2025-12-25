@@ -114,7 +114,7 @@
         /* Pending List in Sidebar */
         .mini-task-row { font-size: 12px; color: var(--text-dim); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Center Panel Navigation */
+        /* Center Panel Navigation (New Stacked Layout) */
         .nav-stack {
             position: sticky; top: 0; z-index: 20; background: var(--card-bg);
             border-bottom: 1px solid var(--border);
@@ -131,6 +131,7 @@
             -webkit-overflow-scrolling: touch;
             background: var(--bg);
         }
+        /* Hide scrollbar for character tabs */
         .char-tabs-bar::-webkit-scrollbar { display: none; } 
         
         .char-pill {
@@ -206,6 +207,7 @@
         @media (max-width: 1000px) {
             .mobile-only { display: block; }
             .desktop-only { display: none; }
+            /* Hide global nav on mobile to preserve layout */
             .global-nav { display: none; }
             
             .content-grid { display: block; height: calc(100dvh - 50px); }
@@ -238,6 +240,7 @@
             .drawer-title { font-weight: 700; color: #fff; }
             .drawer-close { background: none; border: none; color: var(--text-dim); font-size: 20px; padding: 0 5px; cursor: pointer; }
 
+            /* Mobile User Profile */
             .user-profile-box { display: flex; align-items: center; gap: 12px; padding: 15px; border-bottom: 1px solid var(--border); }
             .user-avatar-mobile { width: 40px; height: 40px; border-radius: 50%; background-color: var(--card-bg); border: 1px solid var(--border); background-size: cover; background-position: center; flex-shrink: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1a1aa'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"); }
             .user-info-text-mobile { font-size: 13px; font-weight: 600; color: var(--text-main); word-break: break-all; line-height: 1.2; }
@@ -426,6 +429,7 @@
     let currentView = 'daily', activeFilter = "ALL", currentUser = null;
     let skipRender = false;
     let isDataLoaded = false; // SAFETY LOCK
+    let catSortableInstance = null; // Store instance
 
     // --- AUTH & SYNC ---
     auth.onAuthStateChanged(user => {
@@ -693,7 +697,11 @@
             charTabsCont.appendChild(btn);
         });
 
-        const cont = document.getElementById('list-container'); cont.innerHTML = '';
+        const cont = document.getElementById('list-container'); 
+        cont.innerHTML = '';
+
+        if (catSortableInstance) catSortableInstance.destroy();
+
         const visibleTasks = tasks.filter(t => currentView === 'daily' ? t.type === 'daily' : t.type !== 'daily');
         
         const allCats = new Set([...catOrder, ...visibleTasks.map(t => t.cat)]);
@@ -740,10 +748,23 @@
                 inp.value = cat; 
                 inp.onclick = e => e.stopPropagation();
                 inp.onchange = e => { 
+                    const newName = e.target.value.trim();
+                    if (!newName) return; 
+
                     skipRender = true;
-                    tasks.forEach(t => { if(t.cat === cat) t.cat = e.target.value; }); 
+                    
+                    tasks.forEach(t => { if(t.cat === cat) t.cat = newName; }); 
+                    
                     const idx = catOrder.indexOf(cat);
-                    if(idx !== -1) catOrder[idx] = e.target.value;
+                    if(idx !== -1) catOrder[idx] = newName;
+                    
+                    catOrder = [...new Set(catOrder)];
+                    
+                    if (collapsed[cat] !== undefined) {
+                        collapsed[newName] = collapsed[cat];
+                        delete collapsed[cat];
+                    }
+
                     pushData(); 
                     render(); 
                 };
@@ -814,7 +835,7 @@
             det.append(sum, list); wrap.appendChild(det); cont.appendChild(wrap);
             new Sortable(list, { group: 'tasks', handle: '.drag-handle', animation: 150, onEnd: saveTaskOrder });
         });
-        new Sortable(cont, { handle: '.group-handle', animation: 150, onEnd: saveCatOrder });
+        catSortableInstance = new Sortable(cont, { handle: '.group-handle', animation: 150, onEnd: saveCatOrder });
         
         renderPendingSidebar();
     }
