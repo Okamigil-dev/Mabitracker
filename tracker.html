@@ -887,7 +887,17 @@
             render(); 
         }
     }
-    function upd(id, f, v) { const t = tasks.find(x => x.id == id); t[f] = (f==='max'?parseInt(v):v); skipRender = true; pushData(); render(); }
+    function upd(id, f, v) { 
+        const t = tasks.find(x => x.id == id); 
+        t[f] = (f==='max'?parseInt(v):v); 
+        skipRender = true; 
+        pushData(); 
+        
+        // Fix for focus loss: Only re-render if the change affects list structure or filtering
+        if (f === 'type' || f === 'char') {
+            render();
+        }
+    }
     function del(id) { tasks = tasks.filter(x => x.id != id); pushData(); render(); }
     function addTask(cat) { 
         // Determine character: Use activeFilter if specific, otherwise default to first in list
