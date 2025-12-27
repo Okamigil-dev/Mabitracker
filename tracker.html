@@ -419,10 +419,10 @@
                 
                 <div class="config-section">
                     <label class="panel-label">Server Resets</label>
-                    <div class="timer-card" id="timer-card-daily"><span class="t-label">Daily</span><span id="timer-daily" class="t-val">00:00:00</span></div>
-                    <div class="timer-card mon" id="timer-card-mon"><span class="t-label">Monday</span><span id="timer-mon" class="t-val">00:00:00</span></div>
-                    <div class="timer-card thu" id="timer-card-thu"><span class="t-label">Thursday</span><span id="timer-thu" class="t-val">00:00:00</span></div>
-                    <div class="timer-card sat" id="timer-card-sat"><span class="t-label">Saturday</span><span id="timer-sat" class="t-val">00:00:00</span></div>
+                    <div class="timer-card" id="timer-card-daily"><span class="t-label">Daily (7AM)</span><span id="timer-daily" class="t-val">00:00:00</span></div>
+                    <div class="timer-card mon" id="timer-card-mon"><span class="t-label">Monday (7AM)</span><span id="timer-mon" class="t-val">00:00:00</span></div>
+                    <div class="timer-card thu" id="timer-card-thu"><span class="t-label">Thursday (7AM)</span><span id="timer-thu" class="t-val">00:00:00</span></div>
+                    <div class="timer-card sat" id="timer-card-sat"><span class="t-label">Saturday (7AM)</span><span id="timer-sat" class="t-val">00:00:00</span></div>
                 </div>
 
                 <!-- Custom Timers List -->
@@ -474,14 +474,18 @@
                 </div>
                 <div class="config-section">
                     <label class="panel-label" style="color:var(--accent);">TRACKER CONFIG</label>
+                    
                     <div class="toggle-row">
                         <span class="toggle-label">Edit Mode</span>
                         <label><input type="checkbox" id="edit-mode-toggle" class="toggle-input" onchange="toggleMgmt()"><div class="toggle-switch"></div></label>
                     </div>
+
+                    <!-- NEW: Hide Completed Toggle -->
                     <div class="toggle-row">
                         <span class="toggle-label">Hide Completed Groups</span>
                         <label><input type="checkbox" id="hide-completed-toggle" class="toggle-input" onchange="toggleHideCompleted()"><div class="toggle-switch"></div></label>
                     </div>
+                    
                     <div style="margin-top:20px;">
                         <label class="panel-label">Characters (Comma Separated)</label>
                         <textarea id="char-input" class="input-dark" placeholder="Main, Alt1, Alt2..." onchange="updateChars(this.value)"></textarea>
@@ -508,6 +512,7 @@
                                 <option value="7">7 AM</option>
                                 <option value="0">12 AM</option>
                                 <option value="12">12 PM</option>
+                                <!-- Basic Hours Logic for brevity, user can pick -->
                                 <option value="1">1 AM</option><option value="2">2 AM</option><option value="3">3 AM</option><option value="4">4 AM</option><option value="5">5 AM</option><option value="6">6 AM</option><option value="8">8 AM</option><option value="9">9 AM</option><option value="10">10 AM</option><option value="11">11 AM</option>
                                 <option value="13">1 PM</option><option value="14">2 PM</option><option value="15">3 PM</option><option value="16">4 PM</option><option value="17">5 PM</option><option value="18">6 PM</option><option value="19">7 PM</option><option value="20">8 PM</option><option value="21">9 PM</option><option value="22">10 PM</option><option value="23">11 PM</option>
                             </select>
@@ -531,20 +536,29 @@
 
                 <div class="config-section">
                     <label class="panel-label">TIMER VISIBILITY (DEFAULT)</label>
-                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Daily Timer</span><label><input type="checkbox" id="toggle-timer-daily" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
-                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Monday Timer</span><label><input type="checkbox" id="toggle-timer-mon" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
-                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Thursday Timer</span><label><input type="checkbox" id="toggle-timer-thu" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
-                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Saturday Timer</span><label><input type="checkbox" id="toggle-timer-sat" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Daily (7AM)</span><label><input type="checkbox" id="toggle-timer-daily" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Monday (7AM)</span><label><input type="checkbox" id="toggle-timer-mon" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Thursday (7AM)</span><label><input type="checkbox" id="toggle-timer-thu" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Saturday (7AM)</span><label><input type="checkbox" id="toggle-timer-sat" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    const firebaseConfig = { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", authDomain: "mabinogi-tracker.firebaseapp.com", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com", projectId: "mabinogi-tracker", storageBucket: "mabinogi-tracker.firebasestorage.app", appId: "1:267690802644:web:fccdd005d5c8990504ea41", measurementId: "G-VBDBKQ3M1B" };
+    const firebaseConfig = {
+        apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
+        authDomain: "mabinogi-tracker.firebaseapp.com",
+        databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
+        projectId: "mabinogi-tracker",
+        storageBucket: "mabinogi-tracker.firebasestorage.app",
+        messagingSenderId: "267690802644",
+        appId: "1:267690802644:web:fccdd005d5c8990504ea41",
+        measurementId: "G-VBDBKQ3M1B"
+    };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.database();
+    const auth = firebase.auth();
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
     let tasks = [], chars = ["Main"], collapsed = {}, catOrder = [], lastReset = { daily: 0, mon: 0, thu: 0, sat: 0 };
@@ -553,13 +567,25 @@
     let hideCompletedGroups = false; 
     let currentView = 'daily', activeFilter = "ALL", currentUser = null;
     let skipRender = false;
-    let isDataLoaded = false; 
-    let catSortableInstance = null;
+    let isDataLoaded = false; // SAFETY LOCK
+    let catSortableInstance = null; // Store instance
     let selectedTimerColor = 'pink';
 
-    function validateName(name) { const invalid = ['.', '#', '$', '[', ']', '/']; return !invalid.some(char => name.includes(char)); }
-    function clearError() { const err=document.getElementById('add-cat-error'); if(err) err.style.display='none'; document.getElementById('new-cat').style.borderColor=''; }
+    // --- UTILS ---
+    function validateName(name) {
+        // Forbidden chars in Firebase keys
+        const invalid = ['.', '#', '$', '[', ']', '/']; 
+        return !invalid.some(char => name.includes(char));
+    }
+    
+    function clearError() {
+        const err = document.getElementById('add-cat-error');
+        const inp = document.getElementById('new-cat');
+        if(err) err.style.display = 'none';
+        if(inp) inp.style.borderColor = '';
+    }
 
+    // --- AUTH & SYNC ---
     auth.onAuthStateChanged(user => {
         const uInfo = document.getElementById('user-info');
         const uAvatar = document.getElementById('user-avatar');
@@ -572,30 +598,55 @@
             currentUser = user;
             status.innerText = "Online & Syncing";
             status.style.color = "var(--accent)";
-            if(mobileStatus) { mobileStatus.innerText = "Online"; mobileStatus.style.color = "var(--accent)"; }
+            
+            if(mobileStatus) {
+                mobileStatus.innerText = "Online";
+                mobileStatus.style.color = "var(--accent)";
+            }
+            
+            // Unified Profile Logic - Cache First
             try {
                 const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
                 const name = cached.username || user.email;
                 uInfo.innerText = name;
                 if(mobileUser) mobileUser.innerText = name;
-                if(cached.avatar) { uAvatar.style.backgroundImage = `url('${cached.avatar}')`; if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${cached.avatar}')`; }
-            } catch(e) {}
+                
+                if(cached.avatar) {
+                    uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+                    if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${cached.avatar}')`;
+                }
+            } catch(e) { 
+                uInfo.innerText = user.email; 
+                if(mobileUser) mobileUser.innerText = user.email;
+            }
+
             db.ref(`users/${user.uid}/profile`).on('value', (snap) => {
                 const profile = snap.val();
                 if (profile) {
-                    if(profile.username) { uInfo.innerText = profile.username; if(mobileUser) mobileUser.innerText = profile.username; }
-                    if(profile.avatar) { uAvatar.style.backgroundImage = `url('${profile.avatar}')`; if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${profile.avatar}')`; }
+                    if(profile.username) {
+                        uInfo.innerText = profile.username;
+                        if(mobileUser) mobileUser.innerText = profile.username;
+                    }
+                    if(profile.avatar) {
+                        uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
+                        if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${profile.avatar}')`;
+                    }
                     localStorage.setItem('mabi_user_cache_' + user.uid, JSON.stringify(profile));
                 }
             });
+            
             startSync(); 
         } else { 
             currentUser = { uid: 'local_guest', isGuest: true };
             uInfo.innerText = "Guest";
             if(mobileUser) mobileUser.innerText = "Guest";
-            status.innerText = "Local Mode";
+            
+            status.innerText = "Local Storage Mode";
             status.style.color = "var(--text-dim)";
-            if(mobileStatus) { mobileStatus.innerText = "Local Mode"; mobileStatus.style.color = "var(--text-dim)"; }
+            if(mobileStatus) {
+                mobileStatus.innerText = "Local Mode";
+                mobileStatus.style.color = "var(--text-dim)";
+            }
             startSync();
         }
         document.body.classList.add('ready');
@@ -873,18 +924,23 @@
             const isComplete = finalTasks.length > 0 && finalTasks.every(t => t.done >= t.max);
 
             // LOGIC: Show group if:
-            // 1. It has tasks relevant to the CURRENT view (Daily/Weekly)
-            // 2. OR it is completely empty and we are in Edit Mode (so we can add to it)
-            // 3. AND (we are in Edit Mode OR "Hide Completed" is OFF OR the group is NOT complete)
+            // 1. It has relevant tasks OR we are in Edit Mode OR it's an empty group in the user's list
+            // 2. AND (we are in Edit Mode OR "Hide Completed" is OFF OR the group is NOT complete)
+            // 3. AND (it matches the current view - Daily vs Weekly - unless it is empty)
+
+            // Calculate if group has *any* tasks relevant to this view
+            const groupTasksInView = finalTasks.length;
             
-            // Refined for Edit Mode clutter reduction:
-            // If a group has tasks but NONE match the current view (e.g. Weekly group in Daily view), hide it even in Edit Mode.
-            
-            const hasRelevantTasks = finalTasks.length > 0;
+            // Check if group is empty in the global context (true empty group)
             const isEmptyGroup = !hasGlobalTasks && catOrder.includes(cat);
+
+            // Refined Logic:
+            // - If in Edit Mode: Show Empty Groups OR Groups with Relevant Tasks. Hide irrelevant groups (Weekly groups in Daily view).
+            // - If Normal Mode: Show Groups with Relevant Tasks (filtered by completion).
             
-            const shouldShow = (hasRelevantTasks || (isEdit && isEmptyGroup)) 
-                               && (isEdit || !hideCompletedGroups || !isComplete);
+            const relevantForView = groupTasksInView > 0 || (isEdit && isEmptyGroup);
+            
+            const shouldShow = relevantForView && (isEdit || !hideCompletedGroups || !isComplete);
 
             if (!shouldShow) return;
             const wrap = document.createElement('div'); wrap.className = 'group-wrap'; wrap.dataset.catname = cat;
