@@ -23,6 +23,17 @@
             --mon: #ff9900;
             --thu: #0088ff;
             --sat: #cc44ff;
+            
+            /* Custom Timer Colors */
+            --custom-pink: #f472b6;
+            --custom-cyan: #22d3ee;
+            --custom-orange: #fb923c;
+            --custom-purple: #a78bfa;
+            --custom-red: #ef4444;
+            --custom-blue: #3b82f6;
+            --custom-yellow: #eab308;
+            --custom-gray: #71717a;
+
             --border: #27272a;
             --text-main: #e4e4e7;
             --text-dim: #a1a1aa;
@@ -179,7 +190,19 @@
         .t-label { font-size: 11px; color: var(--text-dim); font-weight: 500; }
         .t-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #fff; float: right; }
 
-        /* Pending List in Sidebar */
+        /* Timer Mgmt List */
+        .timer-mgmt-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px; border: 1px solid var(--border); border-radius: 6px;
+            margin-bottom: 6px; background: var(--bg);
+        }
+
+        /* Color Picker */
+        .color-picker { display: flex; gap: 8px; margin: 5px 0; flex-wrap: wrap; }
+        .color-swatch { width: 20px; height: 20px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: 0.1s; }
+        .color-swatch:hover { transform: scale(1.1); }
+        .color-swatch.selected { border-color: #fff; box-shadow: 0 0 0 1px var(--bg); }
+
         .mini-task-row { font-size: 12px; color: var(--text-dim); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: space-between; }
 
         /* Center Panel Navigation (New Stacked Layout) */
@@ -227,14 +250,19 @@
         .task-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; position: relative; overflow: hidden; transition: 0.2s; }
         .task-card:hover { border-color: #3f3f46; }
         .task-card.complete { opacity: 0.4; filter: grayscale(1); background: var(--bg); }
+        
+        /* Type colors */
         .task-card.type-mon { border-left: 2px solid var(--mon); }
         .task-card.type-thu { border-left: 2px solid var(--thu); }
         .task-card.type-sat { border-left: 2px solid var(--sat); }
+        /* Custom Timer Color */
+        .task-card.type-custom { border-left: 2px solid var(--custom-pink); }
 
         .type-tag { font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 700; color: #000; margin-left: 6px; }
         .tag-mon { background: var(--mon); }
         .tag-thu { background: var(--thu); }
         .tag-sat { background: var(--sat); }
+        .tag-custom { background: var(--custom-pink); color: #fff; }
         
         .t-info { flex-grow: 1; display: flex; align-items: center; gap: 12px; overflow: hidden; z-index: 2; position: relative; }
         .t-char-tag { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-dim); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
@@ -274,6 +302,14 @@
         .mobile-backdrop { display: none; }
         .drawer-header { display: none; } /* Hidden on desktop */
         .mobile-only { display: none; }
+
+        /* Add Group Container in Center Panel */
+        .add-group-container {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            margin-top: auto; /* Push to bottom if flex container allows */
+            background: var(--card-bg);
+        }
 
         @media (max-width: 1000px) {
             .mobile-only { display: block; }
@@ -389,12 +425,16 @@
                     <div class="timer-card sat" id="timer-card-sat"><span class="t-label">Saturday</span><span id="timer-sat" class="t-val">00:00:00</span></div>
                 </div>
 
-                <!-- Remaining Tasks List (Filtered by View & Char) -->
-                <div class="config-section" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; border-bottom: none;">
+                <!-- Custom Timers List -->
+                <div class="config-section" style="border-bottom:none;">
+                    <label class="panel-label">Personal Timers</label>
+                    <div id="custom-timer-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+
+                <!-- Remaining Tasks List -->
+                <div class="config-section" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; border-top:1px solid var(--border); border-bottom: none;">
                     <label class="panel-label">Remaining Tasks</label>
-                    <div id="left-sidebar-pending" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;">
-                        <!-- Populated by JS -->
-                    </div>
+                    <div id="left-sidebar-pending" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;"></div>
                 </div>
             </div>
 
@@ -412,6 +452,18 @@
                 </div>
 
                 <div id="list-container" class="task-list"></div>
+
+                <!-- Add Group Moved to Center Bottom -->
+                <div class="add-group-container">
+                    <label class="panel-label">ADD NEW GROUP</label>
+                    <div style="display:flex; flex-direction: column; gap:4px;">
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="new-cat" class="input-dark" placeholder="Group Name..." oninput="clearError()" onkeydown="if(event.key==='Enter') addCat()">
+                            <button onclick="addCat()" class="hub-btn" style="background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent);">Add</button>
+                        </div>
+                        <div id="add-cat-error" style="color:var(--danger); font-size:11px; display:none;">Group Name cannot contain: . # $ [ ] /</div>
+                    </div>
+                </div>
             </div>
 
             <!-- RIGHT PANEL: Config -->
@@ -422,18 +474,14 @@
                 </div>
                 <div class="config-section">
                     <label class="panel-label" style="color:var(--accent);">TRACKER CONFIG</label>
-                    
                     <div class="toggle-row">
                         <span class="toggle-label">Edit Mode</span>
                         <label><input type="checkbox" id="edit-mode-toggle" class="toggle-input" onchange="toggleMgmt()"><div class="toggle-switch"></div></label>
                     </div>
-
-                    <!-- NEW: Hide Completed Toggle -->
                     <div class="toggle-row">
                         <span class="toggle-label">Hide Completed Groups</span>
                         <label><input type="checkbox" id="hide-completed-toggle" class="toggle-input" onchange="toggleHideCompleted()"><div class="toggle-switch"></div></label>
                     </div>
-                    
                     <div style="margin-top:20px;">
                         <label class="panel-label">Characters (Comma Separated)</label>
                         <textarea id="char-input" class="input-dark" placeholder="Main, Alt1, Alt2..." onchange="updateChars(this.value)"></textarea>
@@ -442,84 +490,76 @@
                 </div>
 
                 <div class="config-section">
-                    <label class="panel-label" style="margin-bottom:12px;">TIMER VISIBILITY</label>
-                    <div class="toggle-row" style="padding:4px 0;">
-                        <span class="toggle-label" style="font-size:12px;">Daily Timer</span>
-                        <label><input type="checkbox" id="toggle-timer-daily" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label>
+                    <label class="panel-label" style="margin-bottom:12px;">ADD CUSTOM TIMER</label>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <input type="text" id="new-timer-name" class="input-dark" placeholder="Name (e.g. My Raid)">
+                        <div style="display:flex; gap:8px;">
+                            <select id="new-timer-day" class="input-dark">
+                                <option value="daily">Daily</option>
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                                <option value="0">Sunday</option>
+                            </select>
+                            <select id="new-timer-hour" class="input-dark">
+                                <option value="7">7 AM</option>
+                                <option value="0">12 AM</option>
+                                <option value="12">12 PM</option>
+                                <option value="1">1 AM</option><option value="2">2 AM</option><option value="3">3 AM</option><option value="4">4 AM</option><option value="5">5 AM</option><option value="6">6 AM</option><option value="8">8 AM</option><option value="9">9 AM</option><option value="10">10 AM</option><option value="11">11 AM</option>
+                                <option value="13">1 PM</option><option value="14">2 PM</option><option value="15">3 PM</option><option value="16">4 PM</option><option value="17">5 PM</option><option value="18">6 PM</option><option value="19">7 PM</option><option value="20">8 PM</option><option value="21">9 PM</option><option value="22">10 PM</option><option value="23">11 PM</option>
+                            </select>
+                        </div>
+                        <div class="color-picker" id="timer-color-picker">
+                            <div class="color-swatch selected" style="background-color: var(--custom-pink);" onclick="selectTimerColor(this, 'pink')"></div>
+                            <div class="color-swatch" style="background-color: var(--custom-cyan);" onclick="selectTimerColor(this, 'cyan')"></div>
+                            <div class="color-swatch" style="background-color: var(--custom-orange);" onclick="selectTimerColor(this, 'orange')"></div>
+                            <div class="color-swatch" style="background-color: var(--custom-purple);" onclick="selectTimerColor(this, 'purple')"></div>
+                            <div class="color-swatch" style="background-color: var(--accent);" onclick="selectTimerColor(this, 'green')"></div>
+                            <div class="color-swatch" style="background-color: var(--custom-red);" onclick="selectTimerColor(this, 'red')"></div>
+                            <div class="color-swatch" style="background-color: var(--custom-blue);" onclick="selectTimerColor(this, 'blue')"></div>
+                            <div class="color-swatch" style="background-color: var(--custom-yellow);" onclick="selectTimerColor(this, 'yellow')"></div>
+                            <div class="color-swatch" style="background-color: var(--custom-gray);" onclick="selectTimerColor(this, 'gray')"></div>
+                        </div>
+                        <button onclick="addCustomTimer()" class="hub-btn" style="background:var(--card-bg); border-color:var(--text-dim); width:100%;">Create Timer</button>
                     </div>
-                    <div class="toggle-row" style="padding:4px 0;">
-                        <span class="toggle-label" style="font-size:12px;">Monday Timer</span>
-                        <label><input type="checkbox" id="toggle-timer-mon" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label>
-                    </div>
-                    <div class="toggle-row" style="padding:4px 0;">
-                        <span class="toggle-label" style="font-size:12px;">Thursday Timer</span>
-                        <label><input type="checkbox" id="toggle-timer-thu" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label>
-                    </div>
-                    <div class="toggle-row" style="padding:4px 0;">
-                        <span class="toggle-label" style="font-size:12px;">Saturday Timer</span>
-                        <label><input type="checkbox" id="toggle-timer-sat" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label>
-                    </div>
+                    <!-- Management List for Timers -->
+                    <div id="manage-timers-list" style="margin-top:15px;"></div>
                 </div>
 
                 <div class="config-section">
-                    <label class="panel-label">ADD NEW GROUP</label>
-                    <div style="display:flex; flex-direction: column; gap:4px;">
-                        <div style="display:flex; gap:8px;">
-                            <input type="text" id="new-cat" class="input-dark" placeholder="Group Name..." oninput="clearError()" onkeydown="if(event.key==='Enter') addCat()">
-                            <button onclick="addCat()" class="hub-btn" style="background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent);">Add</button>
-                        </div>
-                        <div id="add-cat-error" style="color:var(--danger); font-size:11px; display:none;">Group Name cannot contain: . # $ [ ] /</div>
-                    </div>
-                </div>
-                
-                <div class="config-section" style="border-bottom:none;">
-                    <div style="font-size:11px; color:var(--text-dim); text-align:center;">
-                        Tip: In Edit Mode, you can drag tasks to reorder them, rename groups, or delete items.
-                    </div>
+                    <label class="panel-label">TIMER VISIBILITY (DEFAULT)</label>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Daily Timer</span><label><input type="checkbox" id="toggle-timer-daily" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Monday Timer</span><label><input type="checkbox" id="toggle-timer-mon" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Thursday Timer</span><label><input type="checkbox" id="toggle-timer-thu" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
+                    <div class="toggle-row" style="padding:4px 0;"><span class="toggle-label" style="font-size:12px;">Saturday Timer</span><label><input type="checkbox" id="toggle-timer-sat" class="toggle-input" onchange="updateTimerSettings()"><div class="toggle-switch"></div></label></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM",
-        authDomain: "mabinogi-tracker.firebaseapp.com",
-        databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com",
-        projectId: "mabinogi-tracker",
-        storageBucket: "mabinogi-tracker.firebasestorage.app",
-        messagingSenderId: "267690802644",
-        appId: "1:267690802644:web:fccdd005d5c8990504ea41",
-        measurementId: "G-VBDBKQ3M1B"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", authDomain: "mabinogi-tracker.firebaseapp.com", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com", projectId: "mabinogi-tracker", storageBucket: "mabinogi-tracker.firebasestorage.app", appId: "1:267690802644:web:fccdd005d5c8990504ea41", measurementId: "G-VBDBKQ3M1B" };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
     const auth = firebase.auth();
+    const db = firebase.database();
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
     let tasks = [], chars = ["Main"], collapsed = {}, catOrder = [], lastReset = { daily: 0, mon: 0, thu: 0, sat: 0 };
     let timerSettings = { daily: true, mon: true, thu: true, sat: true };
-    let hideCompletedGroups = false; // New state variable
+    let customTimers = []; 
+    let hideCompletedGroups = false; 
     let currentView = 'daily', activeFilter = "ALL", currentUser = null;
     let skipRender = false;
-    let isDataLoaded = false; // SAFETY LOCK
-    let catSortableInstance = null; // Store instance
+    let isDataLoaded = false; 
+    let catSortableInstance = null;
+    let selectedTimerColor = 'pink';
 
-    // --- UTILS ---
-    function validateName(name) {
-        // Forbidden chars in Firebase keys
-        const invalid = ['.', '#', '$', '[', ']', '/']; 
-        return !invalid.some(char => name.includes(char));
-    }
-    
-    function clearError() {
-        const err = document.getElementById('add-cat-error');
-        const inp = document.getElementById('new-cat');
-        if(err) err.style.display = 'none';
-        if(inp) inp.style.borderColor = '';
-    }
+    function validateName(name) { const invalid = ['.', '#', '$', '[', ']', '/']; return !invalid.some(char => name.includes(char)); }
+    function clearError() { const err=document.getElementById('add-cat-error'); if(err) err.style.display='none'; document.getElementById('new-cat').style.borderColor=''; }
 
-    // --- AUTH & SYNC ---
     auth.onAuthStateChanged(user => {
         const uInfo = document.getElementById('user-info');
         const uAvatar = document.getElementById('user-avatar');
@@ -532,55 +572,30 @@
             currentUser = user;
             status.innerText = "Online & Syncing";
             status.style.color = "var(--accent)";
-            
-            if(mobileStatus) {
-                mobileStatus.innerText = "Online";
-                mobileStatus.style.color = "var(--accent)";
-            }
-            
-            // Unified Profile Logic - Cache First
+            if(mobileStatus) { mobileStatus.innerText = "Online"; mobileStatus.style.color = "var(--accent)"; }
             try {
                 const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
                 const name = cached.username || user.email;
                 uInfo.innerText = name;
                 if(mobileUser) mobileUser.innerText = name;
-                
-                if(cached.avatar) {
-                    uAvatar.style.backgroundImage = `url('${cached.avatar}')`;
-                    if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${cached.avatar}')`;
-                }
-            } catch(e) { 
-                uInfo.innerText = user.email; 
-                if(mobileUser) mobileUser.innerText = user.email;
-            }
-
+                if(cached.avatar) { uAvatar.style.backgroundImage = `url('${cached.avatar}')`; if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${cached.avatar}')`; }
+            } catch(e) {}
             db.ref(`users/${user.uid}/profile`).on('value', (snap) => {
                 const profile = snap.val();
                 if (profile) {
-                    if(profile.username) {
-                        uInfo.innerText = profile.username;
-                        if(mobileUser) mobileUser.innerText = profile.username;
-                    }
-                    if(profile.avatar) {
-                        uAvatar.style.backgroundImage = `url('${profile.avatar}')`;
-                        if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${profile.avatar}')`;
-                    }
+                    if(profile.username) { uInfo.innerText = profile.username; if(mobileUser) mobileUser.innerText = profile.username; }
+                    if(profile.avatar) { uAvatar.style.backgroundImage = `url('${profile.avatar}')`; if(mobileAvatar) mobileAvatar.style.backgroundImage = `url('${profile.avatar}')`; }
                     localStorage.setItem('mabi_user_cache_' + user.uid, JSON.stringify(profile));
                 }
             });
-            
             startSync(); 
         } else { 
             currentUser = { uid: 'local_guest', isGuest: true };
             uInfo.innerText = "Guest";
             if(mobileUser) mobileUser.innerText = "Guest";
-            
-            status.innerText = "Local Storage Mode";
+            status.innerText = "Local Mode";
             status.style.color = "var(--text-dim)";
-            if(mobileStatus) {
-                mobileStatus.innerText = "Local Mode";
-                mobileStatus.style.color = "var(--text-dim)";
-            }
+            if(mobileStatus) { mobileStatus.innerText = "Local Mode"; mobileStatus.style.color = "var(--text-dim)"; }
             startSync();
         }
         document.body.classList.add('ready');
@@ -589,86 +604,156 @@
     function startSync() {
         if (currentUser.isGuest) {
             const localData = JSON.parse(localStorage.getItem('mabi_tracker_guest_data') || '{}');
-            tasks = localData.tasks || []; 
-            chars = localData.chars || ["Main"]; 
-            catOrder = localData.catOrder || []; 
-            lastReset = localData.lastReset || { daily: 0, mon: 0, thu: 0, sat: 0 };
-            collapsed = localData.collapsed || {};
-            timerSettings = localData.timerSettings || { daily: true, mon: true, thu: true, sat: true };
-            hideCompletedGroups = localData.hideCompletedGroups || false;
-            
-            document.getElementById('hide-completed-toggle').checked = hideCompletedGroups;
-            isDataLoaded = true; 
-            checkAndReset(); render(); renderPendingSidebar(); applyTimerSettings();
+            loadFromData(localData);
         } else {
-            // Listen specifically to the main user node (excluding profile/settings if possible, but structure forces root)
-            // Ideally, we'd split listeners, but for now we safeguard with isDataLoaded
             db.ref(`users/${currentUser.uid}`).on('value', (snap) => {
                 if (skipRender) { skipRender = false; return; }
-                const data = snap.val() || {};
-                
-                // Force Arrays
-                if (data.tasks) {
-                    tasks = Array.isArray(data.tasks) ? data.tasks : Object.values(data.tasks);
-                    tasks = tasks.filter(t => t); 
-                } else {
-                    tasks = [];
-                }
-                
-                if (data.chars) chars = Array.isArray(data.chars) ? data.chars : Object.values(data.chars);
-                else chars = ["Main"];
-
-                if (data.catOrder) catOrder = Array.isArray(data.catOrder) ? data.catOrder : Object.values(data.catOrder);
-                else catOrder = [];
-
-                lastReset = data.lastReset || { daily: 0, mon: 0, thu: 0, sat: 0 };
-                collapsed = data.collapsed || {};
-                timerSettings = data.timerSettings || { daily: true, mon: true, thu: true, sat: true };
-                hideCompletedGroups = data.hideCompletedGroups || false;
-                
-                document.getElementById('hide-completed-toggle').checked = hideCompletedGroups;
-
-                isDataLoaded = true; // Mark safe!
-                checkAndReset(); render(); renderPendingSidebar(); applyTimerSettings();
+                loadFromData(snap.val() || {});
             });
         }
     }
 
+    function loadFromData(data) {
+        if(data.tasks) { tasks = Array.isArray(data.tasks) ? data.tasks : Object.values(data.tasks); tasks = tasks.filter(t => t); } else { tasks = []; }
+        if(data.chars) chars = Array.isArray(data.chars) ? data.chars : Object.values(data.chars); else chars = ["Main"];
+        if(data.catOrder) catOrder = Array.isArray(data.catOrder) ? data.catOrder : Object.values(data.catOrder); else catOrder = [];
+        if(data.customTimers) customTimers = Array.isArray(data.customTimers) ? data.customTimers : Object.values(data.customTimers); else customTimers = [];
+        lastReset = data.lastReset || { daily: 0, mon: 0, thu: 0, sat: 0 };
+        collapsed = data.collapsed || {};
+        timerSettings = data.timerSettings || { daily: true, mon: true, thu: true, sat: true };
+        hideCompletedGroups = data.hideCompletedGroups || false;
+        
+        document.getElementById('hide-completed-toggle').checked = hideCompletedGroups;
+        isDataLoaded = true;
+        checkAndReset(); render(); renderPendingSidebar(); applyTimerSettings(); renderCustomTimers();
+    }
+
     function pushData() { 
         if (!currentUser) return;
-        if (!isDataLoaded && !currentUser.isGuest) {
-            console.warn("Prevented overwrite: Data not yet loaded.");
-            return;
-        }
+        if (!isDataLoaded && !currentUser.isGuest) { console.warn("Prevented overwrite: Data not yet loaded."); return; }
+        const cleanCollapsed = {}; for(const key in collapsed) { if(catOrder.includes(key) && validateName(key)) { cleanCollapsed[key] = collapsed[key]; } } collapsed = cleanCollapsed;
+        const dataToSave = { tasks, chars, catOrder, lastReset, collapsed, timerSettings, hideCompletedGroups, customTimers };
+        if (currentUser.isGuest) localStorage.setItem('mabi_tracker_guest_data', JSON.stringify(dataToSave));
+        else db.ref(`users/${currentUser.uid}`).update(dataToSave); 
+    }
 
-        // SELF-HEALING: Remove ghost entries from collapsed state before saving
-        const cleanCollapsed = {};
-        for(const key in collapsed) {
-             if(catOrder.includes(key) && validateName(key)) {
-                 cleanCollapsed[key] = collapsed[key];
-             }
-        }
-        collapsed = cleanCollapsed;
+    // --- CUSTOM TIMERS ---
+    function selectTimerColor(el, color) {
+        selectedTimerColor = color;
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+    }
 
-        const dataToSave = { tasks, chars, catOrder, lastReset, collapsed, timerSettings, hideCompletedGroups };
-        if (currentUser.isGuest) {
-            localStorage.setItem('mabi_tracker_guest_data', JSON.stringify(dataToSave));
-        } else {
-            db.ref(`users/${currentUser.uid}`).update(dataToSave); 
+    function addCustomTimer() {
+        const name = document.getElementById('new-timer-name').value.trim();
+        const day = document.getElementById('new-timer-day').value;
+        const hour = parseInt(document.getElementById('new-timer-hour').value);
+        if(!name) return;
+        
+        customTimers.push({ id: Date.now(), name, day, hour, visible: true, color: selectedTimerColor });
+        document.getElementById('new-timer-name').value = '';
+        pushData();
+        renderCustomTimers();
+        updateEngine(); 
+    }
+
+    function deleteTimer(id) {
+        customTimers = customTimers.filter(t => t.id !== id);
+        pushData();
+        renderCustomTimers();
+    }
+    
+    function toggleCustomTimerVisibility(id) {
+        const timer = customTimers.find(t => t.id === id);
+        if(timer) {
+            timer.visible = !timer.visible;
+            pushData();
+            renderCustomTimers();
         }
     }
 
-    // --- LOGIC ---
+    function renderCustomTimers() {
+        const mgmtList = document.getElementById('manage-timers-list');
+        mgmtList.innerHTML = '';
+        customTimers.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'timer-mgmt-item';
+            const isVisible = t.visible !== false;
+            
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label style="display:flex;align-items:center;cursor:pointer;"><input type="checkbox" class="toggle-input" ${isVisible ? 'checked' : ''} onchange="toggleCustomTimerVisibility(${t.id})"><div class="toggle-switch" style="transform:scale(0.8);"></div></label>
+                    <span style="font-size:11px;color:#fff;">${t.name}</span> 
+                </div>
+                <button onclick="deleteTimer(${t.id})" class="btn-del" style="width:20px;height:20px;font-size:14px;">×</button>
+            `;
+            mgmtList.appendChild(div);
+        });
+
+        let cont = document.getElementById('custom-timer-list');
+        cont.innerHTML = '';
+        customTimers.forEach(t => {
+            if(t.visible === false) return; 
+            const div = document.createElement('div');
+            div.className = 'timer-card';
+            
+            // Set Color
+            let colorVar = 'var(--custom-pink)';
+            if(t.color === 'cyan') colorVar = 'var(--custom-cyan)';
+            if(t.color === 'orange') colorVar = 'var(--custom-orange)';
+            if(t.color === 'purple') colorVar = 'var(--custom-purple)';
+            if(t.color === 'green') colorVar = 'var(--accent)';
+            if(t.color === 'red') colorVar = 'var(--custom-red)';
+            if(t.color === 'blue') colorVar = 'var(--custom-blue)';
+            if(t.color === 'yellow') colorVar = 'var(--custom-yellow)';
+            if(t.color === 'gray') colorVar = 'var(--custom-gray)';
+            
+            div.style.borderLeftColor = colorVar;
+            div.id = `ct-${t.id}`;
+            div.innerHTML = `<span class="t-label">${t.name}</span><span id="ct-val-${t.id}" class="t-val">--:--:--</span>`;
+            cont.appendChild(div);
+        });
+    }
+
+    function updateEngine() {
+        const now = new Date();
+        const pac = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
+        
+        const getNext = (dayStr, hour) => {
+            let d = new Date(pac); d.setHours(hour, 0, 0, 0);
+            if (dayStr !== 'daily') {
+                const dayNum = parseInt(dayStr);
+                while(d.getDay() !== dayNum) d.setDate(d.getDate() + 1);
+            }
+            if (pac >= d) d.setDate(d.getDate() + (dayStr === 'daily' ? 1 : 7));
+            return d;
+        };
+
+        const formatDiff = (target) => {
+            const ms = target - pac;
+            const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000), s = Math.floor((ms%60000)/1000);
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        };
+
+        document.getElementById('timer-daily').innerText = formatDiff(getNext('daily', 7));
+        document.getElementById('timer-mon').innerText = formatDiff(getNext('1', 7)); 
+        document.getElementById('timer-thu').innerText = formatDiff(getNext('4', 7));
+        document.getElementById('timer-sat').innerText = formatDiff(getNext('6', 7));
+        
+        customTimers.forEach(t => {
+            const el = document.getElementById(`ct-val-${t.id}`);
+            if(el) el.innerText = formatDiff(getNext(t.day, t.hour));
+        });
+    }
+
+    // --- RESET LOGIC UPDATED FOR CUSTOM TIMERS ---
     function checkAndReset() {
         if (!isDataLoaded) return;
         const now = new Date(), pac = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
-        const getR = (dayNum) => {
-            let r = new Date(pac); r.setHours(7, 0, 0, 0);
-            if (dayNum !== null) while (r.getDay() !== dayNum) r.setDate(r.getDate() - 1);
-            if (pac < r) r.setDate(r.getDate() - (dayNum !== null ? 7 : 1));
-            return r.getTime();
-        };
-        const rd = getR(null), rm = getR(1), rt = getR(4), rs = getR(6);
+        
+        const getR = (dayNum) => { let r=new Date(pac);r.setHours(7,0,0,0); if(dayNum!==null)while(r.getDay()!==dayNum)r.setDate(r.getDate()-1); if(pac<r)r.setDate(r.getDate()-(dayNum!==null?7:1)); return r.getTime(); };
+        const rd=getR(null), rm=getR(1), rt=getR(4), rs=getR(6);
+
         let changed = false;
         
         if (tasks && Array.isArray(tasks)) {
@@ -676,23 +761,37 @@
             if (lastReset.mon < rm) { tasks.forEach(t => { if(t.type === 'mon') t.done = 0; }); lastReset.mon = rm; changed = true; }
             if (lastReset.thu < rt) { tasks.forEach(t => { if(t.type === 'thu') t.done = 0; }); lastReset.thu = rt; changed = true; }
             if (lastReset.sat < rs) { tasks.forEach(t => { if(t.type === 'sat') t.done = 0; }); lastReset.sat = rs; changed = true; }
-        }
         
+            customTimers.forEach(timer => {
+                const typeId = 'custom_' + timer.id;
+                let d = new Date(pac); d.setHours(timer.hour, 0, 0, 0);
+                if (timer.day !== 'daily') {
+                    const dayNum = parseInt(timer.day);
+                    while(d.getDay() !== dayNum) d.setDate(d.getDate() - 1);
+                }
+                if (pac < d) d.setDate(d.getDate() - (timer.day === 'daily' ? 1 : 7));
+                const resetTime = d.getTime();
+                
+                if (!lastReset[typeId] || lastReset[typeId] < resetTime) {
+                    tasks.forEach(t => { if(t.type === typeId) t.done = 0; });
+                    lastReset[typeId] = resetTime;
+                    changed = true;
+                }
+            });
+        }
         if (changed) { pushData(); render(); }
     }
-
+    
     function applyTimerSettings() {
         document.getElementById('toggle-timer-daily').checked = timerSettings.daily !== false;
         document.getElementById('toggle-timer-mon').checked = timerSettings.mon !== false;
         document.getElementById('toggle-timer-thu').checked = timerSettings.thu !== false;
         document.getElementById('toggle-timer-sat').checked = timerSettings.sat !== false;
-
         document.getElementById('timer-card-daily').style.display = (timerSettings.daily !== false) ? 'block' : 'none';
         document.getElementById('timer-card-mon').style.display = (timerSettings.mon !== false) ? 'block' : 'none';
         document.getElementById('timer-card-thu').style.display = (timerSettings.thu !== false) ? 'block' : 'none';
         document.getElementById('timer-card-sat').style.display = (timerSettings.sat !== false) ? 'block' : 'none';
     }
-
     function updateTimerSettings() {
         timerSettings.daily = document.getElementById('toggle-timer-daily').checked;
         timerSettings.mon = document.getElementById('toggle-timer-mon').checked;
@@ -701,398 +800,126 @@
         applyTimerSettings();
         pushData();
     }
+    function toggleHideCompleted() { hideCompletedGroups = document.getElementById('hide-completed-toggle').checked; pushData(); render(); }
     
-    function toggleHideCompleted() {
-        hideCompletedGroups = document.getElementById('hide-completed-toggle').checked;
-        pushData();
-        render();
-    }
-
     function renderPendingSidebar() {
-        const list = document.getElementById('left-sidebar-pending');
-        if(!list) return;
-        list.innerHTML = '';
-
+        const list = document.getElementById('left-sidebar-pending'); if(!list) return; list.innerHTML = '';
         let relevantTasks = tasks.filter(t => currentView === 'daily' ? t.type === 'daily' : t.type !== 'daily');
-
         const allCats = new Set([...catOrder, ...relevantTasks.map(t => t.cat)]);
-        const sortedCats = [...allCats].sort((a,b) => {
-            const ia = catOrder.indexOf(a);
-            const ib = catOrder.indexOf(b);
-            if (ia === -1) return 1;
-            if (ib === -1) return -1;
-            return ia - ib;
-        });
-
+        const sortedCats = [...allCats].sort((a,b) => { const ia=catOrder.indexOf(a), ib=catOrder.indexOf(b); if(ia===-1)return 1; if(ib===-1)return -1; return ia-ib; });
         let hasPending = false;
-
         sortedCats.forEach(cat => {
-            const catTasks = relevantTasks.filter(t => 
-                t.cat === cat && 
-                (activeFilter === "ALL" || t.char === activeFilter) &&
-                (t.done < t.max)
-            );
-
+            const catTasks = relevantTasks.filter(t => t.cat === cat && (activeFilter === "ALL" || t.char === activeFilter) && (t.done < t.max));
             if (catTasks.length > 0) {
                 catTasks.forEach(t => {
-                    hasPending = true;
-                    const div = document.createElement('div');
-                    div.className = 'mini-task-row';
+                    hasPending = true; const div = document.createElement('div'); div.className = 'mini-task-row';
+                    let color = 'var(--accent)'; 
+                    if(t.type === 'mon') color = 'var(--mon)'; 
+                    else if(t.type === 'thu') color = 'var(--thu)'; 
+                    else if(t.type === 'sat') color = 'var(--sat)';
+                    else if(String(t.type).startsWith('custom_')) {
+                        const cTimer = customTimers.find(ct => 'custom_'+ct.id === t.type);
+                        if(cTimer && cTimer.color === 'cyan') color = 'var(--custom-cyan)';
+                        else if(cTimer && cTimer.color === 'orange') color = 'var(--custom-orange)';
+                        else if(cTimer && cTimer.color === 'purple') color = 'var(--custom-purple)';
+                        else if(cTimer && cTimer.color === 'green') color = 'var(--accent)';
+                        else if(cTimer && cTimer.color === 'red') color = 'var(--custom-red)';
+                        else if(cTimer && cTimer.color === 'blue') color = 'var(--custom-blue)';
+                        else if(cTimer && cTimer.color === 'yellow') color = 'var(--custom-yellow)';
+                        else if(cTimer && cTimer.color === 'gray') color = 'var(--custom-gray)';
+                        else color = 'var(--custom-pink)';
+                    }
                     
-                    let color = 'var(--accent)';
-                    if(t.type === 'mon') color = 'var(--mon)';
-                    if(t.type === 'thu') color = 'var(--thu)';
-                    if(t.type === 'sat') color = 'var(--sat)';
-                    
-                    div.innerHTML = `
-                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            <span style="color:${color}; margin-right:5px;">●</span> ${t.name} <span style="opacity:0.5; font-size:10px;">(${t.char})</span>
-                        </div>
-                        <button onclick="del(${t.id})" class="btn-del" title="Delete Task">×</button>
-                    `; 
+                    div.innerHTML = `<div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><span style="color:${color}; margin-right:5px;">●</span> ${t.name} <span style="opacity:0.5; font-size:10px;">(${t.char})</span></div><button onclick="del(${t.id})" class="btn-del" title="Delete Task">×</button>`; 
                     list.appendChild(div);
                 });
             }
         });
-
-        if(!hasPending) {
-            list.innerHTML = '<div style="color:var(--text-dim); font-size:11px; text-align:center; padding:10px;">All clear!</div>';
-        }
+        if(!hasPending) list.innerHTML = '<div style="color:var(--text-dim); font-size:11px; text-align:center; padding:10px;">All clear!</div>';
     }
 
-    function deleteCat(catName) {
-        // Confirmation removed as requested
-        catOrder = catOrder.filter(c => c !== catName);
-        tasks = tasks.filter(t => t.cat !== catName);
-        if (collapsed[catName] !== undefined) delete collapsed[catName];
-        pushData();
-        render();
-    }
-
+    function deleteCat(catName) { catOrder = catOrder.filter(c => c !== catName); tasks = tasks.filter(t => t.cat !== catName); if (collapsed[catName] !== undefined) delete collapsed[catName]; pushData(); render(); }
+    
     function render() {
-        if(!currentUser) return;
-        if (!tasks) tasks = []; 
-        const isEdit = document.getElementById('app').classList.contains('show-mgmt');
-        
-        document.getElementById('nav-daily').classList.toggle('active', currentView === 'daily');
-        document.getElementById('nav-weekly').classList.toggle('active', currentView === 'weekly');
-
-        const charInp = document.getElementById('char-input');
-        if (document.activeElement !== charInp) charInp.value = chars.join(', ');
-
-        // RENDER CHAR TABS
-        const charTabsCont = document.getElementById('char-tabs-container');
-        charTabsCont.innerHTML = '';
-        
-        // Add ALL button
-        const allBtn = document.createElement('div');
-        allBtn.className = `char-pill ${activeFilter === 'ALL' ? 'active' : ''}`;
-        allBtn.innerText = "All Characters";
-        allBtn.onclick = () => setF("ALL");
-        charTabsCont.appendChild(allBtn);
-
-        // Add character buttons
-        chars.forEach(c => {
-            const btn = document.createElement('div');
-            btn.className = `char-pill ${activeFilter === c ? 'active' : ''}`;
-            btn.innerText = c;
-            btn.onclick = () => setF(c);
-            charTabsCont.appendChild(btn);
-        });
-
-        const cont = document.getElementById('list-container'); 
-        cont.innerHTML = '';
-
-        if (catSortableInstance) catSortableInstance.destroy();
-
+        if(!currentUser) return; if (!tasks) tasks = []; const isEdit = document.getElementById('app').classList.contains('show-mgmt');
+        document.getElementById('nav-daily').classList.toggle('active', currentView === 'daily'); document.getElementById('nav-weekly').classList.toggle('active', currentView === 'weekly');
+        const charInp = document.getElementById('char-input'); if (document.activeElement !== charInp) charInp.value = chars.join(', ');
+        const charTabsCont = document.getElementById('char-tabs-container'); charTabsCont.innerHTML = '';
+        const allBtn = document.createElement('div'); allBtn.className = `char-pill ${activeFilter === 'ALL' ? 'active' : ''}`; allBtn.innerText = "All Characters"; allBtn.onclick = () => setF("ALL"); charTabsCont.appendChild(allBtn);
+        chars.forEach(c => { const btn = document.createElement('div'); btn.className = `char-pill ${activeFilter === c ? 'active' : ''}`; btn.innerText = c; btn.onclick = () => setF(c); charTabsCont.appendChild(btn); });
+        const cont = document.getElementById('list-container'); cont.innerHTML = ''; if (catSortableInstance) catSortableInstance.destroy();
         const visibleTasks = tasks.filter(t => currentView === 'daily' ? t.type === 'daily' : t.type !== 'daily');
-        
         const allCats = new Set([...catOrder, ...visibleTasks.map(t => t.cat)]);
-        const cats = [...allCats].sort((a,b) => {
-            const ia = catOrder.indexOf(a);
-            const ib = catOrder.indexOf(b);
-            if (ia === -1) return 1;
-            if (ib === -1) return -1;
-            return ia - ib;
-        });
-
+        const cats = [...allCats].sort((a,b) => { const ia=catOrder.indexOf(a), ib=catOrder.indexOf(b); if(ia===-1)return 1; if(ib===-1)return -1; return ia-ib; });
         cats.forEach(cat => {
             const finalTasks = visibleTasks.filter(t => t.cat === cat && (activeFilter === "ALL" || t.char === activeFilter));
             const hasGlobalTasks = tasks.some(t => t.cat === cat);
             const isComplete = finalTasks.length > 0 && finalTasks.every(t => t.done >= t.max);
-
-            // LOGIC: Show group if:
-            // 1. It has relevant tasks OR we are in Edit Mode OR it's an empty group in the user's list
-            // 2. AND (we are in Edit Mode OR "Hide Completed" is OFF OR the group is NOT complete)
-            const shouldShow = ((finalTasks.length > 0) || isEdit || (!hasGlobalTasks && catOrder.includes(cat)))
-                               && (isEdit || !hideCompletedGroups || !isComplete);
-
+            const shouldShow = ((finalTasks.length > 0) || isEdit || (!hasGlobalTasks && catOrder.includes(cat))) && (isEdit || !hideCompletedGroups || !isComplete);
             if (!shouldShow) return;
-
             const wrap = document.createElement('div'); wrap.className = 'group-wrap'; wrap.dataset.catname = cat;
-            const det = document.createElement('details'); det.open = collapsed[cat] !== false;
-            
-            det.ontoggle = () => { collapsed[cat] = det.open; skipRender = true; pushData(); };
-
-            const sum = document.createElement('summary');
-            sum.className = 'group-handle';
-            
+            const det = document.createElement('details'); det.open = collapsed[cat] !== false; det.ontoggle = () => { collapsed[cat] = det.open; skipRender = true; pushData(); };
+            const sum = document.createElement('summary'); sum.className = 'group-handle';
             if(isEdit) {
-                const dragIcon = document.createElement('span');
-                dragIcon.className = "drag-handle";
-                dragIcon.style.display = "inline-block";
-                dragIcon.style.marginRight = "10px";
-                dragIcon.innerHTML = "::";
-                sum.appendChild(dragIcon);
-
-                const inp = document.createElement('input'); 
-                inp.className = "input-dark no-drag"; // ADDED no-drag
-                inp.style = "width:200px; font-weight:700;";
-                inp.value = cat; 
-                inp.onclick = e => e.stopPropagation();
-                inp.onchange = e => { 
-                    const newName = e.target.value.trim();
-                    if (!newName) return; 
-
-                    if (!validateName(newName)) { // VALIDATE ON RENAME
-                        e.target.value = cat; 
-                        e.target.classList.add('input-error');
-                        setTimeout(() => e.target.classList.remove('input-error'), 1000);
-                        return;
-                    }
-
-                    skipRender = true;
-                    
-                    tasks.forEach(t => { if(t.cat === cat) t.cat = newName; }); 
-                    
-                    const idx = catOrder.indexOf(cat);
-                    if(idx !== -1) catOrder[idx] = newName;
-                    
-                    catOrder = [...new Set(catOrder)];
-                    
-                    if (collapsed[cat] !== undefined) {
-                        collapsed[newName] = collapsed[cat];
-                        delete collapsed[cat];
-                    }
-
-                    pushData(); 
-                    render(); 
-                };
-                sum.appendChild(inp);
-
-                const delBtn = document.createElement('button');
-                delBtn.innerHTML = "×";
-                delBtn.className = "btn-del no-drag"; // ADDED no-drag and class
-                delBtn.style = "margin-left:auto;"; // Removed most inline styles
-                delBtn.onclick = (e) => { e.preventDefault(); deleteCat(cat); };
-                sum.appendChild(delBtn);
-
-            } else { 
-                sum.innerHTML = `${cat} <span style="font-weight:400; font-size:10px; opacity:0.6; margin-left:5px;">${isComplete ? '(Complete)' : ''}</span>`; 
-            }
-
+                const dragIcon = document.createElement('span'); dragIcon.className = "drag-handle"; dragIcon.style.display = "inline-block"; dragIcon.style.marginRight = "10px"; dragIcon.innerHTML = "::"; sum.appendChild(dragIcon);
+                const inp = document.createElement('input'); inp.className = "input-dark no-drag"; inp.style = "width:200px; font-weight:700;"; inp.value = cat; inp.onclick = e => e.stopPropagation();
+                inp.onchange = e => { const newName = e.target.value.trim(); if (!newName) return; if (!validateName(newName)) { e.target.value = cat; e.target.classList.add('input-error'); setTimeout(() => e.target.classList.remove('input-error'), 1000); return; } skipRender = true; tasks.forEach(t => { if(t.cat === cat) t.cat = newName; }); const idx = catOrder.indexOf(cat); if(idx !== -1) catOrder[idx] = newName; catOrder = [...new Set(catOrder)]; if (collapsed[cat] !== undefined) { collapsed[newName] = collapsed[cat]; delete collapsed[cat]; } pushData(); render(); }; sum.appendChild(inp);
+                const delBtn = document.createElement('button'); delBtn.innerHTML = "×"; delBtn.className = "no-drag btn-del"; delBtn.style = "margin-left:auto;"; delBtn.onclick = (e) => { e.preventDefault(); deleteCat(cat); }; sum.appendChild(delBtn);
+            } else { sum.innerHTML = `${cat} <span style="font-weight:400; font-size:10px; opacity:0.6; margin-left:5px;">${isComplete ? '(Complete)' : ''}</span>`; }
             const list = document.createElement('div'); list.className = "sort-list"; list.dataset.cat = cat;
             finalTasks.forEach(t => {
                 const card = document.createElement('div'); 
-                card.className = `task-card type-${t.type} ${t.done >= t.max ? 'complete' : ''}`; 
+                card.className = `task-card type-${String(t.type).startsWith('custom_')?'custom':t.type} ${t.done >= t.max ? 'complete' : ''}`; 
                 card.dataset.id = t.id;
+                let tagHtml = ""; 
+                let typeColor = "";
                 
-                let tagHtml = "";
-                if(t.type === 'mon') tagHtml = `<span class="type-tag tag-mon">MON</span>`;
-                if(t.type === 'thu') tagHtml = `<span class="type-tag tag-thu">THU</span>`;
-                if(t.type === 'sat') tagHtml = `<span class="type-tag tag-sat">SAT</span>`;
+                if(t.type === 'mon') { tagHtml = `<span class="type-tag tag-mon">MON</span>`; typeColor = 'var(--mon)'; }
+                else if(t.type === 'thu') { tagHtml = `<span class="type-tag tag-thu">THU</span>`; typeColor = 'var(--thu)'; }
+                else if(t.type === 'sat') { tagHtml = `<span class="type-tag tag-sat">SAT</span>`; typeColor = 'var(--sat)'; }
+                else if(String(t.type).startsWith('custom_')) {
+                    const cTimer = customTimers.find(ct => 'custom_'+ct.id === t.type);
+                    let cColor = 'var(--custom-pink)';
+                    if(cTimer) {
+                        if(cTimer.color === 'cyan') cColor = 'var(--custom-cyan)';
+                        else if(cTimer.color === 'orange') cColor = 'var(--custom-orange)';
+                        else if(cTimer.color === 'purple') cColor = 'var(--custom-purple)';
+                        else if(cTimer.color === 'green') cColor = 'var(--accent)';
+                        else if(cTimer.color === 'red') cColor = 'var(--custom-red)';
+                        else if(cTimer.color === 'blue') cColor = 'var(--custom-blue)';
+                        else if(cTimer.color === 'yellow') cColor = 'var(--custom-yellow)';
+                        else if(cTimer.color === 'gray') cColor = 'var(--custom-gray)';
+                    }
+                    card.style.borderLeftColor = cColor; 
+                    typeColor = cColor;
+                    tagHtml = `<span class="type-tag" style="background-color:${cColor};color:#000;">${cTimer ? cTimer.name : 'Unknown'}</span>`;
+                }
 
-                card.innerHTML = `
-                    <div class="drag-handle">::</div>
-                    <div class="t-info">
-                        <div class="view-ui t-char-tag">${t.char || 'GB'}</div>
-                        <div class="view-ui t-name">${t.name} ${tagHtml}</div>
-                        <div class="view-ui pips">${Array.from({length:t.max}, (_,i) => `<div class="pip ${i<t.done?'on':''}"></div>`).join('')}</div>
-                        
-                        <div class="edit-ui">
-                            <input type="text" class="input-dark" value="${t.name}" onchange="upd(${t.id},'name',this.value)">
-                            <select class="input-dark" onchange="upd(${t.id},'char',this.value)">
-                                <option value="">GB</option>
-                                ${chars.map(c => `<option value="${c}" ${t.char === c ? 'selected' : ''}>${c}</option>`).join('')}
-                            </select>
-                            <select class="input-dark" onchange="upd(${t.id},'type',this.value)">
-                                <option value="daily" ${t.type==='daily'?'selected':''}>Daily</option>
-                                <option value="mon" ${t.type==='mon'?'selected':''}>Mon</option>
-                                <option value="thu" ${t.type==='thu'?'selected':''}>Thu</option>
-                                <option value="sat" ${t.type==='sat'?'selected':''}>Sat</option>
-                            </select>
-                            <input type="number" class="input-dark" value="${t.max}" onchange="upd(${t.id},'max',this.value)">
-                            <button onclick="del(${t.id})" class="btn-del" title="Delete Task">×</button>
-                        </div>
-                        <div class="prog-bar" style="width:${(t.done/t.max)*100}%"></div>
-                    </div>
-                    <div class="view-ui" style="display:flex; align-items:center; gap:8px;">
-                        <button class="btn-c" onclick="mod(event, ${t.id},-1)">-</button>
-                        <div style="font-family:'JetBrains Mono'; font-size:12px; width:22px; text-align:center; color:#fff; font-weight:700;">${t.done}</div>
-                        <button class="btn-c" onclick="mod(event, ${t.id},1)">+</button>
-                    </div>`;
+                card.innerHTML = `<div class="drag-handle">::</div><div class="t-info"><div class="view-ui t-char-tag">${t.char || 'GB'}</div><div class="view-ui t-name">${t.name} ${tagHtml}</div><div class="view-ui pips">${Array.from({length:t.max}, (_,i) => `<div class="pip ${i<t.done?'on':''}" style="${i<t.done && typeColor ? 'background:'+typeColor+';box-shadow:0 0 5px '+typeColor : ''}"></div>`).join('')}</div><div class="edit-ui"><input type="text" class="input-dark" value="${t.name}" onchange="upd(${t.id},'name',this.value)"><select class="input-dark" onchange="upd(${t.id},'char',this.value)"><option value="">GB</option>${chars.map(c => `<option value="${c}" ${t.char === c ? 'selected' : ''}>${c}</option>`).join('')}</select><select class="input-dark" onchange="upd(${t.id},'type',this.value)"><option value="daily" ${t.type==='daily'?'selected':''}>Daily</option><option value="mon" ${t.type==='mon'?'selected':''}>Mon</option><option value="thu" ${t.type==='thu'?'selected':''}>Thu</option><option value="sat" ${t.type==='sat'?'selected':''}>Sat</option>${customTimers.map(ct=>`<option value="custom_${ct.id}" ${t.type===('custom_'+ct.id)?'selected':''}>${ct.name}</option>`).join('')}</select><input type="number" class="input-dark" value="${t.max}" onchange="upd(${t.id},'max',this.value)"><button onclick="del(${t.id})" class="btn-del" title="Delete Task">×</button></div><div class="prog-bar" style="width:${(t.done/t.max)*100}%; ${typeColor ? 'background:'+typeColor : ''}"></div></div><div class="view-ui" style="display:flex; align-items:center; gap:8px;"><button class="btn-c" onclick="mod(event, ${t.id},-1)">-</button><div style="font-family:'JetBrains Mono'; font-size:12px; width:22px; text-align:center; color:#fff; font-weight:700;">${t.done}</div><button class="btn-c" onclick="mod(event, ${t.id},1)">+</button></div>`;
                 list.appendChild(card);
             });
-            
-            if(isEdit) { 
-                const add = document.createElement('button'); 
-                add.className = "hub-btn add-task-btn"; 
-                // Removed inline style
-                add.innerText = "+ Add Task"; 
-                add.onclick = () => addTask(cat); 
-                list.appendChild(add); 
-            }
-            
-            det.append(sum, list); wrap.appendChild(det); cont.appendChild(wrap);
-            new Sortable(list, { group: 'tasks', handle: '.drag-handle', animation: 150, onEnd: saveTaskOrder });
+            if(isEdit) { const add = document.createElement('button'); add.className = "hub-btn add-task-btn"; add.innerText = "+ Add Task"; add.onclick = () => addTask(cat); list.appendChild(add); }
+            det.append(sum, list); wrap.appendChild(det); cont.appendChild(wrap); new Sortable(list, { group: 'tasks', handle: '.drag-handle', animation: 150, onEnd: saveTaskOrder });
         });
-        
         catSortableInstance = new Sortable(cont, { handle: '.group-handle', filter: '.no-drag', preventOnFilter: false, animation: 150, onEnd: saveCatOrder });
-        
         renderPendingSidebar();
     }
-
+    
     function haptic() { if ("vibrate" in navigator) navigator.vibrate(12); }
-    function mod(e, id, d) { 
-        haptic(); 
-        const t = tasks.find(x => x.id == id); 
-        if(t) {
-            if (e.ctrlKey || e.metaKey) {
-                // If adding (d > 0), set to max. If removing (d < 0), set to 0.
-                t.done = d > 0 ? t.max : 0;
-            } else {
-                t.done = Math.max(0, Math.min(t.max, t.done + d)); 
-            }
-            skipRender = true; 
-            pushData(); 
-            render(); 
-        }
-    }
-    function upd(id, f, v) { 
-        const t = tasks.find(x => x.id == id); 
-        t[f] = (f==='max'?parseInt(v):v); 
-        skipRender = true; 
-        pushData(); 
-        
-        // Fix for focus loss: Only re-render if the change affects list structure or filtering
-        if (f === 'type' || f === 'char') {
-            render();
-        }
-    }
+    function mod(e, id, d) { haptic(); const t = tasks.find(x => x.id == id); if(t) { if (e.ctrlKey || e.metaKey) { t.done = d > 0 ? t.max : 0; } else { t.done = Math.max(0, Math.min(t.max, t.done + d)); } skipRender = true; pushData(); render(); } }
+    function upd(id, f, v) { const t = tasks.find(x => x.id == id); t[f] = (f==='max'?parseInt(v):v); skipRender = true; pushData(); if (f === 'type' || f === 'char') { render(); } }
     function del(id) { tasks = tasks.filter(x => x.id != id); pushData(); render(); }
-    function addTask(cat) { 
-        // Determine character: Use activeFilter if specific, otherwise default to first in list
-        let targetChar = (activeFilter !== "ALL") ? activeFilter : ((chars && chars.length > 0) ? chars[0] : "Main");
-        
-        // Determine type: 'daily' for daily view, 'thu' (weekly) for weekly view
-        let targetType = (currentView === 'daily') ? "daily" : "thu";
-
-        tasks.push({ id: Date.now(), name: "New Task", cat, done: 0, max: 1, type: targetType, char: targetChar }); 
-        pushData(); 
-        render();
-    }
-    
-    function addCat() { 
-        const i = document.getElementById('new-cat'); 
-        const err = document.getElementById('add-cat-error');
-        const name = i.value.trim();
-        
-        if(name) { 
-            if (!validateName(name)) { // VALIDATE ON CREATE
-                err.style.display = 'block';
-                i.classList.add('input-error');
-                setTimeout(() => i.classList.remove('input-error'), 1000);
-                return; 
-            }
-            
-            addTask(name); 
-            if(!catOrder.includes(name)) catOrder.push(name);
-            pushData();
-            i.value=''; 
-            err.style.display = 'none';
-        } 
-    }
-    
+    function addTask(cat) { let targetChar = (activeFilter !== "ALL") ? activeFilter : ((chars && chars.length > 0) ? chars[0] : "Main"); let targetType = (currentView === 'daily') ? "daily" : "thu"; tasks.push({ id: Date.now(), name: "New Task", cat, done: 0, max: 1, type: targetType, char: targetChar }); pushData(); render(); }
+    function addCat() { const i = document.getElementById('new-cat'); const err = document.getElementById('add-cat-error'); const name = i.value.trim(); if(name) { if (!validateName(name)) { err.style.display = 'block'; i.classList.add('input-error'); setTimeout(() => i.classList.remove('input-error'), 1000); return; } addTask(name); if(!catOrder.includes(name)) catOrder.push(name); pushData(); i.value=''; err.style.display = 'none'; } }
     function updateChars(v) { chars = v.split(',').map(s => s.trim()).filter(s => s !== ""); skipRender = true; pushData(); render(); }
     function setView(v) { currentView = v; render(); }
     function setF(f) { activeFilter = f; render(); }
     function toggleMgmt() { document.getElementById('app').classList.toggle('show-mgmt'); render(); }
+    function saveTaskOrder() { const taskCards = document.querySelectorAll('.task-card'); const visibleIds = new Set(); let newOrderedTasks = []; taskCards.forEach(c => { const id = parseInt(c.dataset.id); visibleIds.add(id); const t = tasks.find(x => x.id === id); if (t) { t.cat = c.closest('.sort-list').dataset.cat; newOrderedTasks.push(t); } }); const hiddenTasks = tasks.filter(t => !visibleIds.has(t.id)); tasks = [...newOrderedTasks, ...hiddenTasks]; pushData(); renderPendingSidebar(); }
+    function saveCatOrder() { const visibleOrder = Array.from(document.querySelectorAll('.group-wrap')).map(w => w.dataset.catname); const missing = catOrder.filter(c => !visibleOrder.includes(c)); catOrder = [...visibleOrder, ...missing]; pushData(); renderPendingSidebar(); }
+    function toggleSidebar(side) { const left = document.getElementById('left-panel'); const right = document.getElementById('right-panel'); const backdrop = document.getElementById('mobile-backdrop'); closeSidebars(); if (side === 'left') { left.classList.add('active'); backdrop.classList.add('active'); } if (side === 'right') { right.classList.add('active'); backdrop.classList.add('active'); } }
+    function closeSidebars() { document.getElementById('left-panel').classList.remove('active'); document.getElementById('right-panel').classList.remove('active'); document.getElementById('mobile-backdrop').classList.remove('active'); }
     
-    // --- SAFE SAVE TASK ORDER (Prevents Deletion of Hidden Tasks) ---
-    function saveTaskOrder() { 
-        // 1. Identify all tasks currently visible in the DOM (the new order)
-        const taskCards = document.querySelectorAll('.task-card');
-        const visibleIds = new Set();
-        let newOrderedTasks = [];
-
-        taskCards.forEach(c => { 
-            const id = parseInt(c.dataset.id);
-            visibleIds.add(id);
-            const t = tasks.find(x => x.id === id); 
-            if (t) {
-                // Update category based on the list it is currently in
-                t.cat = c.closest('.sort-list').dataset.cat; 
-                newOrderedTasks.push(t); 
-            }
-        }); 
-
-        // 2. Identify tasks that are NOT in the current DOM (hidden by view or char filter)
-        // These MUST be preserved
-        const hiddenTasks = tasks.filter(t => !visibleIds.has(t.id));
-        
-        // 3. Recombine: New Order + Preserved Hidden Tasks
-        tasks = [...newOrderedTasks, ...hiddenTasks]; 
-        
-        pushData(); 
-        renderPendingSidebar();
-    }
-    
-    function saveCatOrder() { 
-        const visibleOrder = Array.from(document.querySelectorAll('.group-wrap')).map(w => w.dataset.catname);
-        const missing = catOrder.filter(c => !visibleOrder.includes(c));
-        catOrder = [...visibleOrder, ...missing];
-        pushData(); 
-        renderPendingSidebar();
-    }
-
-    // Mobile Navigation
-    function toggleSidebar(side) {
-        const left = document.getElementById('left-panel');
-        const right = document.getElementById('right-panel');
-        const backdrop = document.getElementById('mobile-backdrop');
-        if (side === 'left') { closeSidebars(); left.classList.add('active'); backdrop.classList.add('active'); }
-        if (side === 'right') { closeSidebars(); right.classList.add('active'); backdrop.classList.add('active'); }
-    }
-    function closeSidebars() {
-        document.getElementById('left-panel').classList.remove('active');
-        document.getElementById('right-panel').classList.remove('active');
-        document.getElementById('mobile-backdrop').classList.remove('active');
-    }
-
-    function updateEngine() {
-        const now = new Date();
-        const pac = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
-        const getNextReset = (day) => {
-            let d = new Date(pac); d.setHours(7,0,0,0);
-            if (day !== null) { while(d.getDay() !== day) d.setDate(d.getDate()+1); }
-            if (pac >= d) d.setDate(d.getDate() + (day !== null ? 7 : 1));
-            return d;
-        };
-        const formatDiff = (target) => {
-            const ms = target - pac;
-            const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000), s = Math.floor((ms%60000)/1000);
-            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        };
-        const dElem = document.getElementById('timer-daily');
-        const tElem = document.getElementById('timer-thu');
-        const sElem = document.getElementById('timer-sat');
-        const mElem = document.getElementById('timer-mon');
-        
-        if(dElem) dElem.innerText = formatDiff(getNextReset(null));
-        if(mElem) mElem.innerText = formatDiff(getNextReset(1)); // 1 is Monday
-        if(tElem) tElem.innerText = formatDiff(getNextReset(4));
-        if(sElem) sElem.innerText = formatDiff(getNextReset(6));
-    }
     setInterval(updateEngine, 1000);
     setInterval(checkAndReset, 60000);
     updateEngine();
