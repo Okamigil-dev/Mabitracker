@@ -23,6 +23,17 @@
             --mon: #ff9900;
             --thu: #0088ff;
             --sat: #cc44ff;
+            
+            /* Custom Timer Colors */
+            --custom-pink: #f472b6;
+            --custom-cyan: #22d3ee;
+            --custom-orange: #fb923c;
+            --custom-purple: #a78bfa;
+            --custom-red: #ef4444;
+            --custom-blue: #3b82f6;
+            --custom-yellow: #eab308;
+            --custom-gray: #71717a;
+
             --border: #27272a;
             --text-main: #e4e4e7;
             --text-dim: #a1a1aa;
@@ -320,10 +331,16 @@
                 
                 <div class="config-section">
                     <label class="panel-label">Server Resets</label>
-                    <div class="timer-card" id="card-daily"><span class="t-label">Daily</span><span id="timer-daily" class="t-val">00:00:00</span></div>
-                    <div class="timer-card mon" id="card-mon"><span class="t-label">Monday</span><span id="timer-mon" class="t-val">00:00:00</span></div>
-                    <div class="timer-card thu" id="card-thu"><span class="t-label">Thursday</span><span id="timer-thu" class="t-val">00:00:00</span></div>
-                    <div class="timer-card sat" id="card-sat"><span class="t-label">Saturday</span><span id="timer-sat" class="t-val">00:00:00</span></div>
+                    <div class="timer-card" id="card-daily"><span class="t-label">Daily (7AM)</span><span id="timer-daily" class="t-val">00:00:00</span></div>
+                    <div class="timer-card mon" id="card-mon"><span class="t-label">Monday (7AM)</span><span id="timer-mon" class="t-val">00:00:00</span></div>
+                    <div class="timer-card thu" id="card-thu"><span class="t-label">Thursday (7AM)</span><span id="timer-thu" class="t-val">00:00:00</span></div>
+                    <div class="timer-card sat" id="card-sat"><span class="t-label">Saturday (7AM)</span><span id="timer-sat" class="t-val">00:00:00</span></div>
+                </div>
+
+                <!-- NEW: Custom Timers Area -->
+                <div class="config-section" style="border-bottom:none;">
+                    <label class="panel-label">Personal Timers</label>
+                    <div id="home-custom-timers" style="display:flex; flex-direction:column; gap:6px;"></div>
                 </div>
             </div>
 
@@ -371,14 +388,13 @@
     </div>
 
     <script>
-    const firebaseConfig = { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", authDomain: "mabinogi-tracker.firebaseapp.com", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com", projectId: "mabinogi-tracker", storageBucket: "mabinogi-tracker.firebasestorage.app", appId: "1:267690802644:web:fccdd005d5c8990504ea41" };
+    const firebaseConfig = { apiKey: "AIzaSyC7A3Rzi-VddhqZiFGjHjjqBwCdX1ks6yM", authDomain: "mabinogi-tracker.firebaseapp.com", databaseURL: "https://mabinogi-tracker-default-rtdb.firebaseio.com", projectId: "mabinogi-tracker", storageBucket: "mabinogi-tracker.firebasestorage.app", appId: "1:267690802644:web:fccdd005d5c8990504ea41", measurementId: "G-VBDBKQ3M1B" };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-    let tasks = [], currentUser = null;
-    // Default timer settings
+    let tasks = [], customTimers = [], currentUser = null;
     let timerSettings = { daily: true, mon: true, thu: true, sat: true };
 
     auth.onAuthStateChanged(user => {
@@ -390,7 +406,7 @@
         const headerStatus = document.getElementById('header-status');
         const loginBtn = document.getElementById('login-btn');
         const loggedInControls = document.getElementById('logged-in-controls');
-        const headerSettingsBtn = document.getElementById('header-settings-btn'); // New Gear Btn
+        const headerSettingsBtn = document.getElementById('header-settings-btn'); 
 
         if (user) {
             currentUser = user;
@@ -401,7 +417,7 @@
             
             loginBtn.style.display = 'none';
             loggedInControls.style.display = 'flex';
-            headerSettingsBtn.style.display = 'flex'; // Show Gear
+            headerSettingsBtn.style.display = 'flex'; 
 
             try {
                 const cached = JSON.parse(localStorage.getItem('mabi_user_cache_' + user.uid) || '{}');
@@ -431,7 +447,7 @@
             // Load tasks and timer settings
             db.ref(`users/${user.uid}`).on('value', snap => {
                 const data = snap.val() || {};
-                // Force array like in tracker.html
+                
                 if (data.tasks) {
                     tasks = Array.isArray(data.tasks) ? data.tasks : Object.values(data.tasks);
                     tasks = tasks.filter(t => t); 
@@ -439,13 +455,13 @@
                     tasks = [];
                 }
                 
-                // Load Timer Settings
-                if (data.timerSettings) {
-                    timerSettings = data.timerSettings;
-                }
+                if (data.timerSettings) timerSettings = data.timerSettings;
+                if (data.customTimers) customTimers = Array.isArray(data.customTimers) ? data.customTimers : Object.values(data.customTimers);
+                else customTimers = [];
                 
                 applyTimerSettings();
                 renderSidebar();
+                renderCustomTimers();
             });
 
         } else {
@@ -458,16 +474,16 @@
             headerStatus.style.color = "var(--text-dim)";
             loginBtn.style.display = 'block';
             loggedInControls.style.display = 'none';
-            headerSettingsBtn.style.display = 'none'; // Hide Gear
+            headerSettingsBtn.style.display = 'none'; 
             
-            // Load local guest data
             const localData = JSON.parse(localStorage.getItem('mabi_tracker_guest_data') || '{}');
             tasks = localData.tasks || [];
-            if (localData.timerSettings) {
-                timerSettings = localData.timerSettings;
-            }
+            if (localData.timerSettings) timerSettings = localData.timerSettings;
+            if (localData.customTimers) customTimers = Array.isArray(localData.customTimers) ? localData.customTimers : Object.values(localData.customTimers);
+            
             applyTimerSettings();
             renderSidebar();
+            renderCustomTimers();
         }
         document.body.classList.add('ready');
     });
@@ -477,6 +493,32 @@
         document.getElementById('card-mon').style.display = (timerSettings.mon !== false) ? 'block' : 'none';
         document.getElementById('card-thu').style.display = (timerSettings.thu !== false) ? 'block' : 'none';
         document.getElementById('card-sat').style.display = (timerSettings.sat !== false) ? 'block' : 'none';
+    }
+
+    function renderCustomTimers() {
+        let cont = document.getElementById('home-custom-timers');
+        cont.innerHTML = '';
+        customTimers.forEach(t => {
+            if(t.visible === false) return; 
+            const div = document.createElement('div');
+            div.className = 'timer-card';
+            
+            // Replicate Color Logic from Tracker
+            let colorVar = 'var(--custom-pink)';
+            if(t.color === 'cyan') colorVar = 'var(--custom-cyan)';
+            if(t.color === 'orange') colorVar = 'var(--custom-orange)';
+            if(t.color === 'purple') colorVar = 'var(--custom-purple)';
+            if(t.color === 'green') colorVar = 'var(--accent)';
+            if(t.color === 'red') colorVar = 'var(--custom-red)';
+            if(t.color === 'blue') colorVar = 'var(--custom-blue)';
+            if(t.color === 'yellow') colorVar = 'var(--custom-yellow)';
+            if(t.color === 'gray') colorVar = 'var(--custom-gray)';
+            
+            div.style.borderLeftColor = colorVar;
+            div.id = `ct-${t.id}`;
+            div.innerHTML = `<span class="t-label">${t.name}</span><span id="ct-val-${t.id}" class="t-val">--:--:--</span>`;
+            cont.appendChild(div);
+        });
     }
 
     function handleAuth(event, mode) {
@@ -505,7 +547,6 @@
             return;
         }
 
-        // Simple render of pending tasks
         pending.forEach(t => {
             const div = document.createElement('div');
             div.className = 'mini-task-row';
@@ -513,6 +554,23 @@
             if(t.type === 'mon') color = 'var(--mon)';
             if(t.type === 'thu') color = 'var(--thu)';
             if(t.type === 'sat') color = 'var(--sat)';
+            // Custom color logic for pending list dots
+            if(String(t.type).startsWith('custom_')) {
+                const cTimer = customTimers.find(ct => 'custom_'+ct.id === t.type);
+                if(cTimer && cTimer.color) {
+                     if(cTimer.color === 'cyan') color = 'var(--custom-cyan)';
+                     else if(cTimer.color === 'orange') color = 'var(--custom-orange)';
+                     else if(cTimer.color === 'purple') color = 'var(--custom-purple)';
+                     else if(cTimer.color === 'green') color = 'var(--accent)';
+                     else if(cTimer.color === 'red') color = 'var(--custom-red)';
+                     else if(cTimer.color === 'blue') color = 'var(--custom-blue)';
+                     else if(cTimer.color === 'yellow') color = 'var(--custom-yellow)';
+                     else if(cTimer.color === 'gray') color = 'var(--custom-gray)';
+                     else color = 'var(--custom-pink)';
+                } else {
+                     color = 'var(--custom-pink)';
+                }
+            }
             
             div.innerHTML = `<span style="color:${color}; margin-right:5px;">●</span> ${t.name} <span style="opacity:0.5; font-size:10px;">(${t.char})</span>`; 
             list.appendChild(div);
@@ -523,21 +581,32 @@
     function updateEngine() {
         const now = new Date();
         const pac = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
-        const getNextReset = (day) => {
-            let d = new Date(pac); d.setHours(7,0,0,0);
-            if (day !== null) { while(d.getDay() !== day) d.setDate(d.getDate()+1); }
-            if (pac >= d) d.setDate(d.getDate() + (day !== null ? 7 : 1));
+        
+        const getNext = (dayStr, hour) => {
+            let d = new Date(pac); d.setHours(hour, 0, 0, 0);
+            if (dayStr !== 'daily') {
+                const dayNum = parseInt(dayStr);
+                while(d.getDay() !== dayNum) d.setDate(d.getDate() + 1);
+            }
+            if (pac >= d) d.setDate(d.getDate() + (dayStr === 'daily' ? 1 : 7));
             return d;
         };
+
         const formatDiff = (target) => {
             const ms = target - pac;
             const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000), s = Math.floor((ms%60000)/1000);
             return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
         };
-        document.getElementById('timer-daily').innerText = formatDiff(getNextReset(null));
-        document.getElementById('timer-mon').innerText = formatDiff(getNextReset(1)); 
-        document.getElementById('timer-thu').innerText = formatDiff(getNextReset(4));
-        document.getElementById('timer-sat').innerText = formatDiff(getNextReset(6));
+
+        document.getElementById('timer-daily').innerText = formatDiff(getNext('daily', 7));
+        document.getElementById('timer-mon').innerText = formatDiff(getNext('1', 7)); 
+        document.getElementById('timer-thu').innerText = formatDiff(getNext('4', 7));
+        document.getElementById('timer-sat').innerText = formatDiff(getNext('6', 7));
+        
+        customTimers.forEach(t => {
+            const el = document.getElementById(`ct-val-${t.id}`);
+            if(el) el.innerText = formatDiff(getNext(t.day, t.hour));
+        });
     }
     setInterval(updateEngine, 1000);
     updateEngine();
